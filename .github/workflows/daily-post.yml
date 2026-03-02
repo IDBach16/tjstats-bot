@@ -1,4 +1,5 @@
 name: Daily Baseball Post
+# TJStats Bot — posts baseball analytics content to X
 
 on:
   schedule:
