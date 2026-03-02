@@ -19,6 +19,9 @@ on:
           - screenshot
           - text
 
+permissions:
+  contents: write
+
 jobs:
   post:
     runs-on: ubuntu-latest
