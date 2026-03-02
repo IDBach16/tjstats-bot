@@ -8,7 +8,7 @@ import logging
 import sys
 
 from . import poster
-from .scheduler import get_generators_for_today, record_post
+from .scheduler import get_generators_for_today, record_post, GENERATORS
 
 logging.basicConfig(
     level=logging.INFO,
@@ -19,8 +19,20 @@ log = logging.getLogger(__name__)
 DRY_RUN = False
 
 
-async def run_post(slot: str) -> None:
-    """Generate and post content for a given slot ('screenshot' or 'text')."""
+async def run_post(slot: str, generator_name: str | None = None) -> None:
+    """Generate and post content for a given slot ('screenshot' or 'text').
+
+    If generator_name is provided, run that specific generator instead.
+    """
+    if generator_name:
+        cls = GENERATORS.get(generator_name)
+        if not cls:
+            log.error("Unknown generator: %s (available: %s)",
+                      generator_name, ", ".join(GENERATORS))
+            return
+        await _generate_and_post(cls())
+        return
+
     ss_gen, txt_gen = get_generators_for_today()
 
     if slot == "screenshot":
@@ -68,6 +80,12 @@ def main() -> None:
         help="Which content slot to run (default: both)",
     )
     parser.add_argument(
+        "--generator",
+        choices=list(GENERATORS.keys()),
+        default=None,
+        help="Run a specific generator by name (overrides --slot)",
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Generate content but don't post to X",
@@ -75,7 +93,7 @@ def main() -> None:
     args = parser.parse_args()
     DRY_RUN = args.dry_run
 
-    asyncio.run(run_post(args.slot))
+    asyncio.run(run_post(args.slot, args.generator))
 
 
 if __name__ == "__main__":

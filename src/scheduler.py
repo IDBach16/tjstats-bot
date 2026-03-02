@@ -26,6 +26,18 @@ log = logging.getLogger(__name__)
 
 HISTORY_PATH = DATA_DIR / "post_history.json"
 
+# Registry of all generators by name (for --generator CLI flag)
+GENERATORS: dict[str, type[ContentGenerator]] = {
+    "pitcher_spotlight": PitcherSpotlightGenerator,
+    "stat_of_day": StatOfDayGenerator,
+    "hardest_pitch": HardestPitchGenerator,
+    "ss_pitching_summary": PitchingSummaryScreenshot,
+    "ss_statcast_cards": StatcastCardsScreenshot,
+    "ss_pitch_plots": PitchPlotsScreenshot,
+    "ss_leaderboard": LeaderboardScreenshot,
+    "ss_heat_maps": HeatMapsScreenshot,
+}
+
 # Weekly rotation: day-of-week → (screenshot_class, text_class)
 # Monday=0 … Sunday=6
 SCHEDULE: dict[int, tuple[type[ContentGenerator], type[ContentGenerator]]] = {

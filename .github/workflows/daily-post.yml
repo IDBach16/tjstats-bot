@@ -18,6 +18,21 @@ on:
           - both
           - screenshot
           - text
+      generator:
+        description: 'Override: run a specific generator by name (leave empty for schedule)'
+        required: false
+        default: ''
+        type: choice
+        options:
+          - ''
+          - pitcher_spotlight
+          - stat_of_day
+          - hardest_pitch
+          - ss_pitching_summary
+          - ss_statcast_cards
+          - ss_pitch_plots
+          - ss_leaderboard
+          - ss_heat_maps
 
 permissions:
   contents: write
@@ -58,7 +73,12 @@ jobs:
           X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
           X_BEARER_TOKEN: ${{ secrets.X_BEARER_TOKEN }}
           PITCH_PROFILER_API_KEY: ${{ secrets.PITCH_PROFILER_API_KEY }}
-        run: python -m src.main --slot ${{ steps.slot.outputs.slot }}
+        run: |
+          ARGS="--slot ${{ steps.slot.outputs.slot }}"
+          if [ -n "${{ inputs.generator }}" ]; then
+            ARGS="--generator ${{ inputs.generator }}"
+          fi
+          python -m src.main $ARGS
 
       - name: Commit post history
         run: |
