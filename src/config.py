@@ -31,7 +31,10 @@ PITCH_PROFILER_BASE = (
 MLB_API_BASE = "https://statsapi.mlb.com/api/v1"
 
 # ── Season ─────────────────────────────────────────────────────────────
-MLB_SEASON = int(os.environ.get("MLB_SEASON", datetime.now().year))
+# MLB regular season starts late March; before April, default to prior year
+_now = datetime.now()
+_default_season = _now.year if _now.month >= 4 else _now.year - 1
+MLB_SEASON = int(os.environ.get("MLB_SEASON", _default_season))
 
 # ── TJStats Hugging Face Spaces catalog ────────────────────────────────
 # Each entry: (slug, human label, HF space URL)
