@@ -1,0 +1,65 @@
+name: Daily Baseball Post
+
+on:
+  schedule:
+    # 10 AM ET (UTC-4 during EDT) = 14:00 UTC — screenshot post
+    - cron: '0 14 * * *'
+    # 6 PM ET = 22:00 UTC — text post
+    - cron: '0 22 * * *'
+  workflow_dispatch:
+    inputs:
+      slot:
+        description: 'Content slot to run'
+        required: false
+        default: 'both'
+        type: choice
+        options:
+          - both
+          - screenshot
+          - text
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          playwright install chromium --with-deps
+
+      - name: Determine slot
+        id: slot
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "slot=${{ inputs.slot }}" >> $GITHUB_OUTPUT
+          elif [ "$(date -u +%H)" -lt 18 ]; then
+            echo "slot=screenshot" >> $GITHUB_OUTPUT
+          else
+            echo "slot=text" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run bot
+        env:
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
+          X_BEARER_TOKEN: ${{ secrets.X_BEARER_TOKEN }}
+          PITCH_PROFILER_API_KEY: ${{ secrets.PITCH_PROFILER_API_KEY }}
+        run: python -m src.main --slot ${{ steps.slot.outputs.slot }}
+
+      - name: Commit post history
+        run: |
+          git config user.name "tjstats-bot"
+          git config user.email "bot@tjstats.local"
+          git add data/post_history.json
+          git diff --cached --quiet || git commit -m "Update post history [skip ci]"
+          git push

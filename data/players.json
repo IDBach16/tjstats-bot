@@ -1,0 +1,24 @@
+{
+  "pitchers": [
+    {"name": "Paul Skenes", "id": 694973, "team": "PIT"},
+    {"name": "Tarik Skubal", "id": 669373, "team": "DET"},
+    {"name": "Zack Wheeler", "id": 554430, "team": "PHI"},
+    {"name": "Dylan Cease", "id": 656302, "team": "SD"},
+    {"name": "Corbin Burnes", "id": 669203, "team": "BAL"},
+    {"name": "Chris Sale", "id": 519242, "team": "ATL"},
+    {"name": "Logan Webb", "id": 657277, "team": "SF"},
+    {"name": "Garrett Crochet", "id": 676979, "team": "BOS"},
+    {"name": "Seth Lugo", "id": 607625, "team": "KC"},
+    {"name": "Framber Valdez", "id": 664285, "team": "HOU"},
+    {"name": "Cole Ragans", "id": 666142, "team": "KC"},
+    {"name": "Yoshinobu Yamamoto", "id": 808967, "team": "LAD"},
+    {"name": "Hunter Brown", "id": 686613, "team": "HOU"},
+    {"name": "Sonny Gray", "id": 543243, "team": "STL"},
+    {"name": "Emmanuel Clase", "id": 661403, "team": "CLE"},
+    {"name": "Ryan Helsley", "id": 664854, "team": "STL"},
+    {"name": "Tanner Houck", "id": 656557, "team": "BOS"},
+    {"name": "Blake Snell", "id": 605483, "team": "LAD"},
+    {"name": "Spencer Strider", "id": 675911, "team": "ATL"},
+    {"name": "Roki Sasaki", "id": 812952, "team": "LAD"}
+  ]
+}

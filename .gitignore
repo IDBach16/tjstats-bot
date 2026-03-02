@@ -1,0 +1,11 @@
+.env
+__pycache__/
+*.pyc
+.venv/
+venv/
+screenshots/
+*.png
+*.jpg
+!data/players.json
+!data/post_history.json
+.pytest_cache/
