@@ -13,8 +13,10 @@ class PostContent:
 
     text: str
     image_path: Path | None = None
+    video_path: Path | None = None
     alt_text: str = ""
     tags: list[str] = field(default_factory=list)
+    reply: PostContent | None = None
 
 
 class ContentGenerator(abc.ABC):

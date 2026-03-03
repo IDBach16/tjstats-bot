@@ -1,11 +1,192 @@
 {
   "posts": [
     {
-      "date": "2026-03-03T15:34:09.224231",
-      "generator": "ss_statcast_cards",
-      "tweet_id": "2028856458608046386",
+      "date": "2026-03-02T14:58:39.210424",
+      "generator": "pitcher_spotlight",
+      "tweet_id": "dry-run-0",
       "tags": [
-        "ss_statcast_cards",
+        "pitcher_spotlight",
+        "Emmanuel Clase"
+      ]
+    },
+    {
+      "date": "2026-03-02T14:59:27.712070",
+      "generator": "stat_of_day",
+      "tweet_id": "dry-run-0",
+      "tags": [
+        "stat_of_day",
+        "whiff_rate"
+      ]
+    },
+    {
+      "date": "2026-03-02T15:01:24.220668",
+      "generator": "pitcher_spotlight",
+      "tweet_id": "dry-run-0",
+      "tags": [
+        "pitcher_spotlight",
+        "Zack Wheeler"
+      ]
+    },
+    {
+      "date": "2026-03-02T15:01:51.552409",
+      "generator": "stat_of_day",
+      "tweet_id": "dry-run-0",
+      "tags": [
+        "stat_of_day",
+        "strike_out_percentage"
+      ]
+    },
+    {
+      "date": "2026-03-02T15:06:54.494714",
+      "generator": "pitcher_spotlight",
+      "tweet_id": "2028487227198628288",
+      "tags": [
+        "pitcher_spotlight",
+        "Blake Snell"
+      ]
+    },
+    {
+      "date": "2026-03-02T15:41:25.927343",
+      "generator": "pitcher_spotlight",
+      "tweet_id": "dry-run-0",
+      "tags": [
+        "pitcher_spotlight",
+        "Tarik Skubal"
+      ]
+    },
+    {
+      "date": "2026-03-02T15:43:59.614928",
+      "generator": "pitcher_spotlight",
+      "tweet_id": "dry-run-0",
+      "tags": [
+        "pitcher_spotlight",
+        "Tarik Skubal"
+      ]
+    },
+    {
+      "date": "2026-03-02T15:55:30.911075",
+      "generator": "pitcher_spotlight",
+      "tweet_id": "dry-run-0",
+      "tags": [
+        "pitcher_spotlight",
+        "Dylan Cease"
+      ]
+    },
+    {
+      "date": "2026-03-02T15:56:26.509233",
+      "generator": "pitcher_spotlight",
+      "tweet_id": "2028499692003246282",
+      "tags": [
+        "pitcher_spotlight",
+        "Logan Webb"
+      ]
+    },
+    {
+      "date": "2026-03-02T15:57:59.745145",
+      "generator": "pitcher_spotlight",
+      "tweet_id": "dry-run-0",
+      "tags": [
+        "pitcher_spotlight",
+        "Chris Sale"
+      ]
+    },
+    {
+      "date": "2026-03-02T15:59:33.240553",
+      "generator": "pitcher_spotlight",
+      "tweet_id": "2028500474714849583",
+      "tags": [
+        "pitcher_spotlight",
+        "Framber Valdez"
+      ]
+    },
+    {
+      "date": "2026-03-02T16:01:41.956629",
+      "generator": "pitcher_spotlight",
+      "tweet_id": "dry-run-0",
+      "tags": [
+        "pitcher_spotlight",
+        "Seth Lugo"
+      ]
+    },
+    {
+      "date": "2026-03-02T19:05:01.141639",
+      "generator": "guess_pitcher",
+      "tweet_id": "2028547137428996358",
+      "tags": [
+        "guess_pitcher",
+        "Blake Snell"
+      ]
+    },
+    {
+      "date": "2026-03-02T19:22:10.157096",
+      "generator": "arsenal_vs",
+      "tweet_id": "2028551453128765920",
+      "tags": [
+        "arsenal_vs",
+        "Sonny Gray",
+        "Mason Montgomery"
+      ]
+    },
+    {
+      "date": "2026-03-02T20:12:39.910315",
+      "generator": "pitcher_spotlight",
+      "tweet_id": "dry-run-0",
+      "tags": [
+        "pitcher_spotlight",
+        "Tanner Houck"
+      ]
+    },
+    {
+      "date": "2026-03-02T20:17:41.511372",
+      "generator": "pitcher_spotlight",
+      "tweet_id": "dry-run-0",
+      "tags": [
+        "pitcher_spotlight",
+        "Tarik Skubal"
+      ]
+    },
+    {
+      "date": "2026-03-02T20:17:59.904612",
+      "generator": "stat_of_day",
+      "tweet_id": "dry-run-0",
+      "tags": [
+        "stat_of_day",
+        "era"
+      ]
+    },
+    {
+      "date": "2026-03-02T20:19:03.548214",
+      "generator": "guess_pitcher",
+      "tweet_id": "dry-run-0",
+      "tags": [
+        "guess_pitcher",
+        "Paul Skenes"
+      ]
+    },
+    {
+      "date": "2026-03-02T20:21:12.358361",
+      "generator": "pitcher_spotlight",
+      "tweet_id": "2028566309261180999",
+      "tags": [
+        "pitcher_spotlight",
+        "Seth Lugo"
+      ]
+    },
+    {
+      "date": "2026-03-02T20:30:57.620171",
+      "generator": "pitcher_spotlight",
+      "tweet_id": "dry-run-0",
+      "tags": [
+        "pitcher_spotlight",
+        "Hunter Brown"
+      ]
+    },
+    {
+      "date": "2026-03-02T20:31:11.820551",
+      "generator": "guess_pitcher",
+      "tweet_id": "dry-run-0",
+      "tags": [
+        "guess_pitcher",
         "Cole Ragans"
       ]
     }

@@ -6,6 +6,8 @@ venv/
 screenshots/
 *.png
 *.jpg
+*.mp4
+data/clips/
 !data/players.json
 !data/post_history.json
 .pytest_cache/

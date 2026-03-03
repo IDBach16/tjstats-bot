@@ -3,10 +3,10 @@ name: Daily Baseball Post
 
 on:
   schedule:
-    # 10 AM ET (UTC-4 during EDT) = 14:00 UTC — screenshot post
-    - cron: '0 14 * * *'
-    # 6 PM ET = 22:00 UTC — text post
-    - cron: '0 22 * * *'
+    # 10 AM EST (UTC-5) = 15:00 UTC — screenshot post
+    - cron: '0 15 * * *'
+    # 2 PM EST (UTC-5) = 19:00 UTC — text post
+    - cron: '0 19 * * *'
   workflow_dispatch:
     inputs:
       slot:
@@ -28,6 +28,10 @@ on:
           - pitcher_spotlight
           - stat_of_day
           - hardest_pitch
+          - guess_pitcher
+          - explainer
+          - arsenal_vs
+          - movement_profile
           - ss_pitching_summary
           - ss_statcast_cards
           - ss_pitch_plots
@@ -59,7 +63,7 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "slot=${{ inputs.slot }}" >> $GITHUB_OUTPUT
-          elif [ "$(date -u +%H)" -lt 18 ]; then
+          elif [ "$(date -u +%H)" -lt 17 ]; then
             echo "slot=screenshot" >> $GITHUB_OUTPUT
           else
             echo "slot=text" >> $GITHUB_OUTPUT

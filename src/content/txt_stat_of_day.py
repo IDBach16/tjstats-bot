@@ -8,19 +8,24 @@ import random
 from .base import ContentGenerator, PostContent
 from .. import pitch_profiler
 from ..config import DEFAULT_HASHTAGS, MLB_SEASON
+from ..charts import plot_percentile_rankings
+from ..video_clips import get_pitcher_clip
 
 log = logging.getLogger(__name__)
 
 # Stats to rotate through, with display names and sort direction
+# pct=True means the raw value is a decimal (0-1) that needs ×100 for display
 STATS = [
-    {"col": "whiff_rate", "label": "Whiff Rate", "fmt": ".1f", "suffix": "%", "top": True},
-    {"col": "k_percent", "label": "K%", "fmt": ".1f", "suffix": "%", "top": True},
-    {"col": "era", "label": "ERA", "fmt": ".2f", "suffix": "", "top": False},
-    {"col": "xera", "label": "xERA", "fmt": ".2f", "suffix": "", "top": False},
-    {"col": "stuff_plus", "label": "Stuff+", "fmt": ".0f", "suffix": "", "top": True},
-    {"col": "bb_percent", "label": "BB%", "fmt": ".1f", "suffix": "%", "top": False},
-    {"col": "chase_rate", "label": "Chase Rate", "fmt": ".1f", "suffix": "%", "top": True},
-    {"col": "csw_rate", "label": "CSW%", "fmt": ".1f", "suffix": "%", "top": True},
+    {"col": "whiff_rate", "label": "Whiff Rate", "fmt": ".1f", "suffix": "%", "top": True, "pct": True},
+    {"col": "strike_out_percentage", "label": "K%", "fmt": ".1f", "suffix": "%", "top": True, "pct": True},
+    {"col": "era", "label": "ERA", "fmt": ".2f", "suffix": "", "top": False, "pct": False},
+    {"col": "fip", "label": "FIP", "fmt": ".2f", "suffix": "", "top": False, "pct": False},
+    {"col": "stuff_plus", "label": "Stuff+", "fmt": ".0f", "suffix": "", "top": True, "pct": False},
+    {"col": "walk_percentage", "label": "BB%", "fmt": ".1f", "suffix": "%", "top": False, "pct": True},
+    {"col": "chase_percentage", "label": "Chase Rate", "fmt": ".1f", "suffix": "%", "top": True, "pct": True},
+    {"col": "called_strikes_plus_whiffs_percentage", "label": "CSW%", "fmt": ".1f", "suffix": "%", "top": True, "pct": True},
+    {"col": "barrel_percentage", "label": "Barrel%", "fmt": ".1f", "suffix": "%", "top": False, "pct": True},
+    {"col": "strikeouts_per_9", "label": "K/9", "fmt": ".1f", "suffix": "", "top": True, "pct": False},
 ]
 
 
@@ -33,8 +38,8 @@ class StatOfDayGenerator(ContentGenerator):
             return PostContent(text="")
 
         # Filter to qualified pitchers if IP column exists
-        if "ip" in df.columns:
-            df = df[df["ip"] >= 20]
+        if "innings_pitched" in df.columns:
+            df = df[df["innings_pitched"] >= 20]
 
         # Pick a random stat that exists in the data
         available = [s for s in STATS if s["col"] in df.columns]
@@ -56,15 +61,38 @@ class StatOfDayGenerator(ContentGenerator):
 
         header = (
             f"{MLB_SEASON} {stat['label']} Leaders (min 20 IP):\n"
-            if "ip" in df.columns
+            if "innings_pitched" in df.columns
             else f"{MLB_SEASON} {stat['label']} Leaders:\n"
         )
         lines = [header]
         for i, (_, row) in enumerate(leaders.iterrows(), 1):
             val = row[col]
+            if stat.get("pct"):
+                val = val * 100
             formatted = f"{val:{stat['fmt']}}{stat['suffix']}"
             lines.append(f"{i}. {row[name_col]} — {formatted}")
 
         lines.append(f"\nData via @mlbpitchprofiler {DEFAULT_HASHTAGS}")
         text = "\n".join(lines)
-        return PostContent(text=text, tags=["stat_of_day", stat["col"]])
+
+        # Media: try chart + video (image as main tweet, video as reply)
+        image_path = None
+        video_path = None
+        top_row = leaders.iloc[0]
+        pitcher_id = top_row.get("pitcher_id") or top_row.get("player_id")
+        top_name = str(top_row[name_col]) if name_col else None
+        if top_name:
+            image_path = plot_percentile_rankings(top_name, df)
+        if pitcher_id and top_name:
+            try:
+                video_path = get_pitcher_clip(int(pitcher_id), top_name)
+            except Exception:
+                log.warning("Video clip fetch failed for %s", top_name, exc_info=True)
+
+        return PostContent(
+            text=text,
+            image_path=image_path,
+            video_path=video_path,
+            alt_text=f"Percentile rankings chart for {top_name}" if image_path else "",
+            tags=["stat_of_day", stat["col"]],
+        )

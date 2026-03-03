@@ -12,6 +12,8 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / "data"
 SCREENSHOTS_DIR = ROOT_DIR / "screenshots"
 SCREENSHOTS_DIR.mkdir(exist_ok=True)
+CLIPS_DIR = ROOT_DIR / "data" / "clips"
+CLIPS_DIR.mkdir(parents=True, exist_ok=True)
 
 # ── X / Twitter credentials ───────────────────────────────────────────
 X_API_KEY = os.environ["X_API_KEY"]

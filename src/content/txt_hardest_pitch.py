@@ -9,6 +9,8 @@ from pybaseball import statcast
 
 from .base import ContentGenerator, PostContent
 from ..config import DEFAULT_HASHTAGS
+from ..charts import plot_pitch_movement
+from ..video_clips import get_pitcher_clip
 
 log = logging.getLogger(__name__)
 
@@ -45,4 +47,22 @@ class HardestPitchGenerator(ContentGenerator):
             f"{pitcher} — {velo:.1f} mph {pitch_type}\n\n"
             f"Data via @baseaboreball / Statcast {DEFAULT_HASHTAGS}"
         )
-        return PostContent(text=text, tags=["hardest_pitch", ds])
+
+        # Media: try chart + video (image as main tweet, video as reply)
+        image_path = None
+        video_path = None
+        pitcher_id = fastest.get("pitcher")
+        if pitcher_id:
+            image_path = plot_pitch_movement(int(pitcher_id), pitcher)
+            try:
+                video_path = get_pitcher_clip(int(pitcher_id), pitcher)
+            except Exception:
+                log.warning("Video clip fetch failed for %s", pitcher, exc_info=True)
+
+        return PostContent(
+            text=text,
+            image_path=image_path,
+            video_path=video_path,
+            alt_text=f"Pitch movement chart for {pitcher}" if image_path else "",
+            tags=["hardest_pitch", ds],
+        )

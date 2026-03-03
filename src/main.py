@@ -54,19 +54,58 @@ async def _generate_and_post(generator) -> None:
 
     log.info("Posting: %s", content.text[:80])
 
+    has_image = content.image_path and content.image_path.exists()
+    has_video = content.video_path and content.video_path.exists()
+
     if DRY_RUN:
-        img_info = f" with image {content.image_path}" if content.image_path else ""
-        print(f"[DRY RUN] Would post{img_info}:\n{content.text}\n")
+        media_parts = []
+        if has_image:
+            media_parts.append(f"image {content.image_path}")
+        if has_video:
+            media_parts.append(f"video {content.video_path}")
+        media_info = f" with {' + '.join(media_parts)}" if media_parts else ""
+        print(f"[DRY RUN] Would post{media_info}:\n{content.text}\n")
+        if has_image and has_video:
+            print("[DRY RUN] Would reply with video clip\n")
+        if content.reply:
+            print(f"[DRY RUN] Would reply (after 5 min):\n{content.reply.text}\n")
         tweet_id = "dry-run-0"
-    elif content.image_path and content.image_path.exists():
+    elif has_image:
         tweet_id = poster.post_with_image(
             content.text, content.image_path, content.alt_text
         )
+        # If we also have a video, reply to the main tweet with it
+        if has_video:
+            try:
+                vid_id = poster.post_video_reply(tweet_id, content.video_path)
+                log.info("Posted video reply — tweet %s", vid_id)
+            except Exception:
+                log.warning("Video reply failed", exc_info=True)
+    elif has_video:
+        tweet_id = poster.post_with_video(content.text, content.video_path)
     else:
         tweet_id = poster.post_text(content.text)
 
     record_post(generator.name, tweet_id, content.tags)
     log.info("Done — tweet %s", tweet_id)
+
+    # Handle delayed reply (e.g. Guess the Pitcher reveal)
+    if content.reply and not DRY_RUN:
+        log.info("Waiting 5 minutes before posting reply...")
+        await asyncio.sleep(300)
+        reply = content.reply
+        try:
+            reply_id = poster.post_reply(
+                reply.text,
+                in_reply_to=tweet_id,
+                image_path=reply.image_path,
+                alt_text=reply.alt_text,
+            )
+            log.info("Posted reply — tweet %s", reply_id)
+        except Exception:
+            log.warning("Reply failed, posting as standalone tweet", exc_info=True)
+            reply_id = poster.post_text(reply.text)
+            log.info("Posted reveal as standalone tweet %s", reply_id)
 
 
 def main() -> None:

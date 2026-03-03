@@ -21,6 +21,12 @@ from .content.ss_heat_maps import HeatMapsScreenshot
 from .content.txt_hardest_pitch import HardestPitchGenerator
 from .content.txt_pitcher_spotlight import PitcherSpotlightGenerator
 from .content.txt_stat_of_day import StatOfDayGenerator
+from .content.txt_guess_pitcher import GuessThePitcherGenerator
+from .content.txt_explainer import ExplainerGenerator
+from .content.txt_arsenal_vs import ArsenalVsGenerator
+
+# Screenshot generators (new)
+from .content.ss_movement_profile import MovementProfileGenerator
 
 log = logging.getLogger(__name__)
 
@@ -31,6 +37,10 @@ GENERATORS: dict[str, type[ContentGenerator]] = {
     "pitcher_spotlight": PitcherSpotlightGenerator,
     "stat_of_day": StatOfDayGenerator,
     "hardest_pitch": HardestPitchGenerator,
+    "guess_pitcher": GuessThePitcherGenerator,
+    "explainer": ExplainerGenerator,
+    "arsenal_vs": ArsenalVsGenerator,
+    "movement_profile": MovementProfileGenerator,
     "ss_pitching_summary": PitchingSummaryScreenshot,
     "ss_statcast_cards": StatcastCardsScreenshot,
     "ss_pitch_plots": PitchPlotsScreenshot,
@@ -41,13 +51,13 @@ GENERATORS: dict[str, type[ContentGenerator]] = {
 # Weekly rotation: day-of-week → (screenshot_class, text_class)
 # Monday=0 … Sunday=6
 SCHEDULE: dict[int, tuple[type[ContentGenerator], type[ContentGenerator]]] = {
-    0: (PitchingSummaryScreenshot, HardestPitchGenerator),       # Mon
+    0: (PitchingSummaryScreenshot, GuessThePitcherGenerator),    # Mon
     1: (StatcastCardsScreenshot, PitcherSpotlightGenerator),     # Tue
-    2: (PitchPlotsScreenshot, StatOfDayGenerator),               # Wed
-    3: (LeaderboardScreenshot, HardestPitchGenerator),           # Thu
-    4: (PitchingSummaryScreenshot, PitcherSpotlightGenerator),   # Fri
-    5: (StatcastCardsScreenshot, StatOfDayGenerator),            # Sat
-    6: (HeatMapsScreenshot, PitcherSpotlightGenerator),         # Sun
+    2: (MovementProfileGenerator, ExplainerGenerator),           # Wed
+    3: (LeaderboardScreenshot, StatOfDayGenerator),               # Thu
+    4: (PitchPlotsScreenshot, ArsenalVsGenerator),               # Fri
+    5: (HeatMapsScreenshot, StatOfDayGenerator),                 # Sat
+    6: (PitchingSummaryScreenshot, PitcherSpotlightGenerator),   # Sun
 }
 
 
