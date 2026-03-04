@@ -1,4 +1,4 @@
-"""Screenshot generator: Pitch Movement Profiles — movement chart + arsenal text."""
+"""Generator: Pitch Movement Profile — local matplotlib chart + arsenal text."""
 
 from __future__ import annotations
 
@@ -7,22 +7,19 @@ import logging
 from .base import ContentGenerator, PostContent
 from .._player_pick import pick_player
 from .. import pitch_profiler
-from ..screenshot import take_screenshot
-from ..config import HF_SPACES, DEFAULT_HASHTAGS
+from ..charts import plot_movement_profile
+from ..config import DEFAULT_HASHTAGS
 
 log = logging.getLogger(__name__)
-SPACE = HF_SPACES["pitch_plots"]
 
 
 def _build_arsenal_text(name: str, pitch_data) -> str:
-    """Build arsenal breakdown text from pitch-type-level data.
+    """Build arsenal breakdown text from pitch-type-level data."""
+    import pandas as pd
 
-    Returns lines like "4-Seam — 97.2 mph avg" or a simpler fallback.
-    """
     if pitch_data is None or pitch_data.empty:
         return ""
 
-    # Find pitcher rows — try common column names
     name_col = None
     for c in ("pitcher_name", "player_name", "name"):
         if c in pitch_data.columns:
@@ -32,38 +29,38 @@ def _build_arsenal_text(name: str, pitch_data) -> str:
         return ""
 
     rows = pitch_data[pitch_data[name_col] == name]
-    if rows.empty:
+    if rows.empty or "pitch_type" not in rows.columns:
         return ""
 
-    # Try to find pitch name and velocity columns
-    pitch_col = None
-    for c in ("pitch_name", "pitch_type", "tagged_pitch_type"):
-        if c in rows.columns:
-            pitch_col = c
-            break
+    # Coerce + aggregate by pitch type
+    for nc in ("velocity", "percentage_thrown"):
+        if nc in rows.columns:
+            rows = rows.copy()
+            rows[nc] = pd.to_numeric(rows[nc], errors="coerce")
 
-    velo_col = None
-    for c in ("release_speed", "avg_velocity", "velocity", "avg_speed"):
-        if c in rows.columns:
-            velo_col = c
-            break
-
-    if not pitch_col:
+    agg = {}
+    if "velocity" in rows.columns:
+        agg["velocity"] = "mean"
+    if "percentage_thrown" in rows.columns:
+        agg["percentage_thrown"] = "sum"
+    if not agg:
         return ""
+
+    grouped = rows.groupby("pitch_type", as_index=False).agg(agg)
+    if "percentage_thrown" in grouped.columns:
+        grouped = grouped.sort_values("percentage_thrown", ascending=False)
+
+    from ..charts import PITCH_NAMES
 
     lines = []
-    for _, row in rows.iterrows():
-        pitch_name = str(row[pitch_col])
-        if not pitch_name or pitch_name == "nan":
-            continue
-        if velo_col and row.get(velo_col) is not None:
-            try:
-                velo = float(row[velo_col])
-                lines.append(f"{pitch_name} — {velo:.1f} mph avg")
-            except (TypeError, ValueError):
-                lines.append(pitch_name)
+    for _, row in grouped.iterrows():
+        pt = str(row["pitch_type"])
+        display = PITCH_NAMES.get(pt, pt)
+        velo = row.get("velocity")
+        if pd.notna(velo):
+            lines.append(f"{display} — {float(velo):.1f} mph avg")
         else:
-            lines.append(pitch_name)
+            lines.append(display)
 
     return "\n".join(lines)
 
@@ -75,33 +72,25 @@ class MovementProfileGenerator(ContentGenerator):
         player = pick_player()
         name = player["name"]
 
-        # Take screenshot of pitch movement plots
-        image = await take_screenshot(
-            url=SPACE["url"],
-            player_name=name,
-            output_name=f"movement_profile_{name.replace(' ', '_')}",
-            full_page=True,
-        )
-        if not image:
-            log.warning("Screenshot failed for %s — skipping post", name)
+        pitches_df = pitch_profiler.get_season_pitches()
+        if pitches_df.empty:
+            log.warning("No pitch data available")
             return PostContent(text="")
 
-        # Fetch pitch-type data for arsenal breakdown
-        arsenal_text = ""
-        try:
-            pitch_data = pitch_profiler.get_season_pitches()
-            arsenal_text = _build_arsenal_text(name, pitch_data)
-        except Exception:
-            log.warning("Failed to fetch pitch-type data for arsenal text", exc_info=True)
+        image = plot_movement_profile(name, pitches_df)
+        if not image:
+            log.warning("Movement profile chart failed for %s", name)
+            return PostContent(text="")
+
+        arsenal_text = _build_arsenal_text(name, pitches_df)
 
         if arsenal_text:
             text = (
                 f"{name}'s pitch movement profile:\n\n"
                 f"{arsenal_text}\n\n"
-                f"Movement chart via @TJStats\n\n{DEFAULT_HASHTAGS}"
+                f"@TJStats {DEFAULT_HASHTAGS}"
             )
         else:
-            # Simpler fallback when pitch-type data is unavailable
             text = (
                 f"{name}'s pitch movement profile "
                 f"via @TJStats\n\n{DEFAULT_HASHTAGS}"

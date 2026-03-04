@@ -432,7 +432,101 @@ def plot_percentile_rankings(name: str, season_df: "pd.DataFrame") -> Path | Non
         return None
 
 
-# ── Chart 5: Pitcher Card (premium PLV-style card) ───────────────────
+# ── Chart 5: Movement Profile (HB × IVB arsenal scatter) ─────────────
+
+def plot_movement_profile(name: str, pitches_df: "pd.DataFrame") -> Path | None:
+    """Arsenal movement profile — HB vs IVB scatter from Pitch Profiler data.
+
+    Each pitch type is one marker, sized by usage, colored by pitch type,
+    and labeled with pitch name + velocity.
+    """
+    try:
+        import pandas as pd
+
+        name_col = None
+        for c in ("pitcher_name", "player_name", "name"):
+            if c in pitches_df.columns:
+                name_col = c
+                break
+        if not name_col:
+            return None
+
+        prows = pitches_df[pitches_df[name_col] == name].copy()
+        if prows.empty or "pitch_type" not in prows.columns:
+            return None
+
+        needed = {"hb", "ivb"}
+        if not needed.issubset(prows.columns):
+            return None
+
+        # Coerce numeric
+        for nc in ("hb", "ivb", "velocity", "percentage_thrown"):
+            if nc in prows.columns:
+                prows[nc] = pd.to_numeric(prows[nc], errors="coerce")
+
+        # Aggregate by pitch type
+        agg = {"hb": "mean", "ivb": "mean"}
+        if "velocity" in prows.columns:
+            agg["velocity"] = "mean"
+        if "percentage_thrown" in prows.columns:
+            agg["percentage_thrown"] = "sum"
+
+        grouped = prows.groupby("pitch_type", as_index=False).agg(agg)
+        grouped = grouped.dropna(subset=["hb", "ivb"])
+        if grouped.empty:
+            return None
+
+        fig, ax = plt.subplots(figsize=(FIG_W, FIG_H), dpi=100)
+        _apply_dark_theme(ax, fig)
+
+        for _, row in grouped.iterrows():
+            pt = str(row["pitch_type"])
+            hb = float(row["hb"])
+            ivb = float(row["ivb"])
+            color = PITCH_COLORS.get(pt, DEFAULT_PITCH_COLOR)
+            label = PITCH_NAMES.get(pt, pt)
+
+            # Marker size based on usage (min 80, max 400)
+            usage = float(row.get("percentage_thrown", 0.1) or 0.1)
+            size = max(80, min(400, usage * 800))
+
+            ax.scatter(hb, ivb, c=color, s=size, alpha=0.85,
+                       edgecolors="white", linewidths=0.8, zorder=3)
+
+            # Label: pitch name + velocity
+            velo_str = ""
+            if "velocity" in row.index and pd.notna(row["velocity"]):
+                velo_str = f" ({float(row['velocity']):.1f})"
+            ax.annotate(
+                f"{label}{velo_str}", (hb, ivb),
+                textcoords="offset points", xytext=(8, 8),
+                fontsize=9, fontweight="bold", color=color,
+            )
+
+        ax.axhline(0, color=GRID_COLOR, linewidth=0.8)
+        ax.axvline(0, color=GRID_COLOR, linewidth=0.8)
+        ax.set_xlabel("Horizontal Break (in)", fontsize=11)
+        ax.set_ylabel("Induced Vertical Break (in)", fontsize=11)
+        ax.set_title(f"{name} — Movement Profile", fontsize=14, fontweight="bold")
+        ax.grid(True, color=GRID_COLOR, linewidth=0.5, alpha=0.5)
+
+        # Footer
+        fig.text(0.5, 0.01, "@TJStatsBot  •  Pitch Profiler Data",
+                 fontsize=9, color="#666666", ha="center")
+
+        safe = name.replace(" ", "_").lower()
+        out = SCREENSHOTS_DIR / f"movement_profile_{safe}.png"
+        fig.savefig(out, bbox_inches="tight", facecolor=fig.get_facecolor())
+        plt.close(fig)
+        log.info("Saved movement profile chart: %s", out)
+        return out
+
+    except Exception:
+        log.warning("plot_movement_profile failed for %s", name, exc_info=True)
+        return None
+
+
+# ── Chart 6: Pitcher Card (premium PLV-style card) ───────────────────
 
 # Stats for the left panel — (column, display_label, lower_is_better)
 _CARD_STATS = [
