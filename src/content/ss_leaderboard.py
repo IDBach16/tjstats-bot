@@ -21,6 +21,9 @@ class LeaderboardScreenshot(ContentGenerator):
             url=SPACE["url"],
             output_name="statcast_leaderboard",
         )
+        if not image:
+            log.warning("Screenshot failed — skipping post")
+            return PostContent(text="")
 
         text = (
             f"{MLB_SEASON} Statcast Pitching Leaderboard "

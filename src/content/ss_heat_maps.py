@@ -25,6 +25,9 @@ class HeatMapsScreenshot(ContentGenerator):
             player_name=name,
             output_name=f"heat_map_{name.replace(' ', '_')}",
         )
+        if not image:
+            log.warning("Screenshot failed for %s — skipping post", name)
+            return PostContent(text="")
 
         text = (
             f"Pitch heat maps for {name} "

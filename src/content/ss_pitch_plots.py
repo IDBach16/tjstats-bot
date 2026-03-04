@@ -26,6 +26,9 @@ class PitchPlotsScreenshot(ContentGenerator):
             output_name=f"pitch_plots_{name.replace(' ', '_')}",
             full_page=True,
         )
+        if not image:
+            log.warning("Screenshot failed for %s — skipping post", name)
+            return PostContent(text="")
 
         text = (
             f"Pitch movement & location plots for {name} "

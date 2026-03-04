@@ -25,6 +25,9 @@ class StatcastCardsScreenshot(ContentGenerator):
             player_name=name,
             output_name=f"statcast_card_{name.replace(' ', '_')}",
         )
+        if not image:
+            log.warning("Screenshot failed for %s — skipping post", name)
+            return PostContent(text="")
 
         text = (
             f"{name}'s Statcast percentile rankings "

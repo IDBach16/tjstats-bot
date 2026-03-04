@@ -25,6 +25,9 @@ class PitchingSummaryScreenshot(ContentGenerator):
             player_name=name,
             output_name=f"pitching_summary_{name.replace(' ', '_')}",
         )
+        if not image:
+            log.warning("Screenshot failed for %s — skipping post", name)
+            return PostContent(text="")
 
         text = (
             f"{name}'s {player.get('season', 2025)} pitching summary "

@@ -96,17 +96,23 @@ async def select_player_in_dropdown(
     input_el = await box.query_selector("input")
     if input_el:
         await input_el.fill(player_name)
-        await asyncio.sleep(1)
+        await asyncio.sleep(1.5)
 
-        # Select the first matching option
-        option = await frame.wait_for_selector(
+        # Try multiple selectors (Streamlit versions vary)
+        option_selectors = [
             "[data-testid='stSelectboxOption']",
-            timeout=5_000,
-        )
-        if option:
-            await option.click()
-            await asyncio.sleep(2)
-            return True
+            "[role='option']",
+            "li[data-testid]",
+        ]
+        for sel in option_selectors:
+            try:
+                option = await frame.wait_for_selector(sel, timeout=8_000)
+                if option:
+                    await option.click()
+                    await asyncio.sleep(2)
+                    return True
+            except PwTimeout:
+                continue
 
     return False
 
@@ -134,6 +140,23 @@ async def take_screenshot(
     """
     output_path = SCREENSHOTS_DIR / f"{output_name}.png"
 
+    try:
+      return await _take_screenshot_impl(
+          url, player_name, output_path, full_page, dropdown_index, clip_selector,
+      )
+    except Exception:
+        log.warning("Screenshot failed for %s", url, exc_info=True)
+        return output_path if output_path.exists() else None
+
+
+async def _take_screenshot_impl(
+    url: str,
+    player_name: str | None,
+    output_path: Path,
+    full_page: bool,
+    dropdown_index: int,
+    clip_selector: str | None,
+) -> Path:
     async with async_playwright() as pw:
         browser = await pw.chromium.launch(headless=True)
         context = await browser.new_context(

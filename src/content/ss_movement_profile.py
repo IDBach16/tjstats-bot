@@ -82,6 +82,9 @@ class MovementProfileGenerator(ContentGenerator):
             output_name=f"movement_profile_{name.replace(' ', '_')}",
             full_page=True,
         )
+        if not image:
+            log.warning("Screenshot failed for %s — skipping post", name)
+            return PostContent(text="")
 
         # Fetch pitch-type data for arsenal breakdown
         arsenal_text = ""
