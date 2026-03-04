@@ -10,8 +10,7 @@ from .base import ContentGenerator, PostContent
 from ._helpers import fmt_stat, get_name
 from .. import pitch_profiler
 from ..config import DATA_DIR, DEFAULT_HASHTAGS
-from ..charts import plot_pitch_movement
-from ..video_clips import get_pitcher_clip
+from ..charts import plot_movement_profile
 
 log = logging.getLogger(__name__)
 
@@ -169,20 +168,23 @@ class ExplainerGenerator(ContentGenerator):
             f"Data via @mlbpitchprofiler {DEFAULT_HASHTAGS}"
         )
 
-        # Media: try chart + video (image as main tweet, video as reply)
+        # Media: movement profile chart from Pitch Profiler data
         image_path = None
-        video_path = None
-        if leader_pitcher_id and leader_name:
-            image_path = plot_pitch_movement(int(leader_pitcher_id), leader_name)
-            try:
-                video_path = get_pitcher_clip(int(leader_pitcher_id), leader_name)
-            except Exception:
-                log.warning("Video clip fetch failed for %s", leader_name, exc_info=True)
+        chart_name = leader_name
+        try:
+            pitches_df = pitch_profiler.get_season_pitches()
+            if not pitches_df.empty:
+                # If no leader, pick a top pitcher for the visual
+                if not chart_name:
+                    from .._player_pick import pick_player
+                    chart_name = pick_player()["name"]
+                image_path = plot_movement_profile(chart_name, pitches_df)
+        except Exception:
+            log.warning("Movement profile chart failed", exc_info=True)
 
         return PostContent(
             text=text,
             image_path=image_path,
-            video_path=video_path,
-            alt_text=f"Pitch movement chart for {leader_name}" if image_path else "",
+            alt_text=f"Pitch movement profile for {chart_name}" if image_path else "",
             tags=["explainer", topic["id"]],
         )
