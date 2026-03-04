@@ -85,9 +85,10 @@ jobs:
           python -m src.main $ARGS
 
       - name: Commit post history
+        continue-on-error: true
         run: |
           git config user.name "tjstats-bot"
           git config user.email "bot@tjstats.local"
           git add data/post_history.json
           git diff --cached --quiet || git commit -m "Update post history [skip ci]"
-          git push
+          git push || echo "Warning: git push failed (transient error), skipping"

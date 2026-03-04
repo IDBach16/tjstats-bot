@@ -28,6 +28,9 @@ from .content.txt_arsenal_vs import ArsenalVsGenerator
 # Screenshot generators (new)
 from .content.ss_movement_profile import MovementProfileGenerator
 
+# Card generators
+from .content.pitcher_card import PitcherCardGenerator
+
 log = logging.getLogger(__name__)
 
 HISTORY_PATH = DATA_DIR / "post_history.json"
@@ -46,17 +49,18 @@ GENERATORS: dict[str, type[ContentGenerator]] = {
     "ss_pitch_plots": PitchPlotsScreenshot,
     "ss_leaderboard": LeaderboardScreenshot,
     "ss_heat_maps": HeatMapsScreenshot,
+    "pitcher_card": PitcherCardGenerator,
 }
 
 # Weekly rotation: day-of-week → (screenshot_class, text_class)
 # Monday=0 … Sunday=6
 SCHEDULE: dict[int, tuple[type[ContentGenerator], type[ContentGenerator]]] = {
     0: (PitchingSummaryScreenshot, GuessThePitcherGenerator),    # Mon
-    1: (StatcastCardsScreenshot, PitcherSpotlightGenerator),     # Tue
+    1: (PitcherCardGenerator, PitcherSpotlightGenerator),        # Tue  ← pitcher card
     2: (MovementProfileGenerator, ExplainerGenerator),           # Wed
     3: (LeaderboardScreenshot, StatOfDayGenerator),               # Thu
     4: (PitchPlotsScreenshot, ArsenalVsGenerator),               # Fri
-    5: (HeatMapsScreenshot, StatOfDayGenerator),                 # Sat
+    5: (PitcherCardGenerator, StatOfDayGenerator),               # Sat  ← pitcher card
     6: (PitchingSummaryScreenshot, PitcherSpotlightGenerator),   # Sun
 }
 

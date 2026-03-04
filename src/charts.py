@@ -45,6 +45,18 @@ PITCH_COLORS: dict[str, str] = {
 }
 DEFAULT_PITCH_COLOR = "#888888"
 
+# MLB team colours (primary brand colour per team abbreviation)
+TEAM_COLORS: dict[str, str] = {
+    "ARI": "#A71930", "ATL": "#CE1141", "BAL": "#DF4601", "BOS": "#BD3039",
+    "CHC": "#0E3386", "CWS": "#27251F", "CIN": "#C6011F", "CLE": "#00385D",
+    "COL": "#333366", "DET": "#0C2340", "HOU": "#002D62", "KC":  "#004687",
+    "LAA": "#BA0021", "LAD": "#005A9C", "MIA": "#00A3E0", "MIL": "#FFC52F",
+    "MIN": "#002B5C", "NYM": "#002D72", "NYY": "#003087", "OAK": "#003831",
+    "PHI": "#E81828", "PIT": "#FDB827", "SD":  "#2F241D", "SF":  "#FD5A1E",
+    "SEA": "#0C2C56", "STL": "#C41E3A", "TB":  "#092C5C", "TEX": "#003278",
+    "TOR": "#134A8E", "WSH": "#AB0003",
+}
+
 # Pitch-type display names
 PITCH_NAMES: dict[str, str] = {
     "FF": "4-Seam",
@@ -417,4 +429,293 @@ def plot_percentile_rankings(name: str, season_df: "pd.DataFrame") -> Path | Non
 
     except Exception:
         log.warning("plot_percentile_rankings failed for %s", name, exc_info=True)
+        return None
+
+
+# ── Chart 5: Pitcher Card (premium PLV-style card) ───────────────────
+
+# Stats for the left panel — (column, display_label, lower_is_better)
+_CARD_STATS = [
+    ("era", "ERA", True),
+    ("fip", "FIP", True),
+    ("strike_out_percentage", "K%", False),
+    ("walk_percentage", "BB%", True),
+    ("whiff_rate", "Whiff%", False),
+    ("chase_percentage", "Chase%", False),
+    ("stuff_plus", "Stuff+", False),
+    ("pitching_plus", "Pitching+", False),
+]
+
+
+def plot_pitcher_card(
+    name: str,
+    season_df: "pd.DataFrame",
+    pitches_df: "pd.DataFrame",
+    team: str | None = None,
+) -> Path | None:
+    """Render a premium pitcher card (1200×675, dark theme).
+
+    Left panel: season overview stats with color-coded percentile bars.
+    Right panel: per-pitch arsenal breakdown (velo + whiff bars).
+
+    *season_df* is the full Pitch Profiler season DataFrame (for percentile
+    computation).  *pitches_df* is the season pitch-type DataFrame.
+    """
+    try:
+        import pandas as pd
+
+        # ── Locate pitcher row ────────────────────────────────────────
+        name_col = None
+        for c in ("pitcher_name", "player_name", "name"):
+            if c in season_df.columns:
+                name_col = c
+                break
+        if not name_col:
+            return None
+
+        matches = season_df[season_df[name_col] == name]
+        if matches.empty:
+            return None
+        player = matches.iloc[0]
+
+        # ── Team colour accent ────────────────────────────────────────
+        if not team:
+            for tc in ("team", "team_abbreviation", "team_abbrev"):
+                if tc in player.index and player[tc]:
+                    team = str(player[tc]).upper()
+                    break
+        accent = TEAM_COLORS.get(team or "", "#3a86ff")
+
+        # ── Compute percentiles for left panel ────────────────────────
+        stat_labels: list[str] = []
+        stat_values: list[str] = []
+        pctiles: list[float] = []
+        bar_colors: list[str] = []
+
+        for col, label, ascending in _CARD_STATS:
+            if col not in season_df.columns or col not in player.index:
+                continue
+            vals = season_df[col].dropna()
+            if vals.empty:
+                continue
+            raw = player[col]
+            try:
+                raw_f = float(raw)
+            except (TypeError, ValueError):
+                continue
+
+            pctile = (vals < raw_f).sum() / len(vals) * 100
+            if ascending:
+                pctile = 100 - pctile
+
+            stat_labels.append(label)
+            # Display value: percentages ×100
+            if col in ("strike_out_percentage", "walk_percentage",
+                        "whiff_rate", "chase_percentage"):
+                stat_values.append(f"{raw_f * 100:.1f}%")
+            elif col in ("era", "fip"):
+                stat_values.append(f"{raw_f:.2f}")
+            else:
+                stat_values.append(f"{raw_f:.0f}")
+
+            pctiles.append(pctile)
+            if pctile >= 70:
+                bar_colors.append("#3a86ff")   # elite
+            elif pctile >= 30:
+                bar_colors.append("#ffbe0b")   # average
+            else:
+                bar_colors.append("#d62828")   # poor
+
+        if not stat_labels:
+            return None
+
+        # ── Arsenal data (right panel) ────────────────────────────────
+        arsenal_rows: list[dict] = []
+        if pitches_df is not None and not pitches_df.empty:
+            pitch_name_col = None
+            for c in ("pitcher_name", "player_name", "name"):
+                if c in pitches_df.columns:
+                    pitch_name_col = c
+                    break
+            if pitch_name_col and "pitch_type" in pitches_df.columns:
+                prows = pitches_df[pitches_df[pitch_name_col] == name].copy()
+                if not prows.empty:
+                    # Coerce numeric columns so groupby aggregation works
+                    for nc in ("velocity", "whiff_rate", "percentage_thrown"):
+                        if nc in prows.columns:
+                            prows[nc] = pd.to_numeric(prows[nc], errors="coerce")
+
+                    # Aggregate per pitch type (mean velo/whiff, sum usage)
+                    agg_map = {}
+                    if "velocity" in prows.columns:
+                        agg_map["velocity"] = "mean"
+                    if "whiff_rate" in prows.columns:
+                        agg_map["whiff_rate"] = "mean"
+                    if "percentage_thrown" in prows.columns:
+                        agg_map["percentage_thrown"] = "sum"
+
+                    grouped = prows.groupby("pitch_type", as_index=False).agg(
+                        agg_map if agg_map else {"pitch_type": "first"},
+                    )
+
+                    for _, row in grouped.iterrows():
+                        pcode = str(row["pitch_type"])
+                        velo = row.get("velocity", None)
+                        whiff = row.get("whiff_rate", None)
+                        usage = row.get("percentage_thrown", 0)
+                        try:
+                            velo_f = float(velo) if pd.notna(velo) else None
+                        except (TypeError, ValueError):
+                            velo_f = None
+                        try:
+                            whiff_f = float(whiff) * 100 if pd.notna(whiff) else None
+                        except (TypeError, ValueError):
+                            whiff_f = None
+                        try:
+                            usage_f = float(usage) if pd.notna(usage) else 0
+                        except (TypeError, ValueError):
+                            usage_f = 0
+                        color = PITCH_COLORS.get(pcode, DEFAULT_PITCH_COLOR)
+                        display = PITCH_NAMES.get(pcode, pcode)
+                        arsenal_rows.append({
+                            "name": display, "code": pcode, "velo": velo_f,
+                            "whiff": whiff_f, "usage": usage_f, "color": color,
+                        })
+                    arsenal_rows.sort(key=lambda r: r["usage"], reverse=True)
+
+        # ── Build figure ──────────────────────────────────────────────
+        fig = plt.figure(figsize=(FIG_W, FIG_H), dpi=100)
+        fig.set_facecolor(BG_COLOR)
+
+        # ── Accent bar at top ─────────────────────────────────────────
+        accent_ax = fig.add_axes([0, 0.95, 1, 0.05])
+        accent_ax.set_xlim(0, 1)
+        accent_ax.set_ylim(0, 1)
+        accent_ax.add_patch(Rectangle((0, 0), 1, 1, color=accent))
+        accent_ax.axis("off")
+
+        # ── Header ────────────────────────────────────────────────────
+        team_label = f"{team}  •  " if team else ""
+        fig.text(
+            0.04, 0.89, name,
+            fontsize=22, fontweight="bold", color=TEXT_COLOR,
+            ha="left", va="top",
+        )
+        fig.text(
+            0.04, 0.83, f"{team_label}{MLB_SEASON} Season",
+            fontsize=12, color="#aaaaaa",
+            ha="left", va="top",
+        )
+
+        # ── Divider line ──────────────────────────────────────────────
+        div_ax = fig.add_axes([0.03, 0.79, 0.94, 0.003])
+        div_ax.set_xlim(0, 1)
+        div_ax.set_ylim(0, 1)
+        div_ax.add_patch(Rectangle((0, 0), 1, 1, color=GRID_COLOR))
+        div_ax.axis("off")
+
+        # ── Left panel: Season Overview ───────────────────────────────
+        left_ax = fig.add_axes([0.04, 0.12, 0.48, 0.62])
+        left_ax.set_facecolor(BG_COLOR)
+
+        n_stats = len(stat_labels)
+        y_pos = np.arange(n_stats)
+        bars = left_ax.barh(y_pos, pctiles, color=bar_colors, height=0.55,
+                            edgecolor="none")
+        left_ax.set_yticks(y_pos)
+        left_ax.set_yticklabels(stat_labels, fontsize=11, color=TEXT_COLOR)
+        left_ax.set_xlim(0, 105)
+        left_ax.invert_yaxis()
+        left_ax.set_title("SEASON OVERVIEW", fontsize=12, fontweight="bold",
+                          color=TEXT_COLOR, loc="left", pad=8)
+
+        # Hide frame
+        for spine in left_ax.spines.values():
+            spine.set_visible(False)
+        left_ax.tick_params(left=False, bottom=False, labelbottom=False,
+                            colors=TEXT_COLOR)
+        left_ax.set_facecolor(BG_COLOR)
+        left_ax.grid(False)
+
+        # Stat value + percentile labels on each bar
+        for bar, val, pctile in zip(bars, stat_values, pctiles):
+            # Value label inside bar
+            left_ax.text(
+                2, bar.get_y() + bar.get_height() / 2,
+                val, va="center", ha="left",
+                color="white", fontsize=10, fontweight="bold",
+            )
+            # Percentile at end
+            left_ax.text(
+                bar.get_width() + 1.5, bar.get_y() + bar.get_height() / 2,
+                f"{pctile:.0f}th", va="center", ha="left",
+                color=TEXT_COLOR, fontsize=9,
+            )
+
+        # ── Vertical divider ─────────────────────────────────────────
+        vdiv = fig.add_axes([0.56, 0.12, 0.002, 0.65])
+        vdiv.set_xlim(0, 1)
+        vdiv.set_ylim(0, 1)
+        vdiv.add_patch(Rectangle((0, 0), 1, 1, color=GRID_COLOR))
+        vdiv.axis("off")
+
+        # ── Right panel: Arsenal ──────────────────────────────────────
+        if arsenal_rows:
+            right_ax = fig.add_axes([0.60, 0.12, 0.36, 0.62])
+            right_ax.set_facecolor(BG_COLOR)
+            right_ax.set_title("ARSENAL", fontsize=12, fontweight="bold",
+                               color=TEXT_COLOR, loc="left", pad=8)
+
+            max_whiff = max((r["whiff"] for r in arsenal_rows if r["whiff"]),
+                            default=50)
+
+            n_pitches = len(arsenal_rows)
+            # Space pitches evenly in the panel
+            row_height = min(0.9 / max(n_pitches, 1), 0.14)
+
+            for i, pitch in enumerate(arsenal_rows):
+                y = 1.0 - (i + 1) * row_height * 1.1
+                # Pitch name (colored)
+                velo_str = f"  {pitch['velo']:.1f} mph" if pitch["velo"] else ""
+                right_ax.text(
+                    0.02, y, f"{pitch['name']}{velo_str}",
+                    transform=right_ax.transAxes,
+                    fontsize=10, fontweight="bold", color=pitch["color"],
+                    va="center", ha="left",
+                )
+                # Whiff bar
+                if pitch["whiff"] is not None:
+                    bar_width = (pitch["whiff"] / max_whiff) * 0.45
+                    right_ax.add_patch(Rectangle(
+                        (0.55, y - 0.02), bar_width, 0.04,
+                        transform=right_ax.transAxes,
+                        color=pitch["color"], alpha=0.8,
+                    ))
+                    right_ax.text(
+                        0.55 + bar_width + 0.02, y,
+                        f"{pitch['whiff']:.0f}% whiff",
+                        transform=right_ax.transAxes,
+                        fontsize=8, color=TEXT_COLOR, va="center",
+                    )
+
+            right_ax.axis("off")
+
+        # ── Footer ────────────────────────────────────────────────────
+        fig.text(
+            0.5, 0.03,
+            "@TJStatsBot  •  Pitch Profiler Data",
+            fontsize=9, color="#666666",
+            ha="center", va="center",
+        )
+
+        # ── Save ──────────────────────────────────────────────────────
+        safe = name.replace(" ", "_").lower()
+        out = SCREENSHOTS_DIR / f"pitcher_card_{safe}.png"
+        fig.savefig(out, facecolor=fig.get_facecolor(), bbox_inches="tight")
+        plt.close(fig)
+        log.info("Saved pitcher card: %s", out)
+        return out
+
+    except Exception:
+        log.warning("plot_pitcher_card failed for %s", name, exc_info=True)
         return None
