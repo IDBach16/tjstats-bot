@@ -260,6 +260,15 @@
       "tags": [
         "ss_leaderboard"
       ]
+    },
+    {
+      "date": "2026-03-05T19:49:58.714865",
+      "generator": "stat_of_day",
+      "tweet_id": "2029645588954853873",
+      "tags": [
+        "stat_of_day",
+        "walk_percentage"
+      ]
     }
   ]
 }
