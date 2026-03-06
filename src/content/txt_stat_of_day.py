@@ -39,7 +39,7 @@ class StatOfDayGenerator(ContentGenerator):
 
         # Filter to qualified pitchers if IP column exists
         if "innings_pitched" in df.columns:
-            df = df[df["innings_pitched"] >= 20]
+            df = df[df["innings_pitched"] >= 50]
 
         # Pick a random stat that exists in the data
         available = [s for s in STATS if s["col"] in df.columns]

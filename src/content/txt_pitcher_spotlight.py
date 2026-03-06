@@ -149,7 +149,7 @@ class PitcherSpotlightGenerator(ContentGenerator):
 
         # Filter to pitchers with meaningful innings
         if "innings_pitched" in candidates.columns:
-            qualified = candidates[candidates["innings_pitched"] >= 20]
+            qualified = candidates[candidates["innings_pitched"] >= 50]
             if not qualified.empty:
                 candidates = qualified
 

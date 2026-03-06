@@ -26,7 +26,7 @@ class ArsenalVsGenerator(ContentGenerator):
 
         # Filter to qualified pitchers
         if "innings_pitched" in df.columns:
-            qualified = df[df["innings_pitched"] >= 20]
+            qualified = df[df["innings_pitched"] >= 50]
             if not qualified.empty:
                 df = qualified
 
