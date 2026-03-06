@@ -1,4 +1,4 @@
-"""Screenshot generator: TJStats pitch movement / location plots."""
+"""Generator: Pitch plots — local movement profile chart from Pitch Profiler data."""
 
 from __future__ import annotations
 
@@ -6,11 +6,11 @@ import logging
 
 from .base import ContentGenerator, PostContent
 from .._player_pick import pick_player
-from ..screenshot import take_screenshot
-from ..config import HF_SPACES, DEFAULT_HASHTAGS
+from .. import pitch_profiler
+from ..charts import plot_movement_profile
+from ..config import DEFAULT_HASHTAGS
 
 log = logging.getLogger(__name__)
-SPACE = HF_SPACES["pitch_plots"]
 
 
 class PitchPlotsScreenshot(ContentGenerator):
@@ -20,23 +20,23 @@ class PitchPlotsScreenshot(ContentGenerator):
         player = pick_player()
         name = player["name"]
 
-        image = await take_screenshot(
-            url=SPACE["url"],
-            player_name=name,
-            output_name=f"pitch_plots_{name.replace(' ', '_')}",
-            full_page=True,
-        )
+        pitches_df = pitch_profiler.get_season_pitches()
+        if pitches_df.empty:
+            log.warning("No pitch data available")
+            return PostContent(text="")
+
+        image = plot_movement_profile(name, pitches_df)
         if not image:
-            log.warning("Screenshot failed for %s — skipping post", name)
+            log.warning("Movement profile chart failed for %s", name)
             return PostContent(text="")
 
         text = (
-            f"Pitch movement & location plots for {name} "
+            f"Pitch movement profile for {name} "
             f"via @TJStats\n\n{DEFAULT_HASHTAGS}"
         )
         return PostContent(
             text=text,
             image_path=image,
-            alt_text=f"Pitch movement and location plots for {name}",
+            alt_text=f"Pitch movement profile for {name}",
             tags=["ss_pitch_plots", name],
         )
