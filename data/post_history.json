@@ -279,6 +279,24 @@
         "pitching_summary",
         "Tanner Houck"
       ]
+    },
+    {
+      "date": "2026-03-09T19:24:50.973558",
+      "generator": "pitching_summary",
+      "tweet_id": "2031103724131582367",
+      "tags": [
+        "pitching_summary",
+        "Ryan Helsley"
+      ]
+    },
+    {
+      "date": "2026-03-09T19:37:38.349236",
+      "generator": "movement_profile",
+      "tweet_id": "2031107107336978672",
+      "tags": [
+        "movement_profile",
+        "Blake Snell"
+      ]
     }
   ]
 }
