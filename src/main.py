@@ -75,9 +75,16 @@ async def _generate_and_post(generator) -> None:
             content.text, content.image_path, content.alt_text
         )
         # If we also have a video, reply to the main tweet with it
+        # Combine with analysis text if available (spark notes)
         if has_video:
             try:
-                vid_id = poster.post_video_reply(tweet_id, content.video_path)
+                reply_text = ""
+                if content.reply and content.reply.text:
+                    reply_text = content.reply.text
+                    content.reply = None  # consumed — don't post again below
+                vid_id = poster.post_video_reply(
+                    tweet_id, content.video_path, text=reply_text
+                )
                 log.info("Posted video reply — tweet %s", vid_id)
             except Exception:
                 log.warning("Video reply failed", exc_info=True)
@@ -89,10 +96,12 @@ async def _generate_and_post(generator) -> None:
     record_post(generator.name, tweet_id, content.tags)
     log.info("Done — tweet %s", tweet_id)
 
-    # Handle delayed reply (e.g. Guess the Pitcher reveal)
+    # Handle reply (delayed for reveals, immediate for analysis)
     if content.reply and not DRY_RUN:
-        log.info("Waiting 5 minutes before posting reply...")
-        await asyncio.sleep(300)
+        is_reveal = "analysis" not in (content.reply.tags or [])
+        if is_reveal:
+            log.info("Waiting 5 minutes before posting reply...")
+            await asyncio.sleep(300)
         reply = content.reply
         try:
             reply_id = poster.post_reply(

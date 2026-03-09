@@ -86,7 +86,7 @@ def post_reply(
     return tweet_id
 
 
-def post_video_reply(in_reply_to: str, video_path: Path | str) -> str:
+def post_video_reply(in_reply_to: str, video_path: Path | str, text: str = "") -> str:
     """Upload video via v1.1 chunked upload and reply to a tweet. Returns reply tweet ID."""
     v1 = _get_v1_api()
     media = v1.chunked_upload(
@@ -97,7 +97,7 @@ def post_video_reply(in_reply_to: str, video_path: Path | str) -> str:
 
     client = _get_v2_client()
     resp = client.create_tweet(
-        text="",
+        text=text,
         media_ids=[media.media_id],
         in_reply_to_tweet_id=in_reply_to,
     )
