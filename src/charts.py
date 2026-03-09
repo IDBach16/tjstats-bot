@@ -1570,7 +1570,7 @@ def plot_pitching_summary(
         # ── Footer ────────────────────────────────────────────────────
         ax_footer = fig.add_subplot(gs[-1, 1:7])
         ax_footer.axis("off")
-        ax_footer.text(0, 1, "By: @TJStatsBot", ha="left", va="top",
+        ax_footer.text(0, 1, "By: @BachTalk2", ha="left", va="top",
                        fontsize=22, fontweight="bold")
         ax_footer.text(0.5, 1,
                        "Colour Coding Compares to League Average By Pitch",
