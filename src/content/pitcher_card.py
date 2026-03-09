@@ -21,6 +21,7 @@ class PitcherCardGenerator(ContentGenerator):
         player_info = pick_player()
         name = player_info["name"]
         team = player_info.get("team")
+        player_id = player_info.get("id")
 
         season_df = pitch_profiler.get_season_pitchers()
         if season_df.empty:
@@ -30,7 +31,8 @@ class PitcherCardGenerator(ContentGenerator):
         pitches_df = pitch_profiler.get_season_pitches()
 
         # Render the card
-        image_path = plot_pitcher_card(name, season_df, pitches_df, team=team)
+        image_path = plot_pitcher_card(name, season_df, pitches_df, team=team,
+                                       player_id=player_id)
         if not image_path:
             log.warning("Pitcher card rendering failed for %s", name)
             return PostContent(text="")

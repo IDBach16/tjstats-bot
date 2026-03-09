@@ -7,6 +7,8 @@ on:
     - cron: '0 15 * * *'
     # 2 PM EST (UTC-5) = 19:00 UTC — text post
     - cron: '0 19 * * *'
+    # 5 PM EST (UTC-5) = 22:00 UTC — pitching summary
+    - cron: '0 22 * * *'
   workflow_dispatch:
     inputs:
       slot:
@@ -32,6 +34,8 @@ on:
           - explainer
           - arsenal_vs
           - movement_profile
+          - pitching_summary
+          - pitcher_card
           - ss_pitching_summary
           - ss_statcast_cards
           - ss_pitch_plots
@@ -63,10 +67,22 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "slot=${{ inputs.slot }}" >> $GITHUB_OUTPUT
-          elif [ "$(date -u +%H)" -lt 17 ]; then
-            echo "slot=screenshot" >> $GITHUB_OUTPUT
+            echo "generator=${{ inputs.generator }}" >> $GITHUB_OUTPUT
           else
-            echo "slot=text" >> $GITHUB_OUTPUT
+            HOUR=$(date -u +%H)
+            if [ "$HOUR" -ge 21 ]; then
+              # 5 PM EST (22:00 UTC) — pitching summary
+              echo "slot=screenshot" >> $GITHUB_OUTPUT
+              echo "generator=pitching_summary" >> $GITHUB_OUTPUT
+            elif [ "$HOUR" -lt 17 ]; then
+              # 10 AM EST (15:00 UTC) — scheduled screenshot
+              echo "slot=screenshot" >> $GITHUB_OUTPUT
+              echo "generator=" >> $GITHUB_OUTPUT
+            else
+              # 2 PM EST (19:00 UTC) — scheduled text
+              echo "slot=text" >> $GITHUB_OUTPUT
+              echo "generator=" >> $GITHUB_OUTPUT
+            fi
           fi
 
       - name: Run bot
@@ -78,9 +94,10 @@ jobs:
           X_BEARER_TOKEN: ${{ secrets.X_BEARER_TOKEN }}
           PITCH_PROFILER_API_KEY: ${{ secrets.PITCH_PROFILER_API_KEY }}
         run: |
-          ARGS="--slot ${{ steps.slot.outputs.slot }}"
-          if [ -n "${{ inputs.generator }}" ]; then
-            ARGS="--generator ${{ inputs.generator }}"
+          if [ -n "${{ steps.slot.outputs.generator }}" ]; then
+            ARGS="--generator ${{ steps.slot.outputs.generator }}"
+          else
+            ARGS="--slot ${{ steps.slot.outputs.slot }}"
           fi
           python -m src.main $ARGS
 

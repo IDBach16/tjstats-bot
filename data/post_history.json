@@ -245,76 +245,21 @@
       ]
     },
     {
-      "date": "2026-03-06T14:56:29.221853",
-      "generator": "ss_pitch_plots",
-      "tweet_id": "2029934144437026925",
-      "tags": [
-        "ss_pitch_plots",
-        "Paul Skenes"
-      ]
-    },
-    {
-      "date": "2026-03-06T15:25:40.696086",
-      "generator": "ss_pitch_plots",
-      "tweet_id": "2029941490277892439",
-      "tags": [
-        "ss_pitch_plots",
-        "Tarik Skubal"
-      ]
-    },
-    {
-      "date": "2026-03-06T19:27:45.458991",
-      "generator": "arsenal_vs",
-      "tweet_id": "2030002388644626869",
-      "tags": [
-        "arsenal_vs",
-        "Hunter Brown",
-        "Devin Williams"
-      ]
-    },
-    {
-      "date": "2026-03-07T15:11:54.619429",
+      "date": "2026-03-09T18:26:27.623748",
       "generator": "pitcher_card",
-      "tweet_id": "2030300413442896161",
+      "tweet_id": "2031089199076565155",
       "tags": [
         "pitcher_card",
-        "Spencer Strider"
+        "Nick Martinez"
       ]
     },
     {
-      "date": "2026-03-08T15:14:50.791940",
-      "generator": "ss_pitching_summary",
-      "tweet_id": "2030663539375874258",
+      "date": "2026-03-09T18:55:41.735716",
+      "generator": "pitching_summary",
+      "tweet_id": "dry-run-0",
       "tags": [
-        "ss_pitching_summary",
-        "Sonny Gray"
-      ]
-    },
-    {
-      "date": "2026-03-08T19:16:37.979485",
-      "generator": "pitcher_spotlight",
-      "tweet_id": "2030724359476924838",
-      "tags": [
-        "pitcher_spotlight",
-        "Garrett Crochet"
-      ]
-    },
-    {
-      "date": "2026-03-09T15:46:58.914484",
-      "generator": "ss_pitching_summary",
-      "tweet_id": "2031034014023221616",
-      "tags": [
-        "ss_pitching_summary",
-        "Zack Wheeler"
-      ]
-    },
-    {
-      "date": "2026-03-09T19:33:42.494694",
-      "generator": "guess_pitcher",
-      "tweet_id": "2031091072944976099",
-      "tags": [
-        "guess_pitcher",
-        "Blake Snell"
+        "pitching_summary",
+        "Cole Ragans"
       ]
     }
   ]
