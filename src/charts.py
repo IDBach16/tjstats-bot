@@ -106,6 +106,95 @@ def _apply_dark_theme(ax: plt.Axes, fig: plt.Figure) -> None:
     ax.title.set_color(TEXT_COLOR)
 
 
+# ── Clean White Theme ────────────────────────────────────────────────
+WHITE_BG = "#ffffff"
+WHITE_TEXT = "#222222"
+WHITE_MUTED = "#888888"
+WHITE_GRID = "#d0d0d0"
+FOOTER_LEFT = "By: @BachTalk1"
+FOOTER_RIGHT = "Data: Pitch Profiler"
+
+
+def _apply_white_theme(ax: plt.Axes) -> None:
+    """Apply clean white theme to an axes."""
+    ax.set_facecolor(WHITE_BG)
+    ax.tick_params(colors=WHITE_TEXT, which="both", labelsize=9)
+    for spine in ("top", "right"):
+        ax.spines[spine].set_visible(False)
+    for spine in ("bottom", "left"):
+        ax.spines[spine].set_color(WHITE_GRID)
+    ax.xaxis.label.set_color(WHITE_TEXT)
+    ax.yaxis.label.set_color(WHITE_TEXT)
+    ax.grid(True, color=WHITE_GRID, linewidth=0.5, alpha=0.4)
+
+
+def _draw_confidence_ellipse(ax, x, y, color, n_std=1.5):
+    """Draw a covariance confidence ellipse on ax."""
+    from matplotlib.patches import Ellipse as _Ellipse
+    import matplotlib.transforms as _transforms
+
+    x = np.asarray(x, dtype=float)
+    y = np.asarray(y, dtype=float)
+    x = x[~np.isnan(x)]
+    y = y[~np.isnan(y)]
+    n = min(len(x), len(y))
+    if n < 5:
+        return
+    x, y = x[:n], y[:n]
+
+    try:
+        cov = np.cov(x, y)
+        pearson = cov[0, 1] / np.sqrt(cov[0, 0] * cov[1, 1])
+        ell_radius_x = np.sqrt(1 + pearson)
+        ell_radius_y = np.sqrt(1 - pearson)
+        ellipse = _Ellipse(
+            (0, 0), width=ell_radius_x * 2, height=ell_radius_y * 2,
+            facecolor=color, alpha=0.08, edgecolor=color,
+            linewidth=1.5, linestyle="--",
+        )
+        scale_x = np.sqrt(cov[0, 0]) * n_std
+        scale_y = np.sqrt(cov[1, 1]) * n_std
+        transf = (_transforms.Affine2D()
+                  .rotate_deg(45)
+                  .scale(scale_x, scale_y)
+                  .translate(x.mean(), y.mean()))
+        ellipse.set_transform(transf + ax.transData)
+        ax.add_patch(ellipse)
+    except (ValueError, np.linalg.LinAlgError):
+        pass
+
+
+def _draw_header(fig, name: str, player_id=None, subtitle="",
+                 accent="#3a86ff"):
+    """Draw a header strip at the top of a white-themed figure."""
+    # Player name
+    fig.text(0.5, 0.95, name, fontsize=22, fontweight="bold",
+             color=WHITE_TEXT, ha="center", va="top",
+             fontfamily="sans-serif")
+    if subtitle:
+        fig.text(0.5, 0.91, subtitle, fontsize=12, color=WHITE_MUTED,
+                 ha="center", va="top", fontfamily="sans-serif")
+    # Headshot (if available)
+    if player_id:
+        try:
+            headshot = _fetch_headshot(player_id, accent=accent)
+            if headshot is not None:
+                ax_hs = fig.add_axes([0.02, 0.86, 0.10, 0.13])
+                ax_hs.imshow(headshot)
+                ax_hs.axis("off")
+        except Exception:
+            pass
+
+
+def _draw_footer(fig):
+    """Draw a footer strip at the bottom of a white-themed figure."""
+    fig.text(0.08, 0.02, FOOTER_LEFT, fontsize=11, fontweight="bold",
+             color=WHITE_TEXT, ha="left", va="bottom",
+             fontfamily="sans-serif")
+    fig.text(0.92, 0.02, FOOTER_RIGHT, fontsize=11, color=WHITE_MUTED,
+             ha="right", va="bottom", fontfamily="sans-serif")
+
+
 # ── Data fetcher ─────────────────────────────────────────────────────────
 
 def fetch_statcast_pitches(pitcher_id: int, lookback: int = 60) -> "pd.DataFrame | None":
@@ -179,29 +268,42 @@ def plot_pitch_movement(pitcher_id: int, name: str) -> Path | None:
         df["hb"] = df["pfx_x"] * 12
         df["ivb"] = df["pfx_z"] * 12
 
-        fig, ax = plt.subplots(figsize=(FIG_W, FIG_H), dpi=100)
-        _apply_dark_theme(ax, fig)
+        fig = plt.figure(figsize=(12, 8), dpi=150)
+        fig.set_facecolor(WHITE_BG)
+
+        ax = fig.add_axes([0.08, 0.10, 0.84, 0.72])
+        _apply_white_theme(ax)
 
         pitch_types = sorted(df["pitch_type"].unique())
         for pt in pitch_types:
+            if pt in _NOISE_PITCHES:
+                continue
             subset = df[df["pitch_type"] == pt]
-            color = PITCH_COLORS.get(pt, DEFAULT_PITCH_COLOR)
-            label = PITCH_NAMES.get(pt, pt)
+            color = _TJ_COLOUR.get(pt, DEFAULT_PITCH_COLOR)
+            label = _TJ_NAME.get(pt, pt)
             ax.scatter(
                 subset["hb"], subset["ivb"],
-                c=color, label=label, alpha=0.6, s=30, edgecolors="none",
+                c=color, label=label, alpha=0.5, s=30, edgecolors="none",
+                zorder=3,
+            )
+            _draw_confidence_ellipse(
+                ax, subset["hb"].values, subset["ivb"].values, color
             )
 
-        ax.axhline(0, color=GRID_COLOR, linewidth=0.8)
-        ax.axvline(0, color=GRID_COLOR, linewidth=0.8)
-        ax.set_xlabel("Horizontal Break (in)", fontsize=11)
-        ax.set_ylabel("Induced Vertical Break (in)", fontsize=11)
-        ax.set_title(f"{name} — Pitch Movement", fontsize=14, fontweight="bold")
+        ax.axhline(0, color="#b0b0b0", linewidth=0.8, linestyle="--", alpha=0.6)
+        ax.axvline(0, color="#b0b0b0", linewidth=0.8, linestyle="--", alpha=0.6)
+        ax.set_xlabel("Horizontal Break (in)", fontsize=12)
+        ax.set_ylabel("Induced Vertical Break (in)", fontsize=12)
+        ax.set_xlim(-25, 25)
+        ax.set_ylim(-25, 25)
         ax.legend(
-            loc="upper right", fontsize=9, framealpha=0.3,
-            facecolor=BG_COLOR, edgecolor=GRID_COLOR, labelcolor=TEXT_COLOR,
+            loc="upper right", fontsize=9, framealpha=0.9,
+            facecolor="white", edgecolor="#cccccc",
         )
-        ax.grid(True, color=GRID_COLOR, linewidth=0.5, alpha=0.5)
+
+        _draw_header(fig, name, player_id=pitcher_id,
+                     subtitle="Pitch Movement (Statcast)")
+        _draw_footer(fig)
 
         out = SCREENSHOTS_DIR / f"movement_{pitcher_id}.png"
         fig.savefig(out, bbox_inches="tight", facecolor=fig.get_facecolor())
@@ -235,38 +337,67 @@ def plot_pitch_locations(pitcher_id: int, name: str, *, anonymize: bool = False)
         if df.empty:
             return None
 
-        fig, ax = plt.subplots(figsize=(FIG_W, FIG_H), dpi=100)
-        _apply_dark_theme(ax, fig)
+        fig = plt.figure(figsize=(9, 10), dpi=150)
+        fig.set_facecolor(WHITE_BG)
 
-        # Strike zone rectangle (MLB rule-book zone, approximate)
-        sz = Rectangle((-0.83, 1.5), 1.66, 2.0, linewidth=2,
-                        edgecolor=TEXT_COLOR, facecolor="none", linestyle="--")
+        ax = fig.add_axes([0.10, 0.08, 0.80, 0.72])
+        _apply_white_theme(ax)
+
+        # Strike zone — solid outer box + 3×3 inner grid
+        sz_left, sz_bot, sz_w, sz_h = -0.83, 1.5, 1.66, 2.0
+        sz = Rectangle((sz_left, sz_bot), sz_w, sz_h, linewidth=2.5,
+                        edgecolor="#333333", facecolor="none")
         ax.add_patch(sz)
+        for i in range(1, 3):
+            ax.plot([sz_left + i * sz_w / 3, sz_left + i * sz_w / 3],
+                    [sz_bot, sz_bot + sz_h], color="#cccccc", linewidth=0.8)
+            ax.plot([sz_left, sz_left + sz_w],
+                    [sz_bot + i * sz_h / 3, sz_bot + i * sz_h / 3],
+                    color="#cccccc", linewidth=0.8)
+
+        # Home plate pentagon
+        hp_w = 0.83
+        hp_pts = np.array([
+            [-hp_w, 0.2], [hp_w, 0.2], [hp_w, 0.35],
+            [0, 0.5], [-hp_w, 0.35], [-hp_w, 0.2]
+        ])
+        ax.plot(hp_pts[:, 0], hp_pts[:, 1], color="#555555", linewidth=1.5)
 
         pitch_types = sorted(df["pitch_type"].unique())
         for pt in pitch_types:
+            if pt in _NOISE_PITCHES:
+                continue
             subset = df[df["pitch_type"] == pt]
-            color = PITCH_COLORS.get(pt, DEFAULT_PITCH_COLOR)
-            label = PITCH_NAMES.get(pt, pt)
+            color = _TJ_COLOUR.get(pt, DEFAULT_PITCH_COLOR)
+            label = _TJ_NAME.get(pt, pt)
             ax.scatter(
                 subset["plate_x"], subset["plate_z"],
-                c=color, label=label, alpha=0.5, s=25, edgecolors="none",
+                c=color, label=label, alpha=0.45, s=28, edgecolors="none",
+                zorder=3,
             )
+            if not anonymize:
+                _draw_confidence_ellipse(
+                    ax, subset["plate_x"].values, subset["plate_z"].values,
+                    color, n_std=1.5,
+                )
 
-        title = "Mystery Pitcher — Pitch Locations" if anonymize else f"{name} — Pitch Locations"
-        ax.set_title(title, fontsize=14, fontweight="bold")
-        ax.set_xlabel("Horizontal (ft from center)", fontsize=11)
-        ax.set_ylabel("Height (ft)", fontsize=11)
+        ax.set_xlabel("Horizontal (ft from center)", fontsize=12)
+        ax.set_ylabel("Height (ft)", fontsize=12)
         ax.set_xlim(-2.5, 2.5)
         ax.set_ylim(0, 5)
         ax.set_aspect("equal")
-        ax.grid(True, color=GRID_COLOR, linewidth=0.5, alpha=0.5)
 
         if not anonymize:
             ax.legend(
-                loc="upper right", fontsize=9, framealpha=0.3,
-                facecolor=BG_COLOR, edgecolor=GRID_COLOR, labelcolor=TEXT_COLOR,
+                loc="upper right", fontsize=9, framealpha=0.9,
+                facecolor="white", edgecolor="#cccccc",
             )
+
+        display_name = "Mystery Pitcher" if anonymize else name
+        pid = None if anonymize else pitcher_id
+        _draw_header(fig, display_name, player_id=pid,
+                     subtitle="Pitch Locations (Statcast)")
+        _draw_footer(fig)
 
         suffix = "anon" if anonymize else str(pitcher_id)
         out = SCREENSHOTS_DIR / f"locations_{suffix}.png"
@@ -297,51 +428,69 @@ def plot_pitch_heatmap(pitcher_id: int, name: str) -> Path | None:
         if df.empty:
             return None
 
-        pitch_types = sorted(df["pitch_type"].unique())
+        pitch_types = [pt for pt in sorted(df["pitch_type"].unique())
+                       if pt not in _NOISE_PITCHES]
         n = len(pitch_types)
         if n == 0:
             return None
 
         cols = min(n, 4)
         rows = (n + cols - 1) // cols
-        fig, axes = plt.subplots(rows, cols, figsize=(FIG_W, FIG_H), dpi=100,
+        fig_h = 3.5 * rows + 2.5
+        fig, axes = plt.subplots(rows, cols, figsize=(12, fig_h), dpi=150,
                                   squeeze=False)
-        fig.set_facecolor(BG_COLOR)
-        fig.suptitle(f"{name} — Pitch Heatmaps", fontsize=14,
-                      fontweight="bold", color=TEXT_COLOR, y=0.98)
+        fig.set_facecolor(WHITE_BG)
 
         for idx, pt in enumerate(pitch_types):
             r, c = divmod(idx, cols)
             ax = axes[r][c]
-            ax.set_facecolor(BG_COLOR)
+            ax.set_facecolor(WHITE_BG)
             subset = df[df["pitch_type"] == pt]
+            color = _TJ_COLOUR.get(pt, DEFAULT_PITCH_COLOR)
+            label = _TJ_NAME.get(pt, pt)
 
+            # Per-pitch colormap: white → pitch color
+            from matplotlib.colors import LinearSegmentedColormap as _LSC
+            cmap = _LSC.from_list("", ["#ffffff", color])
             ax.hexbin(
                 subset["plate_x"], subset["plate_z"],
-                gridsize=15, cmap="YlOrRd", mincnt=1, extent=(-2.5, 2.5, 0, 5),
+                gridsize=15, cmap=cmap, mincnt=1,
+                extent=(-2.5, 2.5, 0, 5), alpha=0.85,
             )
 
             # Strike zone
-            sz = Rectangle((-0.83, 1.5), 1.66, 2.0, linewidth=1.5,
-                            edgecolor=TEXT_COLOR, facecolor="none", linestyle="--")
+            sz = Rectangle((-0.83, 1.5), 1.66, 2.0, linewidth=2,
+                            edgecolor="#333333", facecolor="none")
             ax.add_patch(sz)
 
-            label = PITCH_NAMES.get(pt, pt)
-            color = PITCH_COLORS.get(pt, DEFAULT_PITCH_COLOR)
-            ax.set_title(label, fontsize=10, fontweight="bold", color=color)
+            ax.set_title(label, fontsize=12, fontweight="bold", color=color)
             ax.set_xlim(-2.5, 2.5)
             ax.set_ylim(0, 5)
             ax.set_aspect("equal")
-            ax.tick_params(colors=TEXT_COLOR, labelsize=7)
+            ax.tick_params(labelsize=7, colors="#555555")
             for spine in ax.spines.values():
-                spine.set_color(GRID_COLOR)
+                spine.set_color(WHITE_GRID)
+
+            # Pitch count
+            ax.text(0.95, 0.95, f"n={len(subset)}", transform=ax.transAxes,
+                    fontsize=8, color=WHITE_MUTED, ha="right", va="top")
+
+            # Hide inner tick labels
+            if c > 0:
+                ax.set_yticklabels([])
+            if r < rows - 1:
+                ax.set_xticklabels([])
 
         # Hide unused subplots
         for idx in range(n, rows * cols):
             r, c = divmod(idx, cols)
             axes[r][c].set_visible(False)
 
-        fig.tight_layout(rect=[0, 0, 1, 0.94])
+        fig.subplots_adjust(top=0.85, bottom=0.08, hspace=0.3, wspace=0.15)
+        _draw_header(fig, name, player_id=pitcher_id,
+                     subtitle="Pitch Location Heatmaps")
+        _draw_footer(fig)
+
         out = SCREENSHOTS_DIR / f"heatmap_{pitcher_id}.png"
         fig.savefig(out, bbox_inches="tight", facecolor=fig.get_facecolor())
         plt.close(fig)
@@ -369,7 +518,8 @@ _PCTILE_STATS = [
 ]
 
 
-def plot_percentile_rankings(name: str, season_df: "pd.DataFrame") -> Path | None:
+def plot_percentile_rankings(name: str, season_df: "pd.DataFrame",
+                             player_id: int | None = None) -> Path | None:
     """Horizontal bar chart showing a pitcher's percentile rank among peers.
 
     *season_df* should be the full Pitch Profiler season DataFrame so
@@ -391,9 +541,14 @@ def plot_percentile_rankings(name: str, season_df: "pd.DataFrame") -> Path | Non
             return None
         player = matches.iloc[0]
 
+        if player_id is None:
+            player_id = player.get("pitcher_id") or player.get("player_id")
+            if player_id is not None:
+                player_id = int(player_id)
+
         labels: list[str] = []
         percentiles: list[float] = []
-        colors: list[str] = []
+        raw_values: list[str] = []
 
         for col, label, ascending in _PCTILE_STATS:
             if col not in season_df.columns or col not in player.index:
@@ -406,38 +561,66 @@ def plot_percentile_rankings(name: str, season_df: "pd.DataFrame") -> Path | Non
                 pctile = 100 - pctile
             labels.append(label)
             percentiles.append(pctile)
-            # Color: red (<30), yellow (30-70), blue (>70)
-            if pctile >= 70:
-                colors.append("#3a86ff")
-            elif pctile >= 30:
-                colors.append("#ffbe0b")
+            # Format raw value
+            v = float(player[col])
+            if col in ("strike_out_percentage", "walk_percentage",
+                        "whiff_rate", "chase_percentage", "barrel_percentage"):
+                raw_values.append(f"{v * 100:.1f}%")
+            elif col in ("era", "fip"):
+                raw_values.append(f"{v:.2f}")
             else:
-                colors.append("#d62828")
+                raw_values.append(f"{v:.0f}")
 
         if not labels:
             return None
 
-        fig, ax = plt.subplots(figsize=(FIG_W, FIG_H), dpi=100)
-        _apply_dark_theme(ax, fig)
+        n_bars = len(labels)
+        fig_h = max(5.5, 1.0 * n_bars + 3.5)
+        fig = plt.figure(figsize=(10, fig_h), dpi=150)
+        fig.set_facecolor(WHITE_BG)
 
-        y_pos = np.arange(len(labels))
-        bars = ax.barh(y_pos, percentiles, color=colors, height=0.6, edgecolor="none")
+        ax = fig.add_axes([0.18, 0.10, 0.72, 0.68])
+        ax.set_facecolor(WHITE_BG)
+        for spine in ax.spines.values():
+            spine.set_visible(False)
+        ax.tick_params(left=False, bottom=False, labelbottom=False)
+        ax.set_xlim(0, 100)
+
+        y_pos = np.arange(n_bars)
+        bar_h = 0.55
+
+        for i, (label, pctile, raw) in enumerate(
+                zip(labels, percentiles, raw_values)):
+            color = _pctile_color(pctile)
+
+            # Gray track
+            ax.barh(i, 100, height=bar_h, color="#e8e8e8",
+                    edgecolor="none", zorder=1)
+            # Filled bar
+            ax.barh(i, pctile, height=bar_h, color=color,
+                    edgecolor="none", zorder=2)
+
+            # Stat label (left)
+            ax.text(-2, i, label, ha="right", va="center",
+                    fontsize=12, fontweight="bold", color=WHITE_TEXT)
+
+            # Raw value inside bar
+            val_x = max(pctile / 2, 5)
+            val_color = "white" if pctile > 25 else WHITE_TEXT
+            ax.text(val_x, i, raw, ha="center", va="center",
+                    fontsize=10, fontweight="bold", color=val_color, zorder=3)
+
+            # Percentile rank (right)
+            ax.text(102, i, f"{pctile:.0f}th", ha="left", va="center",
+                    fontsize=11, fontweight="bold", color=color)
 
         ax.set_yticks(y_pos)
-        ax.set_yticklabels(labels, fontsize=11)
-        ax.set_xlim(0, 100)
-        ax.set_xlabel("Percentile", fontsize=11)
-        ax.set_title(f"{name} — Percentile Rankings", fontsize=14, fontweight="bold")
+        ax.set_yticklabels([""] * n_bars)
         ax.invert_yaxis()
-        ax.grid(True, axis="x", color=GRID_COLOR, linewidth=0.5, alpha=0.5)
 
-        # Add percentile values at the end of each bar
-        for bar, pctile in zip(bars, percentiles):
-            ax.text(
-                bar.get_width() + 1.5, bar.get_y() + bar.get_height() / 2,
-                f"{pctile:.0f}", va="center", ha="left",
-                color=TEXT_COLOR, fontsize=10, fontweight="bold",
-            )
+        _draw_header(fig, name, player_id=player_id,
+                     subtitle="Percentile Rankings (vs. Qualified Pitchers)")
+        _draw_footer(fig)
 
         out = SCREENSHOTS_DIR / f"percentile_{name.replace(' ', '_').lower()}.png"
         fig.savefig(out, bbox_inches="tight", facecolor=fig.get_facecolor())
@@ -452,7 +635,8 @@ def plot_percentile_rankings(name: str, season_df: "pd.DataFrame") -> Path | Non
 
 # ── Chart 5: Movement Profile (HB × IVB arsenal scatter) ─────────────
 
-def plot_movement_profile(name: str, pitches_df: "pd.DataFrame") -> Path | None:
+def plot_movement_profile(name: str, pitches_df: "pd.DataFrame",
+                          player_id: int | None = None) -> Path | None:
     """Arsenal movement profile — HB vs IVB scatter from Pitch Profiler data.
 
     Each pitch type is one marker, sized by usage, colored by pitch type,
@@ -477,6 +661,22 @@ def plot_movement_profile(name: str, pitches_df: "pd.DataFrame") -> Path | None:
         if not needed.issubset(prows.columns):
             return None
 
+        # Detect handedness for arm/glove side labels
+        is_lhp = False
+        if "p_throws" in prows.columns:
+            hand = str(prows["p_throws"].iloc[0]).upper()
+            is_lhp = hand == "L"
+
+        # Get player_id from data if not provided
+        if player_id is None:
+            for id_col in ("pitcher_id", "player_id"):
+                if id_col in prows.columns:
+                    try:
+                        player_id = int(prows[id_col].iloc[0])
+                    except (TypeError, ValueError):
+                        pass
+                    break
+
         # Coerce numeric
         for nc in ("hb", "ivb", "velocity", "percentage_thrown"):
             if nc in prows.columns:
@@ -494,43 +694,63 @@ def plot_movement_profile(name: str, pitches_df: "pd.DataFrame") -> Path | None:
         if grouped.empty:
             return None
 
-        fig, ax = plt.subplots(figsize=(FIG_W, FIG_H), dpi=100)
-        _apply_dark_theme(ax, fig)
+        fig = plt.figure(figsize=(12, 9), dpi=150)
+        fig.set_facecolor(WHITE_BG)
+
+        ax = fig.add_axes([0.10, 0.10, 0.80, 0.70])
+        _apply_white_theme(ax)
 
         for _, row in grouped.iterrows():
             pt = str(row["pitch_type"])
+            if pt in _NOISE_PITCHES:
+                continue
             hb = float(row["hb"])
             ivb = float(row["ivb"])
-            color = PITCH_COLORS.get(pt, DEFAULT_PITCH_COLOR)
-            label = PITCH_NAMES.get(pt, pt)
+            color = _TJ_COLOUR.get(pt, DEFAULT_PITCH_COLOR)
+            label = _TJ_NAME.get(pt, pt)
 
-            # Marker size based on usage (min 80, max 400)
+            # Marker size based on usage (min 150, max 600)
             usage = float(row.get("percentage_thrown", 0.1) or 0.1)
-            size = max(80, min(400, usage * 800))
+            size = max(150, min(600, usage * 1200))
 
             ax.scatter(hb, ivb, c=color, s=size, alpha=0.85,
-                       edgecolors="white", linewidths=0.8, zorder=3)
+                       edgecolors="black", linewidths=0.8, zorder=3)
 
-            # Label: pitch name + velocity
+            # Label with background box
             velo_str = ""
             if "velocity" in row.index and pd.notna(row["velocity"]):
                 velo_str = f" ({float(row['velocity']):.1f})"
             ax.annotate(
                 f"{label}{velo_str}", (hb, ivb),
-                textcoords="offset points", xytext=(8, 8),
-                fontsize=9, fontweight="bold", color=color,
+                textcoords="offset points", xytext=(10, 10),
+                fontsize=10, fontweight="bold", color=color,
+                bbox=dict(facecolor="white", edgecolor="none",
+                          alpha=0.75, pad=1.5),
+                zorder=4,
             )
 
-        ax.axhline(0, color=GRID_COLOR, linewidth=0.8)
-        ax.axvline(0, color=GRID_COLOR, linewidth=0.8)
-        ax.set_xlabel("Horizontal Break (in)", fontsize=11)
-        ax.set_ylabel("Induced Vertical Break (in)", fontsize=11)
-        ax.set_title(f"{name} — Movement Profile", fontsize=14, fontweight="bold")
-        ax.grid(True, color=GRID_COLOR, linewidth=0.5, alpha=0.5)
+        ax.axhline(0, color="#b0b0b0", linewidth=0.8, linestyle="--", alpha=0.5)
+        ax.axvline(0, color="#b0b0b0", linewidth=0.8, linestyle="--", alpha=0.5)
+        ax.set_xlabel("Horizontal Break (in)", fontsize=12, fontweight="bold")
+        ax.set_ylabel("Induced Vertical Break (in)", fontsize=12, fontweight="bold")
+        ax.set_xlim(-25, 25)
+        ax.set_ylim(-25, 25)
 
-        # Footer
-        fig.text(0.5, 0.01, "@TJStatsBot  •  Pitch Profiler Data",
-                 fontsize=9, color="#666666", ha="center")
+        # Arm side / Glove side labels
+        arm_side = "← Arm Side" if not is_lhp else "Arm Side →"
+        glove_side = "Glove Side →" if not is_lhp else "← Glove Side"
+        ax.text(0.02, 0.02, glove_side if is_lhp else arm_side,
+                transform=ax.transAxes, fontsize=9, color=WHITE_MUTED,
+                ha="left", va="bottom",
+                bbox=dict(facecolor="white", alpha=0.7, edgecolor="none"))
+        ax.text(0.98, 0.02, arm_side if is_lhp else glove_side,
+                transform=ax.transAxes, fontsize=9, color=WHITE_MUTED,
+                ha="right", va="bottom",
+                bbox=dict(facecolor="white", alpha=0.7, edgecolor="none"))
+
+        _draw_header(fig, name, player_id=player_id,
+                     subtitle="Movement Profile (Pitch Profiler)")
+        _draw_footer(fig)
 
         safe = name.replace(" ", "_").lower()
         out = SCREENSHOTS_DIR / f"movement_profile_{safe}.png"
