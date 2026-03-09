@@ -9,11 +9,74 @@ from .base import ContentGenerator, PostContent
 from ._helpers import build_stat_block, get_name
 from .. import pitch_profiler
 from .._player_pick import pick_player
-from ..config import DEFAULT_HASHTAGS
+from ..analysis import generate_analysis
+from ..config import DEFAULT_HASHTAGS, MLB_SEASON
 from ..charts import plot_pitch_heatmap
 from ..video_clips import get_pitcher_clip
 
 log = logging.getLogger(__name__)
+
+
+def _extract_comparison_stats(player_a, name_a: str, player_b, name_b: str) -> str | None:
+    """Generate a comparison analysis for two pitchers."""
+    from ..analysis import _get_client
+
+    client = _get_client()
+    if not client:
+        return None
+
+    def _row_stats(p) -> dict[str, str]:
+        stats = {}
+        for col, label, fmt in [
+            ("era", "ERA", ".2f"), ("fip", "FIP", ".2f"),
+            ("strike_out_percentage", "K%", None), ("whiff_rate", "Whiff%", None),
+            ("stuff_plus", "Stuff+", ".0f"),
+        ]:
+            if col in p.index:
+                try:
+                    val = float(p[col])
+                    stats[label] = format(val, fmt) if fmt else f"{val * 100:.1f}%"
+                except (TypeError, ValueError):
+                    pass
+        return stats
+
+    stats_a = _row_stats(player_a)
+    stats_b = _row_stats(player_b)
+
+    if not stats_a and not stats_b:
+        return None
+
+    stats_text_a = "\n".join(f"  {k}: {v}" for k, v in stats_a.items())
+    stats_text_b = "\n".join(f"  {k}: {v}" for k, v in stats_b.items())
+
+    prompt = f"""You are a sharp baseball analyst on Twitter/X. Compare these two {MLB_SEASON} pitchers:
+
+Pitcher A — {name_a}:
+{stats_text_a}
+
+Pitcher B — {name_b}:
+{stats_text_b}
+
+Write a 2-3 sentence comparison take. Who has the edge and why? Be specific with stats.
+Rules:
+- Keep it UNDER 260 characters (strict Twitter limit)
+- Do NOT use hashtags, emojis, or @ mentions
+- Sound like a knowledgeable baseball person"""
+
+    try:
+        message = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=150,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        text = message.content[0].text.strip()
+        if len(text) > 270:
+            text = text[:267] + "..."
+        log.info("Generated comparison (%d chars): %s", len(text), text[:80])
+        return text
+    except Exception:
+        log.warning("Comparison analysis failed", exc_info=True)
+        return None
 
 
 class ArsenalVsGenerator(ContentGenerator):
@@ -100,10 +163,17 @@ class ArsenalVsGenerator(ContentGenerator):
             except Exception:
                 log.warning("Video clip fetch failed for %s", name_a, exc_info=True)
 
+        # AI comparison analysis
+        reply_content = None
+        analysis_text = _extract_comparison_stats(player_a, name_a, player_b, name_b)
+        if analysis_text:
+            reply_content = PostContent(text=analysis_text, tags=["analysis"])
+
         return PostContent(
             text=text,
             image_path=image_path,
             video_path=video_path,
             alt_text=f"Pitch heatmap for {name_a}" if image_path else "",
             tags=["arsenal_vs", name_a, name_b],
+            reply=reply_content,
         )

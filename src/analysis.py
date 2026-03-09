@@ -6,12 +6,16 @@ import logging
 import os
 
 import anthropic
+import pandas as pd
 
 from .config import MLB_SEASON
 
 log = logging.getLogger(__name__)
 
 _client: anthropic.Anthropic | None = None
+
+# Noise pitch types to skip
+_NOISE = {"PO", "IN", "EP", "AB", "FA", "UN", "SC"}
 
 
 def _get_client() -> anthropic.Anthropic | None:
@@ -23,6 +27,95 @@ def _get_client() -> anthropic.Anthropic | None:
     if _client is None:
         _client = anthropic.Anthropic(api_key=key)
     return _client
+
+
+def analyze_pitcher(
+    name: str,
+    season_df: pd.DataFrame,
+    pitches_df: pd.DataFrame | None = None,
+) -> str | None:
+    """High-level helper: extract stats from DataFrames and generate analysis.
+
+    This is the convenience function most generators should call.
+    """
+    # Find the pitcher row
+    name_col = None
+    for c in ("pitcher_name", "player_name", "name"):
+        if c in season_df.columns:
+            name_col = c
+            break
+    if not name_col:
+        return None
+
+    matches = season_df[season_df[name_col] == name]
+    if matches.empty:
+        return None
+
+    p = matches.iloc[0]
+
+    # Extract season stats
+    season_stats: dict[str, str] = {}
+    for col, label, fmt in [
+        ("era", "ERA", ".2f"),
+        ("fip", "FIP", ".2f"),
+        ("strike_out_percentage", "K%", None),
+        ("walk_percentage", "BB%", None),
+        ("whiff_rate", "Whiff%", None),
+        ("stuff_plus", "Stuff+", ".0f"),
+        ("pitching_plus", "Pitching+", ".0f"),
+        ("innings_pitched", "IP", ".1f"),
+    ]:
+        if col in p.index:
+            try:
+                val = float(p[col])
+                if fmt:
+                    season_stats[label] = format(val, fmt)
+                else:
+                    season_stats[label] = f"{val * 100:.1f}%"
+            except (TypeError, ValueError):
+                pass
+
+    if not season_stats:
+        return None
+
+    # Extract per-pitch stats
+    pitch_stats: list[dict] = []
+    if pitches_df is not None and not pitches_df.empty:
+        pitch_name_col = None
+        for c in ("pitch_type", "pitch_name"):
+            if c in pitches_df.columns:
+                pitch_name_col = c
+                break
+
+        if pitch_name_col and name_col in pitches_df.columns:
+            pitcher_pitches = pitches_df[pitches_df[name_col] == name]
+            if not pitcher_pitches.empty:
+                grouped = pitcher_pitches.groupby(pitch_name_col)
+                total = pitcher_pitches["percentage_thrown"].sum() if "percentage_thrown" in pitcher_pitches.columns else 1
+                for ptype, grp in grouped:
+                    if str(ptype) in _NOISE:
+                        continue
+                    row = grp.iloc[0]
+                    ps: dict = {"pitch_name": str(ptype)}
+                    if "percentage_thrown" in grp.columns:
+                        ps["usage"] = round(grp["percentage_thrown"].sum() / total * 100, 1)
+                    for attr, key in [
+                        ("velocity", "velocity"),
+                        ("whiff_rate", "whiff_rate"),
+                        ("stuff_plus", "stuff_plus"),
+                        ("run_value_per_100_pitches", "run_value"),
+                    ]:
+                        if attr in row.index:
+                            try:
+                                v = float(row[attr])
+                                if key == "whiff_rate" and v < 1:
+                                    v *= 100
+                                ps[key] = v
+                            except (TypeError, ValueError):
+                                pass
+                    pitch_stats.append(ps)
+
+    return generate_analysis(name, season_stats, pitch_stats)
 
 
 def generate_analysis(

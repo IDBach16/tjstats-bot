@@ -7,6 +7,7 @@ import random
 
 from .base import ContentGenerator, PostContent
 from .. import pitch_profiler
+from ..analysis import analyze_pitcher
 from ..config import DEFAULT_HASHTAGS, MLB_SEASON
 from ..charts import plot_percentile_rankings
 from ..video_clips import get_pitcher_clip
@@ -89,10 +90,18 @@ class StatOfDayGenerator(ContentGenerator):
             except Exception:
                 log.warning("Video clip fetch failed for %s", top_name, exc_info=True)
 
+        # AI analysis of the #1 leader
+        reply_content = None
+        if top_name:
+            analysis_text = analyze_pitcher(top_name, df, pitch_profiler.get_season_pitches())
+            if analysis_text:
+                reply_content = PostContent(text=analysis_text, tags=["analysis"])
+
         return PostContent(
             text=text,
             image_path=image_path,
             video_path=video_path,
             alt_text=f"Percentile rankings chart for {top_name}" if image_path else "",
             tags=["stat_of_day", stat["col"]],
+            reply=reply_content,
         )

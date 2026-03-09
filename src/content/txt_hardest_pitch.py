@@ -8,6 +8,8 @@ from datetime import date, timedelta
 from pybaseball import statcast
 
 from .base import ContentGenerator, PostContent
+from .. import pitch_profiler
+from ..analysis import analyze_pitcher
 from ..config import DEFAULT_HASHTAGS
 from ..charts import plot_pitch_movement
 from ..video_clips import get_pitcher_clip
@@ -59,10 +61,24 @@ class HardestPitchGenerator(ContentGenerator):
             except Exception:
                 log.warning("Video clip fetch failed for %s", pitcher, exc_info=True)
 
+        # AI analysis using Pitch Profiler season data
+        reply_content = None
+        try:
+            season_df = pitch_profiler.get_season_pitchers()
+            if not season_df.empty:
+                analysis_text = analyze_pitcher(
+                    pitcher, season_df, pitch_profiler.get_season_pitches()
+                )
+                if analysis_text:
+                    reply_content = PostContent(text=analysis_text, tags=["analysis"])
+        except Exception:
+            log.warning("Analysis generation failed for %s", pitcher, exc_info=True)
+
         return PostContent(
             text=text,
             image_path=image_path,
             video_path=video_path,
             alt_text=f"Pitch movement chart for {pitcher}" if image_path else "",
             tags=["hardest_pitch", ds],
+            reply=reply_content,
         )

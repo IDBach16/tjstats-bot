@@ -10,6 +10,7 @@ from pathlib import Path
 from .base import ContentGenerator, PostContent
 from ._helpers import fmt_stat, safe_stat, build_stat_block
 from .. import pitch_profiler
+from ..analysis import analyze_pitcher
 from ..config import DATA_DIR, DEFAULT_HASHTAGS
 from ..charts import plot_pitch_movement
 from ..video_clips import get_pitcher_clip
@@ -181,10 +182,17 @@ class PitcherSpotlightGenerator(ContentGenerator):
             except Exception:
                 log.warning("Video clip fetch failed for %s", name, exc_info=True)
 
+        # AI analysis
+        analysis_text = analyze_pitcher(name, df, pitch_profiler.get_season_pitches())
+        reply_content = None
+        if analysis_text:
+            reply_content = PostContent(text=analysis_text, tags=["analysis"])
+
         return PostContent(
             text=text,
             image_path=image_path,
             video_path=video_path,
             alt_text=f"Pitch movement chart for {name}" if image_path else "",
             tags=["pitcher_spotlight", name],
+            reply=reply_content,
         )
