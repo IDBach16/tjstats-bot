@@ -324,6 +324,15 @@
         "pitcher_spotlight",
         "Zack Wheeler"
       ]
+    },
+    {
+      "date": "2026-03-10T22:20:07.048709",
+      "generator": "pitching_summary",
+      "tweet_id": "2031495309491318955",
+      "tags": [
+        "pitching_summary",
+        "Logan Webb"
+      ]
     }
   ]
 }
