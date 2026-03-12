@@ -377,6 +377,15 @@
         "pitcher_card",
         "Sonny Gray"
       ]
+    },
+    {
+      "date": "2026-03-12T19:35:31.844649",
+      "generator": "stat_of_day",
+      "tweet_id": "2032178672057401497",
+      "tags": [
+        "stat_of_day",
+        "called_strikes_plus_whiffs_percentage"
+      ]
     }
   ]
 }
