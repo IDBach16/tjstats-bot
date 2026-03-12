@@ -27,6 +27,9 @@ from .content.txt_arsenal_vs import ArsenalVsGenerator
 
 # Screenshot generators (new)
 from .content.ss_movement_profile import MovementProfileGenerator
+from .content.ss_release_points import ReleasePointGenerator
+from .content.ss_velo_distribution import VeloDistributionGenerator
+from .content.ss_arsenal_usage import ArsenalUsageGenerator
 
 # Card generators
 from .content.pitcher_card import PitcherCardGenerator
@@ -52,28 +55,34 @@ GENERATORS: dict[str, type[ContentGenerator]] = {
     "ss_pitch_plots": PitchPlotsScreenshot,
     "ss_leaderboard": LeaderboardScreenshot,
     "ss_heat_maps": HeatMapsScreenshot,
+    "release_points": ReleasePointGenerator,
+    "velo_distribution": VeloDistributionGenerator,
+    "arsenal_usage": ArsenalUsageGenerator,
     "pitcher_card": PitcherCardGenerator,
     "pitching_summary": PitchingSummaryGenerator,
 }
 
-# Weekly rotation: day-of-week → (screenshot_class, text_class)
-# Monday=0 … Sunday=6
+# Weekly rotation: day-of-week → (morning_visual, afternoon_text)
+# Monday=0 … Sunday=6  —  evening is always PitchingSummaryGenerator
 SCHEDULE: dict[int, tuple[type[ContentGenerator], type[ContentGenerator]]] = {
-    0: (PitchingSummaryGenerator, GuessThePitcherGenerator),     # Mon  ← pitching summary
-    1: (PitcherCardGenerator, PitcherSpotlightGenerator),        # Tue  ← pitcher card
-    2: (MovementProfileGenerator, ExplainerGenerator),           # Wed
-    3: (LeaderboardScreenshot, StatOfDayGenerator),               # Thu
-    4: (PitchPlotsScreenshot, ArsenalVsGenerator),               # Fri
-    5: (PitcherCardGenerator, StatOfDayGenerator),               # Sat  ← pitcher card
-    6: (PitchingSummaryGenerator, PitcherSpotlightGenerator),    # Sun  ← pitching summary
+    0: (PitcherCardGenerator, GuessThePitcherGenerator),          # Mon
+    1: (ReleasePointGenerator, PitcherSpotlightGenerator),        # Tue
+    2: (VeloDistributionGenerator, ExplainerGenerator),           # Wed
+    3: (ArsenalUsageGenerator, StatOfDayGenerator),               # Thu
+    4: (PitcherCardGenerator, ArsenalVsGenerator),                # Fri
+    5: (MovementProfileGenerator, HardestPitchGenerator),         # Sat
+    6: (ReleasePointGenerator, PitcherSpotlightGenerator),        # Sun
 }
 
 
-def get_generators_for_today() -> tuple[ContentGenerator, ContentGenerator]:
-    """Return (screenshot_generator, text_generator) for today's schedule."""
+def get_generators_for_today() -> tuple[ContentGenerator, ContentGenerator, ContentGenerator]:
+    """Return (morning, afternoon, evening) generators for today's schedule.
+
+    Evening is always the TJStats Pitching Summary dashboard.
+    """
     dow = date.today().weekday()
-    ss_cls, txt_cls = SCHEDULE[dow]
-    return ss_cls(), txt_cls()
+    morning_cls, afternoon_cls = SCHEDULE[dow]
+    return morning_cls(), afternoon_cls(), PitchingSummaryGenerator()
 
 
 # ── Post history ──────────────────────────────────────────────────────

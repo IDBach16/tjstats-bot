@@ -22,6 +22,7 @@ import numpy as np                                  # noqa: E402
 import requests as _requests                        # noqa: E402
 from matplotlib.patches import FancyBboxPatch, Rectangle, Circle  # noqa: E402
 from matplotlib.colors import LinearSegmentedColormap              # noqa: E402
+from PIL import Image as _PILImage                                 # noqa: E402
 from pybaseball import statcast_pitcher             # noqa: E402
 
 from .config import MLB_SEASON, SCREENSHOTS_DIR
@@ -113,6 +114,30 @@ WHITE_MUTED = "#888888"
 WHITE_GRID = "#d0d0d0"
 FOOTER_LEFT = "By: @BachTalk1"
 FOOTER_RIGHT = "Data: Pitch Profiler"
+
+# ── Watermark ───────────────────────────────────────────────────────────
+_ASSETS_DIR = Path(__file__).resolve().parent.parent / "assets"
+_WATERMARK_PATH = _ASSETS_DIR / "BachTalk.png"
+_watermark_cache: "np.ndarray | None" = None
+
+
+def _draw_watermark(fig, alpha=0.12, scale=0.45):
+    """Overlay BachTalk logo as a watermark in the center of the figure."""
+    global _watermark_cache
+    if _watermark_cache is None:
+        if not _WATERMARK_PATH.exists():
+            return
+        try:
+            img = _PILImage.open(_WATERMARK_PATH).convert("RGBA")
+            _watermark_cache = np.array(img)
+        except Exception:
+            return
+    if _watermark_cache is None:
+        return
+    ax_wm = fig.add_axes([0.5 - scale / 2, 0.5 - scale / 2, scale, scale],
+                         zorder=-1)
+    ax_wm.imshow(_watermark_cache, alpha=alpha)
+    ax_wm.axis("off")
 
 
 def _apply_white_theme(ax: plt.Axes) -> None:
@@ -306,6 +331,7 @@ def plot_pitch_movement(pitcher_id: int, name: str) -> Path | None:
         _draw_footer(fig)
 
         out = SCREENSHOTS_DIR / f"movement_{pitcher_id}.png"
+        _draw_watermark(fig)
         fig.savefig(out, bbox_inches="tight", facecolor=fig.get_facecolor())
         plt.close(fig)
         log.info("Saved pitch movement chart: %s", out)
@@ -401,6 +427,7 @@ def plot_pitch_locations(pitcher_id: int, name: str, *, anonymize: bool = False)
 
         suffix = "anon" if anonymize else str(pitcher_id)
         out = SCREENSHOTS_DIR / f"locations_{suffix}.png"
+        _draw_watermark(fig)
         fig.savefig(out, bbox_inches="tight", facecolor=fig.get_facecolor())
         plt.close(fig)
         log.info("Saved pitch locations chart: %s", out)
@@ -492,6 +519,7 @@ def plot_pitch_heatmap(pitcher_id: int, name: str) -> Path | None:
         _draw_footer(fig)
 
         out = SCREENSHOTS_DIR / f"heatmap_{pitcher_id}.png"
+        _draw_watermark(fig)
         fig.savefig(out, bbox_inches="tight", facecolor=fig.get_facecolor())
         plt.close(fig)
         log.info("Saved pitch heatmap chart: %s", out)
@@ -623,6 +651,7 @@ def plot_percentile_rankings(name: str, season_df: "pd.DataFrame",
         _draw_footer(fig)
 
         out = SCREENSHOTS_DIR / f"percentile_{name.replace(' ', '_').lower()}.png"
+        _draw_watermark(fig)
         fig.savefig(out, bbox_inches="tight", facecolor=fig.get_facecolor())
         plt.close(fig)
         log.info("Saved percentile rankings chart: %s", out)
@@ -754,6 +783,7 @@ def plot_movement_profile(name: str, pitches_df: "pd.DataFrame",
 
         safe = name.replace(" ", "_").lower()
         out = SCREENSHOTS_DIR / f"movement_profile_{safe}.png"
+        _draw_watermark(fig)
         fig.savefig(out, bbox_inches="tight", facecolor=fig.get_facecolor())
         plt.close(fig)
         log.info("Saved movement profile chart: %s", out)
@@ -1242,6 +1272,7 @@ def plot_pitcher_card(
         # ── Save ──────────────────────────────────────────────────────
         safe = name.replace(" ", "_").lower()
         out = SCREENSHOTS_DIR / f"pitcher_card_{safe}.png"
+        _draw_watermark(fig)
         fig.savefig(out, facecolor=fig.get_facecolor(), dpi=100,
                     bbox_inches="tight", pad_inches=0.02)
         plt.close(fig)
@@ -1802,6 +1833,7 @@ def plot_pitching_summary(
         # ── Save ──────────────────────────────────────────────────────
         safe = name.replace(" ", "_").lower()
         out = SCREENSHOTS_DIR / f"pitching_summary_{safe}.png"
+        _draw_watermark(fig)
         fig.savefig(out, facecolor="white", dpi=150,
                     bbox_inches="tight", pad_inches=0.3)
         plt.close(fig)
@@ -1811,4 +1843,319 @@ def plot_pitching_summary(
     except Exception:
         log.warning("plot_pitching_summary failed for %s", name,
                     exc_info=True)
+        return None
+
+
+# ── Chart 8: Release Point Plot (catcher perspective) ─────────────────
+
+def plot_release_points(pitcher_id: int, name: str) -> Path | None:
+    """Release point scatter from catcher's perspective using Statcast data."""
+    try:
+        df = fetch_statcast_pitches(pitcher_id)
+        if df is None:
+            return None
+
+        needed = {"release_pos_x", "release_pos_z", "pitch_type", "p_throws"}
+        if not needed.issubset(df.columns):
+            return None
+
+        df = df.dropna(subset=["release_pos_x", "release_pos_z", "pitch_type"])
+        if df.empty:
+            return None
+
+        df = df.copy()
+        pitcher_hand = df["p_throws"].iloc[0] if "p_throws" in df.columns else "R"
+
+        fig = plt.figure(figsize=(10, 10), dpi=150)
+        fig.set_facecolor(WHITE_BG)
+
+        ax = fig.add_axes([0.10, 0.08, 0.80, 0.74])
+        _apply_white_theme(ax)
+
+        # Mound/rubber representation
+        mound = Circle((0, 10 / 12), radius=1.5, edgecolor="#a63b17",
+                        facecolor="#a63b17", alpha=0.15, zorder=1)
+        ax.add_patch(mound)
+        rubber = Rectangle((-0.5, 9 / 12), 1.0, 1 / 6, edgecolor="#555555",
+                           facecolor="white", linewidth=1.5, zorder=2)
+        ax.add_patch(rubber)
+
+        pitch_types = sorted(df["pitch_type"].unique())
+        for pt in pitch_types:
+            if pt in _NOISE_PITCHES:
+                continue
+            subset = df[df["pitch_type"] == pt]
+            color = _TJ_COLOUR.get(pt, DEFAULT_PITCH_COLOR)
+            label = _TJ_NAME.get(pt, pt)
+
+            x_vals = subset["release_pos_x"]
+            z_vals = subset["release_pos_z"]
+
+            # Flip x for RHP (catcher perspective)
+            if pitcher_hand == "R":
+                x_vals = x_vals * -1
+
+            ax.scatter(
+                x_vals, z_vals,
+                c=color, label=label, alpha=0.5, s=35,
+                edgecolors="black", linewidths=0.3, zorder=3,
+            )
+            _draw_confidence_ellipse(
+                ax, x_vals.values, z_vals.values, color, n_std=1.5
+            )
+
+        ax.axhline(0, color="#b0b0b0", linewidth=0.8, linestyle="--", alpha=0.6)
+        ax.axvline(0, color="#b0b0b0", linewidth=0.8, linestyle="--", alpha=0.6)
+        ax.set_xlabel("Horizontal Release (ft)", fontsize=12)
+        ax.set_ylabel("Vertical Release (ft)", fontsize=12)
+        ax.set_xlim(-4, 4)
+        ax.set_ylim(0, 8)
+
+        # Arm/glove side labels
+        if pitcher_hand == "R":
+            ax.text(-3.8, 0.15, "\u2190 Arm Side", fontstyle="italic",
+                    fontsize=10, ha="left", va="bottom",
+                    bbox=dict(facecolor="white", edgecolor="#cccccc", pad=3))
+            ax.text(3.8, 0.15, "Glove Side \u2192", fontstyle="italic",
+                    fontsize=10, ha="right", va="bottom",
+                    bbox=dict(facecolor="white", edgecolor="#cccccc", pad=3))
+        else:
+            ax.text(-3.8, 0.15, "\u2190 Glove Side", fontstyle="italic",
+                    fontsize=10, ha="left", va="bottom",
+                    bbox=dict(facecolor="white", edgecolor="#cccccc", pad=3))
+            ax.text(3.8, 0.15, "Arm Side \u2192", fontstyle="italic",
+                    fontsize=10, ha="right", va="bottom",
+                    bbox=dict(facecolor="white", edgecolor="#cccccc", pad=3))
+
+        ax.legend(
+            loc="upper right", fontsize=9, framealpha=0.9,
+            facecolor="white", edgecolor="#cccccc",
+        )
+
+        _draw_header(fig, name, player_id=pitcher_id,
+                     subtitle="Release Points — Catcher Perspective (Statcast)")
+        _draw_footer(fig)
+
+        out = SCREENSHOTS_DIR / f"release_{pitcher_id}.png"
+        _draw_watermark(fig)
+        fig.savefig(out, bbox_inches="tight", facecolor=fig.get_facecolor())
+        plt.close(fig)
+        log.info("Saved release point chart: %s", out)
+        return out
+
+    except Exception:
+        log.warning("plot_release_points failed for %s", name, exc_info=True)
+        return None
+
+
+# ── Chart 9: Velocity Distribution (violin plot by pitch type) ────────
+
+def plot_velocity_distribution(pitcher_id: int, name: str) -> Path | None:
+    """Violin/box plot showing velocity distributions per pitch type."""
+    try:
+        df = fetch_statcast_pitches(pitcher_id)
+        if df is None:
+            return None
+
+        needed = {"release_speed", "pitch_type"}
+        if not needed.issubset(df.columns):
+            return None
+
+        df = df.dropna(subset=["release_speed", "pitch_type"])
+        df = df[~df["pitch_type"].isin(_NOISE_PITCHES)]
+        if df.empty:
+            return None
+
+        # Order pitch types by median velocity (fastest first)
+        medians = df.groupby("pitch_type")["release_speed"].median().sort_values(ascending=False)
+        ordered = list(medians.index)
+        if not ordered:
+            return None
+
+        fig = plt.figure(figsize=(12, 8), dpi=150)
+        fig.set_facecolor(WHITE_BG)
+
+        ax = fig.add_axes([0.08, 0.10, 0.84, 0.72])
+        _apply_white_theme(ax)
+
+        positions = list(range(len(ordered)))
+        colors = [_TJ_COLOUR.get(pt, DEFAULT_PITCH_COLOR) for pt in ordered]
+
+        for i, pt in enumerate(ordered):
+            subset = df[df["pitch_type"] == pt]["release_speed"].values
+            if len(subset) < 3:
+                continue
+            color = _TJ_COLOUR.get(pt, DEFAULT_PITCH_COLOR)
+            label = _TJ_NAME.get(pt, pt)
+
+            # Violin
+            parts = ax.violinplot(subset, positions=[i], showmedians=False,
+                                  showextrema=False, widths=0.7)
+            for pc in parts["bodies"]:
+                pc.set_facecolor(color)
+                pc.set_edgecolor(color)
+                pc.set_alpha(0.3)
+
+            # Box overlay
+            q1, med, q3 = np.percentile(subset, [25, 50, 75])
+            ax.vlines(i, q1, q3, color=color, linewidth=4, zorder=4)
+            ax.scatter([i], [med], color="white", s=30, zorder=5,
+                       edgecolors=color, linewidths=1.5)
+
+            # Median label
+            ax.text(i, med + 0.3, f"{med:.1f}", ha="center", va="bottom",
+                    fontsize=9, fontweight="bold", color=color)
+
+            # Pitch count
+            ax.text(i, ax.get_ylim()[0] if ax.get_ylim()[0] else min(subset) - 2,
+                    f"n={len(subset)}", ha="center", va="top",
+                    fontsize=7, color=WHITE_MUTED)
+
+        ax.set_xticks(positions)
+        ax.set_xticklabels([_TJ_NAME.get(pt, pt) for pt in ordered],
+                           fontsize=10, fontweight="bold")
+        # Color each x-tick label
+        for ticklabel, pt in zip(ax.get_xticklabels(), ordered):
+            ticklabel.set_color(_TJ_COLOUR.get(pt, DEFAULT_PITCH_COLOR))
+
+        ax.set_ylabel("Velocity (mph)", fontsize=12)
+        ax.set_xlabel("")
+
+        _draw_header(fig, name, player_id=pitcher_id,
+                     subtitle="Velocity Distribution by Pitch Type (Statcast)")
+        _draw_footer(fig)
+
+        out = SCREENSHOTS_DIR / f"velo_dist_{pitcher_id}.png"
+        _draw_watermark(fig)
+        fig.savefig(out, bbox_inches="tight", facecolor=fig.get_facecolor())
+        plt.close(fig)
+        log.info("Saved velocity distribution chart: %s", out)
+        return out
+
+    except Exception:
+        log.warning("plot_velocity_distribution failed for %s", name,
+                    exc_info=True)
+        return None
+
+
+# ── Chart 10: Arsenal Usage Breakdown (horizontal bars) ───────────────
+
+def plot_arsenal_usage(name: str, pitches_df: "pd.DataFrame",
+                       player_id: int | None = None) -> Path | None:
+    """Horizontal bar chart of pitch type usage with velo + whiff overlays."""
+    try:
+        import pandas as pd
+
+        name_col = None
+        for c in ("pitcher_name", "player_name", "name"):
+            if c in pitches_df.columns:
+                name_col = c
+                break
+        if not name_col:
+            return None
+
+        pdf = pitches_df[pitches_df[name_col] == name].copy()
+        if pdf.empty:
+            return None
+
+        # Get pitch type column
+        pt_col = "pitch_type" if "pitch_type" in pdf.columns else "pitch_name"
+        if pt_col not in pdf.columns:
+            return None
+
+        # Clean noise
+        pdf = pdf[~pdf[pt_col].isin(_NOISE_PITCHES)]
+        if pdf.empty:
+            return None
+
+        # Get usage percentage
+        usage_col = None
+        for c in ("percentage_thrown", "pitch_percent", "usage"):
+            if c in pdf.columns:
+                usage_col = c
+                break
+        if not usage_col:
+            return None
+
+        pdf = pdf.sort_values(usage_col, ascending=True)
+
+        fig = plt.figure(figsize=(12, 8), dpi=150)
+        fig.set_facecolor(WHITE_BG)
+        ax = fig.add_axes([0.18, 0.10, 0.74, 0.72])
+        _apply_white_theme(ax)
+
+        pitch_types = pdf[pt_col].tolist()
+        usages = pdf[usage_col].tolist()
+
+        # Convert to percentages if in decimal form
+        if all(u <= 1 for u in usages if pd.notna(u)):
+            usages = [u * 100 for u in usages]
+
+        colors = [_TJ_COLOUR.get(pt, DEFAULT_PITCH_COLOR) for pt in pitch_types]
+        labels = [_TJ_NAME.get(pt, pt) for pt in pitch_types]
+
+        bars = ax.barh(range(len(pitch_types)), usages, color=colors, height=0.6,
+                       edgecolor="white", linewidth=0.5, alpha=0.85)
+
+        ax.set_yticks(range(len(pitch_types)))
+        ax.set_yticklabels(labels, fontsize=11, fontweight="bold")
+        for ticklabel, pt in zip(ax.get_yticklabels(), pitch_types):
+            ticklabel.set_color(_TJ_COLOUR.get(pt, DEFAULT_PITCH_COLOR))
+
+        # Add usage percentage + velocity + whiff on each bar
+        for i, (pt, usage) in enumerate(zip(pitch_types, usages)):
+            row = pdf[pdf[pt_col] == pt].iloc[0]
+
+            # Usage label
+            ax.text(usage + 0.5, i, f"{usage:.1f}%", va="center", ha="left",
+                    fontsize=10, fontweight="bold", color=WHITE_TEXT)
+
+            # Velocity
+            velo = None
+            for vc in ("velocity", "avg_speed", "release_speed"):
+                if vc in row.index:
+                    try:
+                        velo = float(row[vc])
+                    except (TypeError, ValueError):
+                        pass
+                    break
+            # Whiff
+            whiff = None
+            for wc in ("whiff_rate", "whiff_percent"):
+                if wc in row.index:
+                    try:
+                        w = float(row[wc])
+                        whiff = w * 100 if w <= 1 else w
+                    except (TypeError, ValueError):
+                        pass
+                    break
+
+            detail_parts = []
+            if velo is not None:
+                detail_parts.append(f"{velo:.1f} mph")
+            if whiff is not None:
+                detail_parts.append(f"{whiff:.0f}% whiff")
+            if detail_parts:
+                detail = " | ".join(detail_parts)
+                ax.text(max(usages) * 0.98, i, detail, va="center",
+                        ha="right", fontsize=8, color=WHITE_MUTED,
+                        fontstyle="italic")
+
+        ax.set_xlabel("Usage %", fontsize=12)
+        ax.set_xlim(0, max(usages) * 1.3)
+
+        _draw_header(fig, name, player_id=player_id,
+                     subtitle="Arsenal Usage Breakdown")
+        _draw_footer(fig)
+
+        safe = name.replace(" ", "_").lower()
+        out = SCREENSHOTS_DIR / f"arsenal_{safe}.png"
+        _draw_watermark(fig)
+        fig.savefig(out, bbox_inches="tight", facecolor=fig.get_facecolor())
+        plt.close(fig)
+        log.info("Saved arsenal usage chart: %s", out)
+        return out
+
+    except Exception:
+        log.warning("plot_arsenal_usage failed for %s", name, exc_info=True)
         return None

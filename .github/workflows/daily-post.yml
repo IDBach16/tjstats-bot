@@ -14,12 +14,13 @@ on:
       slot:
         description: 'Content slot to run'
         required: false
-        default: 'both'
+        default: 'all'
         type: choice
         options:
-          - both
+          - all
           - screenshot
           - text
+          - evening
       generator:
         description: 'Override: run a specific generator by name (leave empty for schedule)'
         required: false
@@ -41,6 +42,9 @@ on:
           - ss_pitch_plots
           - ss_leaderboard
           - ss_heat_maps
+          - release_points
+          - velo_distribution
+          - arsenal_usage
 
 permissions:
   contents: write
@@ -71,15 +75,15 @@ jobs:
           else
             HOUR=$(date -u +%H)
             if [ "$HOUR" -ge 21 ]; then
-              # 5 PM EST (22:00 UTC) — pitching summary
-              echo "slot=screenshot" >> $GITHUB_OUTPUT
-              echo "generator=pitching_summary" >> $GITHUB_OUTPUT
+              # 5 PM EST (22:00 UTC) — evening visual
+              echo "slot=evening" >> $GITHUB_OUTPUT
+              echo "generator=" >> $GITHUB_OUTPUT
             elif [ "$HOUR" -lt 17 ]; then
-              # 10 AM EST (15:00 UTC) — scheduled screenshot
+              # 10 AM EST (15:00 UTC) — morning visual
               echo "slot=screenshot" >> $GITHUB_OUTPUT
               echo "generator=" >> $GITHUB_OUTPUT
             else
-              # 2 PM EST (19:00 UTC) — scheduled text
+              # 2 PM EST (19:00 UTC) — afternoon text
               echo "slot=text" >> $GITHUB_OUTPUT
               echo "generator=" >> $GITHUB_OUTPUT
             fi
