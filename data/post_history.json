@@ -333,6 +333,16 @@
         "stat_of_day",
         "called_strikes_plus_whiffs_percentage"
       ]
+    },
+    {
+      "date": "2026-03-12T22:17:45.149193",
+      "generator": "milb_pitching_summary",
+      "tweet_id": "2032219518794088900",
+      "tags": [
+        "milb_pitching_summary",
+        "Thomas Hatch",
+        "AAA"
+      ]
     }
   ]
 }
