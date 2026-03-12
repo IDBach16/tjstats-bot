@@ -45,6 +45,8 @@ on:
           - release_points
           - velo_distribution
           - arsenal_usage
+          - milb_pitcher_card
+          - milb_pitching_summary
 
 permissions:
   contents: write

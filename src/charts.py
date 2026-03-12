@@ -902,6 +902,7 @@ def plot_pitcher_card(
     pitches_df: "pd.DataFrame",
     team: str | None = None,
     player_id: int | None = None,
+    level: str = "MLB",
 ) -> Path | None:
     """Render a premium pitcher card (1200×675, dark theme).
 
@@ -1076,7 +1077,7 @@ def plot_pitcher_card(
         # ── Team + season subtitle ────────────────────────────────────
         team_label = f"{team}  |  " if team else ""
         fig.text(
-            name_x, 0.88, f"{team_label}{MLB_SEASON} Season",
+            name_x, 0.88, f"{team_label}{MLB_SEASON} {level} Season",
             fontsize=13, color=CARD_TEXT_MUTED,
             ha="left", va="top",
         )
@@ -1361,6 +1362,7 @@ def plot_pitching_summary(
     all_pitches_df: "pd.DataFrame | None" = None,
     team: str | None = None,
     player_id: int | None = None,
+    level: str = "MLB",
 ) -> Path | None:
     """Render a TJStats-style full pitching summary dashboard.
 
@@ -1500,7 +1502,7 @@ def plot_pitching_summary(
                     fontsize=26, color="#555555")
         ax_bio.text(0.5, 0.35, "Season Pitching Summary", va="top",
                     ha="center", fontsize=34, fontweight="bold")
-        ax_bio.text(0.5, 0.10, f"{MLB_SEASON} MLB Season", va="top",
+        ax_bio.text(0.5, 0.10, f"{MLB_SEASON} {level} Season", va="top",
                     ha="center", fontsize=26, fontstyle="italic",
                     color="#666666")
 
@@ -1827,7 +1829,8 @@ def plot_pitching_summary(
                        "Colour Coding Compares to League Average By Pitch",
                        ha="center", va="top", fontsize=14,
                        color="#666666")
-        ax_footer.text(1, 1, "Data: Pitch Profiler\nImages: MLB, ESPN",
+        data_src = "Data: Baseball Savant" if level != "MLB" else "Data: Pitch Profiler"
+        ax_footer.text(1, 1, f"{data_src}\nImages: MLB, ESPN",
                        ha="right", va="top", fontsize=22)
 
         # ── Save ──────────────────────────────────────────────────────
