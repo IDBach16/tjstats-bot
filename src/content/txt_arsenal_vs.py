@@ -61,6 +61,7 @@ Write a 2-3 sentence comparison take. Who has the edge and why? Be specific with
 Rules:
 - Keep it UNDER 260 characters (strict Twitter limit)
 - Do NOT use hashtags, emojis, or @ mentions
+- Do NOT use dashes or hyphens (use commas, periods, or other punctuation instead)
 - Sound like a knowledgeable baseball person"""
 
     try:

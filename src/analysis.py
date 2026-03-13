@@ -168,6 +168,7 @@ Rules:
 - Sound like a knowledgeable baseball person, not a robot
 - Keep it UNDER 260 characters total (strict Twitter limit)
 - Do NOT use hashtags, emojis, or @ mentions
+- Do NOT use dashes or hyphens (use commas, periods, or other punctuation instead)
 - Do NOT start with the pitcher's name (the tweet already has it)"""
 
     try:

@@ -1263,7 +1263,7 @@ def plot_pitcher_card(
         foot_ax.add_patch(Rectangle((0, 0), 1, 1, color=CARD_BORDER))
         foot_ax.axis("off")
 
-        fig.text(0.04, 0.025, "@TJStatsBot", fontsize=10, color=accent,
+        fig.text(0.04, 0.025, "@BachTalk1", fontsize=10, color=accent,
                  ha="left", va="center", fontweight="bold")
         fig.text(0.5, 0.025, "Pitch Profiler Data", fontsize=9,
                  color=CARD_TEXT_MUTED, ha="center", va="center")
@@ -1711,7 +1711,7 @@ def plot_milb_pitcher_card(
         foot_ax.add_patch(Rectangle((0, 0), 1, 1, color=CARD_BORDER))
         foot_ax.axis("off")
 
-        fig.text(0.04, 0.025, "@TJStatsBot", fontsize=10, color=accent,
+        fig.text(0.04, 0.025, "@BachTalk1", fontsize=10, color=accent,
                  ha="left", va="center", fontweight="bold")
         fig.text(0.5, 0.025, "Data: Baseball Savant", fontsize=9,
                  color=CARD_TEXT_MUTED, ha="center", va="center")
@@ -3095,7 +3095,7 @@ def plot_traditional_pitcher_card(
         foot_ax.add_patch(Rectangle((0, 0), 1, 1, color=CARD_BORDER))
         foot_ax.axis("off")
 
-        fig.text(0.04, 0.025, "@TJStatsBot", fontsize=10, color=accent,
+        fig.text(0.04, 0.025, "@BachTalk1", fontsize=10, color=accent,
                  ha="left", va="center", fontweight="bold")
         fig.text(0.5, 0.025, "Data: MLB Stats API", fontsize=9,
                  color=CARD_TEXT_MUTED, ha="center", va="center")
@@ -3589,7 +3589,7 @@ def plot_biomechanics(
         foot_ax.add_patch(Rectangle((0, 0), 1, 1, color=CARD_BORDER))
         foot_ax.axis("off")
 
-        fig.text(0.04, 0.025, "@TJStatsBot", fontsize=10,
+        fig.text(0.04, 0.025, "@BachTalk1", fontsize=10,
                  color=_BIO_PRIMARY, ha="left", va="center",
                  fontweight="bold")
         fig.text(0.5, 0.025, "Data: Driveline Open Biomechanics Project",

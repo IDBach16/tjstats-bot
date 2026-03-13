@@ -84,6 +84,7 @@ Rules:
 - Sound like a knowledgeable coach/trainer, not a textbook
 - Keep it UNDER 260 characters total (strict Twitter limit)
 - Do NOT use hashtags, emojis, or @ mentions
+- Do NOT use dashes or hyphens (use commas, periods, or other punctuation instead)
 - Start with a hook or key takeaway, not "This chart shows..."
 """
 
