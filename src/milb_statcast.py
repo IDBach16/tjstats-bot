@@ -1,17 +1,20 @@
 """MiLB Statcast data fetcher and aggregator.
 
-Uses Baseball Savant's CSV export with sportId parameter to get
-MiLB pitch-level data in the exact same format as MLB Statcast.
-Aggregates into season-level pitcher/pitch-type DataFrames
-matching the Pitch Profiler format used by charts.py.
+Fetches real AAA pitch-level Statcast data from the MLB Stats API
+game feeds. Each AAA game's live feed contains full tracking data
+(velocity, spin rate, movement, extension, zone coordinates, etc.).
+
+Data is cached per-game on disk (games are immutable once Final),
+so only new games are fetched on each run.
 """
 
 from __future__ import annotations
 
+import json
 import logging
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import date, timedelta
-from io import StringIO
 from pathlib import Path
 
 import numpy as np
@@ -35,119 +38,336 @@ LEVEL_NAMES = {
 # Noise pitch types to filter
 _NOISE = {"PO", "IN", "EP", "AB", "AS", "UN", "XX", "NP", "SC", ""}
 
-# Cache dir
+# Cache dirs
 _CACHE_DIR = DATA_DIR / "milb_cache"
 _CACHE_DIR.mkdir(parents=True, exist_ok=True)
+_GAME_CACHE_DIR = _CACHE_DIR / "games"
+_GAME_CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 # In-memory caches
 _raw_cache: dict[str, pd.DataFrame] = {}
 _season_pitchers_cache: dict[str, pd.DataFrame] = {}
 _season_pitches_cache: dict[str, pd.DataFrame] = {}
 
-# Baseball Savant search endpoint (same as pybaseball uses for MLB)
-_SAVANT_URL = "https://baseballsavant.mlb.com/statcast_search/csv"
+# MLB Stats API
+_STATS_API_BASE = "https://statsapi.mlb.com/api/v1"
+_GAME_FEED_URL = "https://statsapi.mlb.com/api/v1.1/game/{game_pk}/feed/live"
+
+# Map live-feed call descriptions to Savant-style description strings
+_CALL_MAP = {
+    "Called Strike": "called_strike",
+    "Ball": "ball",
+    "Ball In Dirt": "ball",
+    "Foul": "foul",
+    "Foul Tip": "foul_tip",
+    "Foul Bunt": "foul_bunt",
+    "Swinging Strike": "swinging_strike",
+    "Swinging Strike (Blocked)": "swinging_strike_blocked",
+    "Missed Bunt": "missed_bunt",
+    "In play, out(s)": "hit_into_play",
+    "In play, no out": "hit_into_play_no_out",
+    "In play, run(s)": "hit_into_play_score",
+    "Hit By Pitch": "hit_by_pitch",
+    "Pitchout": "pitchout",
+    "Bunt Foul Tip": "foul_tip",
+    "Swinging Pitchout": "swinging_strike",
+    "Automatic Ball": "ball",
+    "Automatic Strike": "called_strike",
+}
 
 
-# ── Fetch raw pitch data from Savant ──────────────────────────────────
+# ── Schedule fetching ────────────────────────────────────────────────
 
-def _fetch_savant_chunk(start_date: str, end_date: str,
-                         sport_id: int) -> pd.DataFrame:
-    """Fetch one date-range chunk from Baseball Savant CSV endpoint."""
-    params = {
-        "all": "true",
-        "type": "details",
-        "hfGT": "R|",
-        "hfSea": f"{start_date[:4]}|",
-        "game_date_gt": start_date,
-        "game_date_lt": end_date,
-        "player_type": "pitcher",
-        "sportId": sport_id,
-        "csv": "true",
-    }
-    log.info("Fetching Savant MiLB data: %s to %s (sportId=%d)",
-             start_date, end_date, sport_id)
+def _fetch_schedule(sport_id: int, start_date: str,
+                    end_date: str) -> list[dict]:
+    """Fetch game schedule from MLB Stats API for a date range.
 
-    headers = {
-        "User-Agent": "Mozilla/5.0 (compatible; tjstats-bot/1.0)",
-    }
+    Returns list of dicts with game_pk, date, home_team, away_team.
+    Only includes Final (completed) regular-season games.
+    """
+    games = []
+    # API supports startDate/endDate but limit to ~30 days per call
+    sd = date.fromisoformat(start_date)
+    ed = date.fromisoformat(end_date)
 
+    while sd <= ed:
+        chunk_end = min(sd + timedelta(days=29), ed)
+        try:
+            resp = requests.get(
+                f"{_STATS_API_BASE}/schedule",
+                params={
+                    "sportId": sport_id,
+                    "startDate": sd.isoformat(),
+                    "endDate": chunk_end.isoformat(),
+                    "gameType": "R",
+                },
+                timeout=30,
+            )
+            resp.raise_for_status()
+            for dt in resp.json().get("dates", []):
+                for g in dt.get("games", []):
+                    status = g.get("status", {}).get("detailedState", "")
+                    if status == "Final":
+                        games.append({
+                            "game_pk": g["gamePk"],
+                            "date": dt["date"],
+                            "home_team": g["teams"]["home"]["team"]["name"],
+                            "away_team": g["teams"]["away"]["team"]["name"],
+                        })
+        except Exception:
+            log.warning("Schedule fetch failed for %s to %s",
+                        sd.isoformat(), chunk_end.isoformat(), exc_info=True)
+
+        sd = chunk_end + timedelta(days=1)
+
+    log.info("Found %d completed games (sportId=%d) from %s to %s",
+             len(games), sport_id, start_date, end_date)
+    return games
+
+
+# ── Game feed fetching with disk cache ───────────────────────────────
+
+def _fetch_game_feed(game_pk: int) -> dict | None:
+    """Fetch a game's live feed, using disk cache if available."""
+    cache_file = _GAME_CACHE_DIR / f"{game_pk}.json"
+
+    # Check disk cache
+    if cache_file.exists():
+        try:
+            return json.loads(cache_file.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+
+    # Fetch from API
     for attempt in range(3):
         try:
-            resp = requests.get(_SAVANT_URL, params=params, headers=headers,
-                                timeout=120)
+            resp = requests.get(
+                _GAME_FEED_URL.format(game_pk=game_pk),
+                timeout=30,
+            )
             resp.raise_for_status()
+            feed = resp.json()
 
-            if len(resp.text.strip()) < 100:
-                log.warning("Empty/small response for %s to %s", start_date, end_date)
-                return pd.DataFrame()
+            # Cache to disk (only the parts we need to save space)
+            try:
+                cache_file.write_text(
+                    json.dumps(feed, separators=(",", ":")),
+                    encoding="utf-8",
+                )
+            except Exception:
+                pass
 
-            df = pd.read_csv(StringIO(resp.text), low_memory=False)
-            log.info("Got %d rows for %s to %s", len(df), start_date, end_date)
-            return df
-
+            return feed
         except Exception as e:
-            log.warning("Savant fetch attempt %d failed: %s", attempt + 1, e)
             if attempt < 2:
-                time.sleep(5 * (attempt + 1))
+                time.sleep(1 * (attempt + 1))
+            else:
+                log.warning("Failed to fetch game feed %d: %s", game_pk, e)
 
-    return pd.DataFrame()
+    return None
 
+
+# ── Pitch extraction from game feed ─────────────────────────────────
+
+def _extract_pitches_from_feed(feed: dict) -> list[dict]:
+    """Extract pitch-by-pitch rows from a live game feed JSON."""
+    pitches = []
+
+    game_data = feed.get("gameData", {})
+    game_pk = game_data.get("game", {}).get("pk", 0)
+    game_date = game_data.get("datetime", {}).get("officialDate", "")
+
+    teams = game_data.get("teams", {})
+    home_abbr = teams.get("home", {}).get("abbreviation", "")
+    away_abbr = teams.get("away", {}).get("abbreviation", "")
+
+    plays = feed.get("liveData", {}).get("plays", {}).get("allPlays", [])
+
+    for play in plays:
+        matchup = play.get("matchup", {})
+        pitcher = matchup.get("pitcher", {})
+        pitcher_id = pitcher.get("id")
+        pitcher_name = pitcher.get("fullName", "Unknown")
+        p_throws = matchup.get("pitchHand", {}).get("code", "R")
+        batter_id = matchup.get("batter", {}).get("id")
+
+        about = play.get("about", {})
+        ab_index = about.get("atBatIndex", 0)
+        half = about.get("halfInning", "top")
+
+        # Pitcher's team: if top of inning, home team pitches; bottom = away
+        pitcher_team = home_abbr if half == "top" else away_abbr
+
+        result = play.get("result", {})
+        result_event = result.get("event", "")
+
+        play_events = play.get("playEvents", [])
+        pitch_events = [e for e in play_events if e.get("isPitch")]
+
+        for i, event in enumerate(pitch_events):
+            pd_ = event.get("pitchData", {})
+            if not pd_.get("startSpeed"):
+                continue  # skip pitches without tracking data
+
+            brk = pd_.get("breaks", {})
+            coords = pd_.get("coordinates", {})
+            details = event.get("details", {})
+            hit = event.get("hitData", {})
+            count = event.get("count", {})
+
+            call_desc = details.get("call", {}).get("description", "")
+            description = _CALL_MAP.get(call_desc, call_desc.lower().replace(" ", "_"))
+
+            pitch_type = details.get("type", {}).get("code", "")
+            pitch_name = details.get("type", {}).get("description", "")
+
+            # Determine if this is the last pitch of the PA
+            is_last = (i == len(pitch_events) - 1)
+            events_val = result_event if is_last else ""
+
+            pitches.append({
+                "game_pk": game_pk,
+                "game_date": game_date,
+                "pitcher": pitcher_id,
+                "player_name": pitcher_name,
+                "p_throws": p_throws,
+                "batter": batter_id,
+                "at_bat_number": ab_index,
+                "pitch_type": pitch_type,
+                "pitch_name": pitch_name,
+                "description": description,
+                "events": events_val if events_val else np.nan,
+                "release_speed": pd_.get("startSpeed"),
+                "release_spin_rate": brk.get("spinRate"),
+                "pfx_x": brk.get("breakHorizontal"),
+                "pfx_z": brk.get("breakVerticalInduced"),
+                "release_extension": pd_.get("extension"),
+                "plate_x": coords.get("pX"),
+                "plate_z": coords.get("pZ"),
+                "sz_top": pd_.get("strikeZoneTop"),
+                "sz_bot": pd_.get("strikeZoneBottom"),
+                "zone": pd_.get("zone"),
+                "launch_speed": hit.get("launchSpeed"),
+                "launch_angle": hit.get("launchAngle"),
+                "hit_distance_sc": hit.get("totalDistance"),
+                "home_team": home_abbr,
+                "away_team": away_abbr,
+                "pitcher_team": pitcher_team,
+                "balls": count.get("balls", 0),
+                "strikes": count.get("strikes", 0),
+            })
+
+    return pitches
+
+
+# ── Fetch full season of MiLB data ──────────────────────────────────
 
 def fetch_milb_season(level: str = "AAA",
                       season: int = MLB_SEASON) -> pd.DataFrame:
-    """Fetch a full season of MiLB Statcast data from Baseball Savant.
+    """Fetch a full season of MiLB Statcast data from Stats API game feeds.
 
-    Returns a DataFrame with the same columns as MLB Statcast.
-    Caches to disk as parquet.
+    Returns a pitch-level DataFrame. Uses incremental caching — only
+    fetches game feeds for games not already in the cache.
     """
     key = f"{level}_{season}"
     if key in _raw_cache:
         return _raw_cache[key]
 
-    cache_file = _CACHE_DIR / f"milb_{level}_{season}.parquet"
-    if cache_file.exists():
-        log.info("Loading cached MiLB data: %s", cache_file)
-        df = pd.read_parquet(cache_file)
-        _raw_cache[key] = df
-        return df
-
     sport_id = SPORT_IDS.get(level, 11)
+    parquet_file = _CACHE_DIR / f"milb_{level}_{season}.parquet"
 
-    # Fetch in monthly chunks to avoid Savant timeouts
+    # Load existing cached pitches
+    existing_df = pd.DataFrame()
+    existing_game_pks: set[int] = set()
+    if parquet_file.exists():
+        try:
+            existing_df = pd.read_parquet(parquet_file)
+            if "game_pk" in existing_df.columns:
+                existing_game_pks = set(existing_df["game_pk"].unique())
+            log.info("Loaded %d cached pitches (%d games) from %s",
+                     len(existing_df), len(existing_game_pks), parquet_file)
+        except Exception:
+            log.warning("Failed to load cached parquet", exc_info=True)
+
+    # Determine date range
     start = date(season, 4, 1)
     end = date(season, 9, 30)
-
-    # If mid-season, use yesterday as end
     today = date.today()
-    if today.year == season and today.month <= 9:
+    if today.year == season and today < end:
         end = today - timedelta(days=1)
 
-    chunks = []
-    chunk_start = start
-    while chunk_start <= end:
-        chunk_end = min(chunk_start + timedelta(days=13), end)
-        df = _fetch_savant_chunk(
-            chunk_start.strftime("%Y-%m-%d"),
-            chunk_end.strftime("%Y-%m-%d"),
-            sport_id,
-        )
-        if not df.empty:
-            chunks.append(df)
-        chunk_start = chunk_end + timedelta(days=1)
-        time.sleep(2)  # Rate limit
-
-    if not chunks:
-        log.warning("No MiLB data returned for %s %s", level, season)
+    if start > end:
+        # Season hasn't started yet
+        if not existing_df.empty:
+            _raw_cache[key] = existing_df
+            return existing_df
         return pd.DataFrame()
 
-    result = pd.concat(chunks, ignore_index=True)
+    # Get schedule
+    schedule = _fetch_schedule(sport_id, start.isoformat(), end.isoformat())
+    all_game_pks = {g["game_pk"] for g in schedule}
+    new_game_pks = all_game_pks - existing_game_pks
 
-    # Save cache
-    try:
-        result.to_parquet(cache_file, index=False)
-        log.info("Cached %d pitches to %s", len(result), cache_file)
-    except Exception:
-        log.warning("Failed to cache MiLB data", exc_info=True)
+    if not new_game_pks:
+        log.info("No new games to fetch for %s %d", level, season)
+        if not existing_df.empty:
+            _raw_cache[key] = existing_df
+            return existing_df
+        return pd.DataFrame()
+
+    log.info("Fetching %d new game feeds for %s %d (%d already cached)",
+             len(new_game_pks), level, season, len(existing_game_pks))
+
+    # Fetch game feeds in parallel
+    new_pitches: list[dict] = []
+    fetched = 0
+    failed = 0
+
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        futures = {
+            executor.submit(_fetch_game_feed, gpk): gpk
+            for gpk in new_game_pks
+        }
+        for future in as_completed(futures):
+            gpk = futures[future]
+            try:
+                feed = future.result()
+                if feed:
+                    rows = _extract_pitches_from_feed(feed)
+                    new_pitches.extend(rows)
+                    fetched += 1
+                else:
+                    failed += 1
+            except Exception:
+                failed += 1
+                log.warning("Error processing game %d", gpk, exc_info=True)
+
+            if (fetched + failed) % 50 == 0:
+                log.info("Progress: %d/%d games fetched (%d failed)",
+                         fetched, fetched + failed, failed)
+
+    log.info("Fetched %d games (%d pitches), %d failed",
+             fetched, len(new_pitches), failed)
+
+    # Combine with existing data
+    if new_pitches:
+        new_df = pd.DataFrame(new_pitches)
+        if not existing_df.empty:
+            result = pd.concat([existing_df, new_df], ignore_index=True)
+        else:
+            result = new_df
+
+        # Save updated parquet
+        try:
+            result.to_parquet(parquet_file, index=False)
+            log.info("Saved %d total pitches to %s", len(result), parquet_file)
+        except Exception:
+            log.warning("Failed to save parquet cache", exc_info=True)
+    else:
+        result = existing_df
+
+    if result.empty:
+        return pd.DataFrame()
 
     _raw_cache[key] = result
     return result
@@ -157,10 +377,7 @@ def fetch_milb_season(level: str = "AAA",
 
 def fetch_milb_pitcher(pitcher_id: int, level: str = "AAA",
                         season: int = MLB_SEASON) -> pd.DataFrame | None:
-    """Fetch Statcast data for a single MiLB pitcher.
-
-    Works like pybaseball.statcast_pitcher but for MiLB.
-    """
+    """Fetch Statcast data for a single MiLB pitcher."""
     raw = fetch_milb_season(level=level, season=season)
     if raw.empty:
         return None
@@ -206,22 +423,16 @@ def _fetch_player_info(player_id: int) -> dict:
 # ── Aggregation: pitch-type level stats ───────────────────────────────
 
 def aggregate_pitch_stats(raw: pd.DataFrame) -> pd.DataFrame:
-    """Aggregate raw Statcast data into per-pitcher, per-pitch-type stats.
-
-    Returns a DataFrame with columns matching Pitch Profiler format.
-    """
+    """Aggregate raw pitch data into per-pitcher, per-pitch-type stats."""
     if raw.empty:
         return pd.DataFrame()
 
     df = raw.copy()
-
-    # Identify column names (Savant format)
     pid_col = "pitcher" if "pitcher" in df.columns else "pitcher_id"
-    pt_col = "pitch_type"
     name_col = "player_name" if "player_name" in df.columns else None
 
     # Filter noise
-    df = df[df[pt_col].notna() & ~df[pt_col].isin(_NOISE)]
+    df = df[df["pitch_type"].notna() & ~df["pitch_type"].isin(_NOISE)]
     if df.empty:
         return pd.DataFrame()
 
@@ -249,21 +460,18 @@ def aggregate_pitch_stats(raw: pd.DataFrame) -> pd.DataFrame:
             (df["plate_x"].abs() <= 0.83) &
             (df["plate_z"].between(df["sz_bot"], df["sz_top"]))
         )
+    elif "zone" in df.columns:
+        df["_in_zone"] = df["zone"].between(1, 9)
     else:
         df["_in_zone"] = True
 
     df["_is_chase"] = df["_is_swing"] & ~df["_in_zone"]
 
-    # Break columns: Savant uses pfx_x/pfx_z in feet, convert to inches
-    if "pfx_x" in df.columns:
-        med = df["pfx_x"].dropna().abs().median()
-        if med < 2:  # in feet
-            df["hb"] = df["pfx_x"] * 12
-            df["ivb"] = df["pfx_z"] * 12
-        else:  # already inches
-            df["hb"] = df["pfx_x"]
-            df["ivb"] = df["pfx_z"]
-    else:
+    # Movement: pfx_x/pfx_z from game feed are already in inches
+    if "pfx_x" in df.columns and "hb" not in df.columns:
+        df["hb"] = df["pfx_x"]
+        df["ivb"] = df["pfx_z"]
+    elif "hb" not in df.columns:
         df["hb"] = np.nan
         df["ivb"] = np.nan
 
@@ -278,28 +486,34 @@ def aggregate_pitch_stats(raw: pd.DataFrame) -> pd.DataFrame:
         df["_pt_has_bb"] = False
         df["_pt_hard_hit"] = False
 
+    pt_col = "pitch_type"
     grouped = df.groupby([pid_col, pt_col])
 
-    agg = grouped.agg(
-        count=(pt_col, "size"),
-        velocity=("release_speed", "mean"),
-        spin_rate=("release_spin_rate" if "release_spin_rate" in df.columns
-                   else "spin_rate" if "spin_rate" in df.columns
-                   else pid_col, lambda x: x.mean() if x.dtype != object else np.nan),
-        hb=("hb", "mean"),
-        ivb=("ivb", "mean"),
-        release_extension=("release_extension", "mean"),
-        swings=("_is_swing", "sum"),
-        whiffs=("_is_whiff", "sum"),
-        called_strikes=("_is_called_strike", "sum"),
-        in_zone=("_in_zone", "sum"),
-        chases=("_is_chase", "sum"),
-        out_of_zone=("_in_zone", lambda x: (~x).sum()),
-        batted_balls=("_pt_has_bb", "sum"),
-        hard_hits=("_pt_hard_hit", "sum"),
-    ).reset_index()
+    spin_col = ("release_spin_rate" if "release_spin_rate" in df.columns
+                else "spin_rate" if "spin_rate" in df.columns
+                else None)
 
-    # Per-pitch-type exit velo and expected stats
+    agg_dict = {
+        "count": (pt_col, "size"),
+        "velocity": ("release_speed", "mean"),
+        "hb": ("hb", "mean"),
+        "ivb": ("ivb", "mean"),
+        "release_extension": ("release_extension", "mean"),
+        "swings": ("_is_swing", "sum"),
+        "whiffs": ("_is_whiff", "sum"),
+        "called_strikes": ("_is_called_strike", "sum"),
+        "in_zone": ("_in_zone", "sum"),
+        "chases": ("_is_chase", "sum"),
+        "out_of_zone": ("_in_zone", lambda x: (~x).sum()),
+        "batted_balls": ("_pt_has_bb", "sum"),
+        "hard_hits": ("_pt_hard_hit", "sum"),
+    }
+    if spin_col:
+        agg_dict["spin_rate"] = (spin_col, "mean")
+
+    agg = grouped.agg(**agg_dict).reset_index()
+
+    # Per-pitch-type exit velo
     if "launch_speed" in df.columns:
         ev_pt = df[df["launch_speed"].notna()].groupby([pid_col, pt_col]).agg(
             avg_exit_velo=("launch_speed", "mean"),
@@ -308,13 +522,8 @@ def aggregate_pitch_stats(raw: pd.DataFrame) -> pd.DataFrame:
     else:
         agg["avg_exit_velo"] = np.nan
 
-    if "estimated_ba_using_speedangle" in df.columns:
-        xba_pt = df[df["estimated_ba_using_speedangle"].notna()].groupby(
-            [pid_col, pt_col]
-        ).agg(xba=("estimated_ba_using_speedangle", "mean")).reset_index()
-        agg = agg.merge(xba_pt, on=[pid_col, pt_col], how="left")
-    else:
-        agg["xba"] = np.nan
+    # xBA (not available from game feed, but keep column for compatibility)
+    agg["xba"] = np.nan
 
     # Player name
     if name_col:
@@ -331,13 +540,11 @@ def aggregate_pitch_stats(raw: pd.DataFrame) -> pd.DataFrame:
         agg["p_throws"] = agg[pid_col].map(hand_map)
 
     # Team
-    team_cols = [c for c in ("home_team", "away_team") if c in df.columns]
-    if team_cols:
-        # Use the team the pitcher appeared on most
-        if "pitcher_team" in df.columns:
-            team_map = df.groupby(pid_col)["pitcher_team"].first()
-        else:
-            team_map = df.groupby(pid_col)[team_cols[0]].first()
+    if "pitcher_team" in df.columns:
+        team_map = df.groupby(pid_col)["pitcher_team"].first()
+        agg["team"] = agg[pid_col].map(team_map)
+    elif "home_team" in df.columns:
+        team_map = df.groupby(pid_col)["home_team"].first()
         agg["team"] = agg[pid_col].map(team_map)
 
     # Join total pitches
@@ -377,10 +584,7 @@ def aggregate_pitch_stats(raw: pd.DataFrame) -> pd.DataFrame:
 # ── Aggregation: season-level pitcher stats ───────────────────────────
 
 def aggregate_pitcher_stats(raw: pd.DataFrame) -> pd.DataFrame:
-    """Aggregate raw Statcast data into per-pitcher season stats.
-
-    Returns a DataFrame matching Pitch Profiler's season pitcher format.
-    """
+    """Aggregate raw pitch data into per-pitcher season stats."""
     if raw.empty:
         return pd.DataFrame()
 
@@ -417,6 +621,8 @@ def aggregate_pitcher_stats(raw: pd.DataFrame) -> pd.DataFrame:
             (df["plate_x"].abs() <= 0.83) &
             (df["plate_z"].between(df["sz_bot"], df["sz_top"]))
         )
+    elif "zone" in df.columns:
+        df["_in_zone"] = df["zone"].between(1, 9)
     else:
         df["_in_zone"] = True
 
@@ -432,7 +638,7 @@ def aggregate_pitcher_stats(raw: pd.DataFrame) -> pd.DataFrame:
         df["_is_first_pitch"] = False
         df["_is_first_pitch_strike"] = False
 
-    # Batted ball stats from Statcast
+    # Batted ball stats
     if "launch_speed" in df.columns:
         df["_has_batted_ball"] = df["launch_speed"].notna()
         df["_is_hard_hit"] = df["launch_speed"] >= 95
@@ -465,7 +671,6 @@ def aggregate_pitcher_stats(raw: pd.DataFrame) -> pd.DataFrame:
         df["_is_strikeout"] = False
         df["_is_walk"] = False
 
-    # Batters faced = unique at-bat events
     ab_col = "at_bat_number" if "at_bat_number" in df.columns else "event_index"
     game_col = "game_pk" if "game_pk" in df.columns else "game_id"
 
@@ -489,7 +694,7 @@ def aggregate_pitcher_stats(raw: pd.DataFrame) -> pd.DataFrame:
         ground_balls=("_is_ground_ball", "sum"),
     ).reset_index()
 
-    # Batted ball quality stats from Savant columns
+    # Exit velo
     if "launch_speed" in df.columns:
         ev_agg = df[df["launch_speed"].notna()].groupby(pid_col).agg(
             avg_exit_velo=("launch_speed", "mean"),
@@ -498,6 +703,7 @@ def aggregate_pitcher_stats(raw: pd.DataFrame) -> pd.DataFrame:
     else:
         agg["avg_exit_velo"] = np.nan
 
+    # Launch angle
     if "launch_angle" in df.columns:
         la_agg = df[df["launch_angle"].notna()].groupby(pid_col).agg(
             avg_launch_angle=("launch_angle", "mean"),
@@ -506,31 +712,19 @@ def aggregate_pitcher_stats(raw: pd.DataFrame) -> pd.DataFrame:
     else:
         agg["avg_launch_angle"] = np.nan
 
-    # Expected stats from Savant
-    if "estimated_ba_using_speedangle" in df.columns:
-        xba_agg = df[df["estimated_ba_using_speedangle"].notna()].groupby(pid_col).agg(
-            xba_against=("estimated_ba_using_speedangle", "mean"),
-        ).reset_index()
-        agg = agg.merge(xba_agg, on=pid_col, how="left")
-    else:
-        agg["xba_against"] = np.nan
-
-    if "estimated_woba_using_speedangle" in df.columns:
-        xwoba_agg = df[df["estimated_woba_using_speedangle"].notna()].groupby(pid_col).agg(
-            xwoba_against=("estimated_woba_using_speedangle", "mean"),
-        ).reset_index()
-        agg = agg.merge(xwoba_agg, on=pid_col, how="left")
-    else:
-        agg["xwoba_against"] = np.nan
+    # xBA/xwOBA not available from game feed
+    agg["xba_against"] = np.nan
+    agg["xwoba_against"] = np.nan
 
     # Batters faced (unique game + at_bat combos)
     if game_col in df.columns and ab_col in df.columns:
         bf = df.groupby(pid_col).apply(
-            lambda x: x[[game_col, ab_col]].drop_duplicates().shape[0]
+            lambda x: x[[game_col, ab_col]].drop_duplicates().shape[0],
+            include_groups=False,
         ).rename("batters_faced")
         agg = agg.merge(bf.reset_index(), on=pid_col)
     else:
-        agg["batters_faced"] = agg["total_pitches"] / 4  # rough estimate
+        agg["batters_faced"] = agg["total_pitches"] / 4
 
     # Player name
     if name_col:
@@ -545,9 +739,10 @@ def aggregate_pitcher_stats(raw: pd.DataFrame) -> pd.DataFrame:
     if "p_throws" in df.columns:
         agg["p_throws"] = agg[pid_col].map(df.groupby(pid_col)["p_throws"].first())
 
-    team_cols = [c for c in ("home_team", "away_team", "pitcher_team") if c in df.columns]
-    if team_cols:
-        agg["team"] = agg[pid_col].map(df.groupby(pid_col)[team_cols[-1]].first())
+    if "pitcher_team" in df.columns:
+        agg["team"] = agg[pid_col].map(df.groupby(pid_col)["pitcher_team"].first())
+    elif "home_team" in df.columns:
+        agg["team"] = agg[pid_col].map(df.groupby(pid_col)["home_team"].first())
 
     # Compute rates
     agg["strike_out_percentage"] = np.where(
@@ -603,7 +798,7 @@ def aggregate_pitcher_stats(raw: pd.DataFrame) -> pd.DataFrame:
 
 def get_milb_season_pitchers(level: str = "AAA",
                               season: int = MLB_SEASON) -> pd.DataFrame:
-    """Get season-level MiLB pitcher stats (like pitch_profiler.get_season_pitchers)."""
+    """Get season-level MiLB pitcher stats."""
     key = f"{level}_{season}"
     if key in _season_pitchers_cache:
         return _season_pitchers_cache[key]
@@ -619,7 +814,7 @@ def get_milb_season_pitchers(level: str = "AAA",
 
 def get_milb_season_pitches(level: str = "AAA",
                              season: int = MLB_SEASON) -> pd.DataFrame:
-    """Get pitch-type level MiLB stats (like pitch_profiler.get_season_pitches)."""
+    """Get pitch-type level MiLB stats."""
     key = f"{level}_{season}"
     if key in _season_pitches_cache:
         return _season_pitches_cache[key]
@@ -633,19 +828,65 @@ def get_milb_season_pitches(level: str = "AAA",
     return result
 
 
+# ── Player picking ────────────────────────────────────────────────────
+
+_mlb_ids_cache: set[int] | None = None
+
+
+def _get_mlb_player_ids(season: int = MLB_SEASON) -> set[int]:
+    """Get MLB player IDs from Pitch Profiler to exclude from MiLB picks."""
+    try:
+        from . import pitch_profiler
+        mlb_df = pitch_profiler.get_season_pitchers()
+        if mlb_df.empty:
+            return set()
+        pid_col = "pitcher_id" if "pitcher_id" in mlb_df.columns else "player_id"
+        if pid_col in mlb_df.columns:
+            return set(mlb_df[pid_col].dropna().astype(int).tolist())
+    except Exception:
+        log.warning("Could not load MLB player IDs for filtering", exc_info=True)
+    return set()
+
+
 def pick_milb_player(level: str = "AAA",
                      season: int = MLB_SEASON,
-                     min_pitches: int = 200) -> dict | None:
-    """Pick a random MiLB pitcher with enough data for a card."""
-    import random
+                     min_pitches: int = 400,
+                     min_batters_faced: int = 100) -> dict | None:
+    """Pick a random MiLB pitcher with enough data for a card.
+
+    Filters out MLB players by cross-referencing against the MLB
+    Pitch Profiler dataset.
+    """
+    global _mlb_ids_cache
 
     pitchers = get_milb_season_pitchers(level=level, season=season)
     if pitchers.empty:
         return None
 
-    qualified = pitchers[pitchers["total_pitches"] >= min_pitches]
+    # Load MLB player IDs to exclude
+    if _mlb_ids_cache is None:
+        _mlb_ids_cache = _get_mlb_player_ids(season)
+        log.info("Loaded %d MLB player IDs for MiLB filtering", len(_mlb_ids_cache))
+
+    # Filter: enough pitches/BF AND not in MLB dataset
+    qualified = pitchers[
+        (pitchers["total_pitches"] >= min_pitches) &
+        (pitchers["batters_faced"] >= min_batters_faced)
+    ]
+
+    if _mlb_ids_cache:
+        qualified = qualified[~qualified["player_id"].isin(_mlb_ids_cache)]
+
     if qualified.empty:
-        qualified = pitchers
+        log.warning("No qualified MiLB-only pitchers at %s after filtering", level)
+        # Relax pitch threshold but keep MLB filter
+        qualified = pitchers[pitchers["total_pitches"] >= 100]
+        if _mlb_ids_cache:
+            qualified = qualified[~qualified["player_id"].isin(_mlb_ids_cache)]
+
+    if qualified.empty:
+        log.warning("No MiLB pitchers found at %s after all filters", level)
+        return None
 
     row = qualified.sample(1).iloc[0]
     pid = int(row["player_id"])

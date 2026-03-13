@@ -8,6 +8,7 @@ screenshots/
 *.jpg
 *.mp4
 data/clips/
+data/milb_cache/
 !data/players.json
 !data/post_history.json
 .pytest_cache/

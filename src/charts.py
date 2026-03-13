@@ -2644,3 +2644,813 @@ def plot_arsenal_usage(name: str, pitches_df: "pd.DataFrame",
     except Exception:
         log.warning("plot_arsenal_usage failed for %s", name, exc_info=True)
         return None
+
+
+# ── Traditional MiLB Stats (non-AAA levels) ──────────────────────────
+
+# Stats for the traditional pitcher card percentile bars
+_TRAD_CARD_STATS = [
+    # (api_column, display_label, lower_is_better)
+    ("era", "ERA", True),
+    ("whip", "WHIP", True),
+    ("strikeoutsPer9Inn", "K/9", False),
+    ("walksPer9Inn", "BB/9", True),
+    ("k_minus_bb", "K-BB%", False),
+    ("homeRunsPer9", "HR/9", True),
+    ("strikeoutWalkRatio", "K/BB", False),
+    ("avg", "BAVG", True),
+    ("groundOutsToAirouts", "GO/AO", False),
+    ("hitsPer9Inn", "H/9", True),
+]
+
+# Stats for the traditional summary top table
+_TRAD_SUMMARY_STATS = [
+    ("inningsPitched", "$\\bf{IP}$", ".1f"),
+    ("era", "$\\bf{ERA}$", ".2f"),
+    ("whip", "$\\bf{WHIP}$", ".2f"),
+    ("strikeoutsPer9Inn", "$\\bf{K/9}$", ".2f"),
+    ("walksPer9Inn", "$\\bf{BB/9}$", ".2f"),
+    ("k_pct", "$\\bf{K\\%}$", ".1%"),
+    ("bb_pct", "$\\bf{BB\\%}$", ".1%"),
+    ("homeRunsPer9", "$\\bf{HR/9}$", ".2f"),
+    ("avg", "$\\bf{BAVG}$", ".3f"),
+    ("groundOutsToAirouts", "$\\bf{GO/AO}$", ".2f"),
+]
+
+# Radar chart axes
+_RADAR_STATS = [
+    # (column, label, higher_is_better)
+    ("strikeoutsPer9Inn", "K/9", True),
+    ("walksPer9Inn", "BB/9", False),
+    ("era", "ERA", False),
+    ("whip", "WHIP", False),
+    ("homeRunsPer9", "HR/9", False),
+    ("groundOutsToAirouts", "GO/AO", True),
+]
+
+
+def plot_traditional_pitcher_card(
+    name: str,
+    season_df: "pd.DataFrame",
+    player_id: int | None = None,
+    team: str | None = None,
+    level: str = "AA",
+    game_log: list[dict] | None = None,
+    league_avgs: dict | None = None,
+) -> Path | None:
+    """Render a traditional-stats MiLB pitcher card (1200x675, dark theme).
+
+    Left panel: percentile bars using traditional stats.
+    Right panel: game log trend chart (top) + radar chart (bottom).
+    """
+    try:
+        import pandas as pd
+
+        # ── Locate pitcher row ────────────────────────────────────────
+        name_col = None
+        for c in ("pitcher_name", "player_name", "name"):
+            if c in season_df.columns:
+                name_col = c
+                break
+        if not name_col:
+            return None
+
+        matches = season_df[season_df[name_col] == name]
+        if matches.empty and player_id is not None:
+            matches = season_df[season_df["player_id"] == player_id]
+        if matches.empty:
+            return None
+        player = matches.iloc[0]
+
+        # ── Team colour accent ────────────────────────────────────────
+        if not team:
+            for tc in ("team", "team_abbreviation"):
+                if tc in player.index and player[tc]:
+                    team = str(player[tc]).upper()
+                    break
+        accent = TEAM_COLORS.get(team or "", "#3a86ff")
+
+        from .milb_statcast import LEVEL_NAMES
+        level_display = LEVEL_NAMES.get(level, level)
+
+        # ── Compute percentiles ───────────────────────────────────────
+        stat_labels: list[str] = []
+        stat_values: list[str] = []
+        stat_raw: list[float] = []
+        pctiles: list[float] = []
+
+        for col, label, lower_better in _TRAD_CARD_STATS:
+            if col not in season_df.columns or col not in player.index:
+                continue
+            vals = season_df[col].dropna()
+            if vals.empty:
+                continue
+            raw = player[col]
+            try:
+                raw_f = float(raw)
+            except (TypeError, ValueError):
+                continue
+            if pd.isna(raw_f):
+                continue
+
+            pctile = (vals < raw_f).sum() / len(vals) * 100
+            if lower_better:
+                pctile = 100 - pctile
+
+            stat_labels.append(label)
+            stat_raw.append(raw_f)
+            if col in ("k_pct", "bb_pct", "k_minus_bb", "strikePercentage"):
+                stat_values.append(f"{raw_f * 100:.1f}%")
+            elif col in ("era", "whip", "fip"):
+                stat_values.append(f"{raw_f:.2f}")
+            elif col == "avg":
+                stat_values.append(f"{raw_f:.3f}")
+            else:
+                stat_values.append(f"{raw_f:.2f}")
+            pctiles.append(pctile)
+
+        if not stat_labels:
+            return None
+
+        # ── Build figure ──────────────────────────────────────────────
+        fig = plt.figure(figsize=(FIG_W, FIG_H), dpi=100)
+        fig.set_facecolor(CARD_BG)
+
+        # Background noise texture
+        noise = np.random.default_rng(42).uniform(0.04, 0.07, (68, 120))
+        bg_ax = fig.add_axes([0, 0, 1, 1])
+        bg_ax.imshow(noise, aspect="auto", cmap="gray", alpha=0.03,
+                     extent=[0, 1, 0, 1])
+        bg_ax.axis("off")
+
+        # Header gradient
+        _draw_gradient_rect(fig, [0, 0.78, 1, 0.22], accent, CARD_BG, alpha=0.25)
+
+        # Accent stripe at top
+        stripe = fig.add_axes([0, 0.97, 1, 0.03])
+        stripe.set_xlim(0, 1)
+        stripe.set_ylim(0, 1)
+        stripe.add_patch(Rectangle((0, 0), 1, 1, color=accent))
+        stripe.axis("off")
+
+        # Headshot
+        name_x = 0.04
+        if player_id:
+            hs_arr = _fetch_headshot(player_id, accent)
+            if hs_arr is not None:
+                name_x = 0.18
+                hs_ax = fig.add_axes([0.02, 0.75, 0.13, 0.22])
+                hs_ax.imshow(hs_arr)
+                hs_ax.axis("off")
+
+        # Player name
+        shadow = [patheffects.withStroke(linewidth=4, foreground=CARD_BG)]
+        fig.text(
+            name_x, 0.95, name,
+            fontsize=28, fontweight="bold", color=CARD_TEXT,
+            ha="left", va="top", path_effects=shadow,
+        )
+
+        # Team + level subtitle
+        team_label = f"{team}  |  " if team else ""
+        fig.text(
+            name_x, 0.88, f"{team_label}{MLB_SEASON} {level_display}",
+            fontsize=13, color=CARD_TEXT_MUTED,
+            ha="left", va="top",
+        )
+
+        # Level badge
+        badge_ax = fig.add_axes([0.88, 0.90, 0.10, 0.06])
+        badge_ax.set_xlim(0, 1)
+        badge_ax.set_ylim(0, 1)
+        badge_ax.add_patch(FancyBboxPatch(
+            (0.05, 0.1), 0.9, 0.8,
+            boxstyle="round,pad=0,rounding_size=0.3",
+            facecolor=accent, edgecolor="none", alpha=0.9,
+        ))
+        badge_ax.text(0.5, 0.5, level, fontsize=12, fontweight="bold",
+                      color="white", ha="center", va="center")
+        badge_ax.axis("off")
+
+        # ── Hero stat boxes (ERA, K/9, WHIP, K/BB) ───────────────────
+        hero_map = {"ERA": 0, "K/9": 1, "WHIP": 2, "K/BB": 3}
+        hero_stats = []
+        for lbl, val, pct in zip(stat_labels, stat_values, pctiles):
+            if lbl in hero_map:
+                hero_stats.append((lbl, val, pct, hero_map[lbl]))
+        hero_stats.sort(key=lambda x: x[3])
+        hero_stats = hero_stats[:4]
+
+        box_y = 0.79
+        box_w = 0.095
+        box_h = 0.07
+        box_gap = 0.008
+        for i, (lbl, val, pct, _) in enumerate(hero_stats):
+            bx = name_x + i * (box_w + box_gap)
+            box_ax = fig.add_axes([bx, box_y, box_w, box_h])
+            box_ax.set_xlim(0, 1)
+            box_ax.set_ylim(0, 1)
+            box_ax.add_patch(FancyBboxPatch(
+                (0.02, 0.02), 0.96, 0.96,
+                boxstyle="round,pad=0,rounding_size=0.15",
+                facecolor=CARD_SURFACE, edgecolor=CARD_BORDER, linewidth=1,
+            ))
+            box_ax.plot([0.15, 0.85], [0.98, 0.98], color=_pctile_color(pct),
+                        linewidth=3, solid_capstyle="round")
+            box_ax.text(0.5, 0.62, val, fontsize=14, fontweight="bold",
+                        color=CARD_TEXT, ha="center", va="center")
+            box_ax.text(0.5, 0.22, lbl, fontsize=8,
+                        color=CARD_TEXT_MUTED, ha="center", va="center")
+            box_ax.axis("off")
+
+        # ── Accent divider line ───────────────────────────────────────
+        div_ax = fig.add_axes([0.03, 0.74, 0.94, 0.004])
+        div_ax.set_xlim(0, 1)
+        div_ax.set_ylim(0, 1)
+        grad = np.linspace(0, 1, 256).reshape(1, -1)
+        cmap_div = LinearSegmentedColormap.from_list("div", ["#00000000", accent, "#00000000"])
+        div_ax.imshow(grad, aspect="auto", cmap=cmap_div, extent=[0, 1, 0, 1])
+        div_ax.axis("off")
+
+        # ── Section header: TRADITIONAL PROFILE ──────────────────────
+        fig.text(0.05, 0.71, "\u2502", fontsize=14, color=accent,
+                 ha="left", va="top", fontweight="bold")
+        fig.text(0.065, 0.71, "TRADITIONAL PROFILE", fontsize=11,
+                 color=CARD_TEXT_MUTED, ha="left", va="top",
+                 fontweight="bold", style="italic")
+
+        # ── Left panel: percentile bars ───────────────────────────────
+        left_ax = fig.add_axes([0.04, 0.07, 0.43, 0.61])
+        left_ax.set_xlim(0, 1.12)
+        left_ax.set_ylim(-0.5, len(stat_labels) - 0.5)
+        left_ax.invert_yaxis()
+        left_ax.set_facecolor("none")
+        for spine in left_ax.spines.values():
+            spine.set_visible(False)
+        left_ax.tick_params(left=False, bottom=False, labelbottom=False,
+                            labelleft=False)
+
+        bar_track_w = 0.58
+        bar_x0 = 0.20
+        bar_h = 0.026
+
+        for i, (lbl, val, pct) in enumerate(zip(stat_labels, stat_values, pctiles)):
+            y = i
+            color = _pctile_color(pct)
+
+            left_ax.text(0.0, y, lbl, fontsize=10, fontweight="bold",
+                         color=CARD_TEXT, va="center", ha="left")
+
+            _rounded_bar(left_ax, bar_x0, y, bar_track_w, bar_h,
+                         CARD_BORDER, alpha=0.5)
+            fill_w = max((pct / 100) * bar_track_w, 0.008)
+            _rounded_bar(left_ax, bar_x0, y, fill_w, bar_h, color, alpha=0.9)
+
+            val_x = bar_x0 + fill_w - 0.01 if pct > 25 else bar_x0 + fill_w + 0.01
+            val_ha = "right" if pct > 25 else "left"
+            val_color = "white" if pct > 25 else CARD_TEXT
+            left_ax.text(val_x, y, val, fontsize=9, fontweight="bold",
+                         color=val_color, va="center", ha=val_ha)
+
+            left_ax.text(bar_x0 + bar_track_w + 0.03, y,
+                         f"{pct:.0f}th", fontsize=9, fontweight="bold",
+                         color=color, va="center", ha="left")
+
+        # ── Vertical divider ──────────────────────────────────────────
+        vdiv = fig.add_axes([0.505, 0.08, 0.003, 0.63])
+        vdiv.set_xlim(0, 1)
+        vdiv.set_ylim(0, 1)
+        vgrad = np.linspace(0, 1, 256).reshape(-1, 1)
+        cmap_v = LinearSegmentedColormap.from_list("vd", ["#00000000", CARD_BORDER, "#00000000"])
+        vdiv.imshow(vgrad, aspect="auto", cmap=cmap_v, extent=[0, 1, 0, 1])
+        vdiv.axis("off")
+
+        # ── Right panel header ────────────────────────────────────────
+        fig.text(0.53, 0.71, "\u2502", fontsize=14, color=accent,
+                 ha="left", va="top", fontweight="bold")
+        fig.text(0.545, 0.71, "SEASON TREND", fontsize=11,
+                 color=CARD_TEXT_MUTED, ha="left", va="top",
+                 fontweight="bold", style="italic")
+
+        # ── Right panel: game log trend (top) + radar (bottom) ────────
+        has_gamelog = game_log and len(game_log) >= 2
+        has_radar = league_avgs and len(league_avgs) >= 3
+
+        if has_gamelog and has_radar:
+            # Split right panel: trend top, radar bottom
+            trend_ax = fig.add_axes([0.54, 0.40, 0.42, 0.28])
+            radar_ax = fig.add_axes([0.60, 0.05, 0.32, 0.32], polar=True)
+        elif has_gamelog:
+            trend_ax = fig.add_axes([0.54, 0.10, 0.42, 0.55])
+            radar_ax = None
+        elif has_radar:
+            trend_ax = None
+            radar_ax = fig.add_axes([0.58, 0.10, 0.38, 0.50], polar=True)
+        else:
+            trend_ax = None
+            radar_ax = None
+
+        # ── Game log trend chart ──────────────────────────────────────
+        if trend_ax and has_gamelog:
+            gl = game_log
+            dates = list(range(len(gl)))
+            eras = [g.get("era", np.nan) for g in gl]
+            ks = []
+            for g in gl:
+                ip = g.get("inningsPitched", 0) or 0
+                k = g.get("strikeOuts", 0) or 0
+                ks.append((k * 9 / ip) if ip > 0 else np.nan)
+
+            trend_ax.set_facecolor(CARD_SURFACE)
+            for spine in trend_ax.spines.values():
+                spine.set_color(CARD_BORDER)
+            trend_ax.tick_params(colors=CARD_TEXT_MUTED, labelsize=7)
+            trend_ax.grid(True, color=CARD_BORDER, alpha=0.3)
+
+            # ERA line
+            valid_eras = [(d, e) for d, e in zip(dates, eras) if not np.isnan(e)]
+            if valid_eras:
+                d_e, v_e = zip(*valid_eras)
+                trend_ax.plot(d_e, v_e, color="#ff6b6b", linewidth=2,
+                              marker="o", markersize=4, label="ERA", zorder=3)
+
+            trend_ax.set_ylabel("ERA", color="#ff6b6b", fontsize=8)
+
+            # K/9 on secondary y-axis
+            ax2 = trend_ax.twinx()
+            ax2.set_facecolor("none")
+            ax2.tick_params(colors=CARD_TEXT_MUTED, labelsize=7)
+            ax2.spines["right"].set_color(CARD_BORDER)
+            ax2.spines["left"].set_color(CARD_BORDER)
+            ax2.spines["top"].set_color(CARD_BORDER)
+            ax2.spines["bottom"].set_color(CARD_BORDER)
+
+            valid_ks = [(d, k) for d, k in zip(dates, ks) if not np.isnan(k)]
+            if valid_ks:
+                d_k, v_k = zip(*valid_ks)
+                ax2.plot(d_k, v_k, color="#4ecdc4", linewidth=2,
+                         marker="s", markersize=4, label="K/9", zorder=3)
+
+            ax2.set_ylabel("K/9", color="#4ecdc4", fontsize=8)
+
+            trend_ax.set_xlabel("Game #", color=CARD_TEXT_MUTED, fontsize=8)
+            trend_ax.set_title("ERA & K/9 by Game", color=CARD_TEXT,
+                               fontsize=10, fontweight="bold", pad=6)
+
+            # Legend
+            lines1, labels1 = trend_ax.get_legend_handles_labels()
+            lines2, labels2 = ax2.get_legend_handles_labels()
+            trend_ax.legend(lines1 + lines2, labels1 + labels2,
+                            loc="upper right", fontsize=7,
+                            facecolor=CARD_SURFACE, edgecolor=CARD_BORDER,
+                            labelcolor=CARD_TEXT_MUTED)
+
+        # ── Radar chart ───────────────────────────────────────────────
+        if radar_ax and has_radar:
+            radar_stats = []
+            for col, label, higher_good in _RADAR_STATS:
+                if col in player.index and col in league_avgs:
+                    try:
+                        val = float(player[col])
+                    except (TypeError, ValueError):
+                        continue
+                    if pd.isna(val):
+                        continue
+                    avg = league_avgs[col]
+                    # Normalize: ratio of player to league avg
+                    # For "lower is better" stats, invert
+                    if higher_good:
+                        score = val / avg if avg > 0 else 1.0
+                    else:
+                        score = avg / val if val > 0 else 1.0
+                    # Clamp to 0.2 - 2.0
+                    score = max(0.2, min(2.0, score))
+                    radar_stats.append((label, score))
+
+            if len(radar_stats) >= 3:
+                labels_r = [s[0] for s in radar_stats]
+                scores = [s[1] for s in radar_stats]
+
+                angles = np.linspace(0, 2 * np.pi, len(labels_r),
+                                     endpoint=False).tolist()
+                scores_plot = scores + scores[:1]
+                angles_plot = angles + angles[:1]
+                avg_line = [1.0] * (len(labels_r) + 1)
+
+                radar_ax.set_facecolor(CARD_SURFACE)
+                radar_ax.plot(angles_plot, avg_line, color=CARD_TEXT_MUTED,
+                              linewidth=1, linestyle="--", alpha=0.5,
+                              label="Lg Avg")
+                radar_ax.fill(angles_plot, avg_line, color=CARD_TEXT_MUTED,
+                              alpha=0.05)
+                radar_ax.plot(angles_plot, scores_plot, color=accent,
+                              linewidth=2, label=name.split()[-1])
+                radar_ax.fill(angles_plot, scores_plot, color=accent,
+                              alpha=0.15)
+
+                radar_ax.set_xticks(angles)
+                radar_ax.set_xticklabels(labels_r, fontsize=8, color=CARD_TEXT,
+                                         fontweight="bold")
+                radar_ax.set_yticklabels([])
+                radar_ax.set_ylim(0, 2.0)
+                radar_ax.spines["polar"].set_color(CARD_BORDER)
+                radar_ax.grid(color=CARD_BORDER, alpha=0.3)
+                radar_ax.set_title("vs League Avg", color=CARD_TEXT,
+                                   fontsize=10, fontweight="bold", pad=12)
+                radar_ax.legend(loc="lower right", fontsize=7,
+                                facecolor=CARD_SURFACE, edgecolor=CARD_BORDER,
+                                labelcolor=CARD_TEXT_MUTED,
+                                bbox_to_anchor=(1.3, -0.1))
+
+        # ── Fallback: no data for right panel ─────────────────────────
+        if not has_gamelog and not has_radar:
+            no_ax = fig.add_axes([0.52, 0.07, 0.46, 0.61])
+            no_ax.set_facecolor("none")
+            no_ax.axis("off")
+            # Show key stats as large text
+            stat_lines = []
+            for col, lbl in [("era", "ERA"), ("whip", "WHIP"),
+                              ("inningsPitched", "IP"),
+                              ("strikeOuts", "K"), ("baseOnBalls", "BB")]:
+                if col in player.index:
+                    try:
+                        v = float(player[col])
+                        if col == "era":
+                            stat_lines.append(f"{lbl}: {v:.2f}")
+                        elif col == "whip":
+                            stat_lines.append(f"{lbl}: {v:.2f}")
+                        else:
+                            stat_lines.append(f"{lbl}: {v:.0f}")
+                    except (TypeError, ValueError):
+                        pass
+            for i, line in enumerate(stat_lines):
+                no_ax.text(0.5, 0.85 - i * 0.18, line,
+                           fontsize=18, fontweight="bold",
+                           color=CARD_TEXT, ha="center", va="center")
+
+        # ── Footer ────────────────────────────────────────────────────
+        foot_ax = fig.add_axes([0.03, 0.0, 0.94, 0.003])
+        foot_ax.set_xlim(0, 1)
+        foot_ax.set_ylim(0, 1)
+        foot_ax.add_patch(Rectangle((0, 0), 1, 1, color=CARD_BORDER))
+        foot_ax.axis("off")
+
+        fig.text(0.04, 0.025, "@TJStatsBot", fontsize=10, color=accent,
+                 ha="left", va="center", fontweight="bold")
+        fig.text(0.5, 0.025, "Data: MLB Stats API", fontsize=9,
+                 color=CARD_TEXT_MUTED, ha="center", va="center")
+        fig.text(0.96, 0.025, f"{MLB_SEASON} {level_display}", fontsize=9,
+                 color=CARD_TEXT_MUTED, ha="right", va="center")
+
+        # ── Save ──────────────────────────────────────────────────────
+        safe = name.replace(" ", "_").lower()
+        out = SCREENSHOTS_DIR / f"trad_pitcher_card_{safe}.png"
+        _draw_watermark(fig)
+        fig.savefig(out, facecolor=fig.get_facecolor(), dpi=100,
+                    bbox_inches="tight", pad_inches=0.02)
+        plt.close(fig)
+        log.info("Saved traditional pitcher card: %s", out)
+        return out
+
+    except Exception:
+        log.warning("plot_traditional_pitcher_card failed for %s", name,
+                    exc_info=True)
+        return None
+
+
+def plot_traditional_pitching_summary(
+    name: str,
+    season_df: "pd.DataFrame",
+    player_id: int | None = None,
+    team: str | None = None,
+    level: str = "AA",
+    game_log: list[dict] | None = None,
+    monthly_splits: list[dict] | None = None,
+    league_avgs: dict | None = None,
+) -> Path | None:
+    """Render a traditional-stats pitching summary dashboard (white theme).
+
+    Row 1: Header (headshot + bio)
+    Row 2: Season stats table
+    Row 3: Game log trend chart + radar chart (replaces movement plot)
+    Row 4: Monthly splits table (replaces pitch-type table)
+    Row 5: Footer
+    """
+    try:
+        import pandas as pd
+        import matplotlib.gridspec as gridspec
+
+        # ── Locate pitcher ────────────────────────────────────────────
+        name_col = None
+        for c in ("pitcher_name", "player_name", "name"):
+            if c in season_df.columns:
+                name_col = c
+                break
+        if not name_col:
+            return None
+
+        matches = season_df[season_df[name_col] == name]
+        if matches.empty and player_id is not None:
+            matches = season_df[season_df["player_id"] == player_id]
+        if matches.empty:
+            return None
+        player = matches.iloc[0]
+
+        # ── Team info ─────────────────────────────────────────────────
+        if not team:
+            for tc in ("team", "team_abbreviation"):
+                if tc in player.index and player[tc]:
+                    team = str(player[tc]).upper()
+                    break
+        accent = TEAM_COLORS.get(team or "", "#3a86ff")
+
+        from .milb_statcast import LEVEL_NAMES
+        level_display = LEVEL_NAMES.get(level, level)
+
+        # Pitcher hand
+        p_throws = "R"
+        for hc in ("p_throws", "throws"):
+            if hc in player.index and player[hc]:
+                p_throws = str(player[hc])[0].upper()
+                break
+
+        # ── Figure + GridSpec ─────────────────────────────────────────
+        fig = plt.figure(figsize=(20, 20), dpi=150)
+        fig.set_facecolor("white")
+
+        gs = gridspec.GridSpec(
+            6, 8,
+            height_ratios=[2, 18, 8, 30, 30, 5],
+            width_ratios=[1, 18, 18, 18, 18, 18, 18, 1],
+            hspace=0.3, wspace=0.3,
+        )
+
+        # Border axes (hidden)
+        for pos in [gs[0, 1:7], gs[-1, 1:7], gs[:, 0], gs[:, -1]]:
+            bax = fig.add_subplot(pos)
+            bax.axis("off")
+
+        # ── Row 1: Header ─────────────────────────────────────────────
+        ax_headshot = fig.add_subplot(gs[1, 1:3])
+        ax_bio = fig.add_subplot(gs[1, 3:5])
+        ax_logo = fig.add_subplot(gs[1, 5:7])
+
+        # Headshot
+        ax_headshot.axis("off")
+        if player_id:
+            try:
+                hs_url = (
+                    f"https://img.mlbstatic.com/mlb-photos/image/upload/"
+                    f"d_people:generic:headshot:67:current.png/"
+                    f"w_640,q_auto:best/v1/people/{player_id}"
+                    f"/headshot/silo/current.png"
+                )
+                resp = _requests.get(hs_url, timeout=10)
+                resp.raise_for_status()
+                from PIL import Image
+                img = Image.open(BytesIO(resp.content))
+                ax_headshot.set_xlim(0, 1.3)
+                ax_headshot.set_ylim(0, 1)
+                ax_headshot.imshow(img, extent=[0, 1, 0, 1], origin="upper")
+            except Exception:
+                log.debug("Headshot failed for %s", player_id)
+
+        # Bio text
+        ax_bio.axis("off")
+        hand_str = f"{p_throws}HP"
+        ax_bio.text(0.5, 1.0, name, va="top", ha="center",
+                    fontsize=48, fontweight="bold")
+        ax_bio.text(0.5, 0.60, hand_str, va="top", ha="center",
+                    fontsize=26, color="#555555")
+        ax_bio.text(0.5, 0.35, "Season Pitching Summary", va="top",
+                    ha="center", fontsize=34, fontweight="bold")
+        ax_bio.text(0.5, 0.10, f"{MLB_SEASON} {level_display} Season", va="top",
+                    ha="center", fontsize=26, fontstyle="italic",
+                    color="#666666")
+
+        ax_logo.axis("off")
+
+        # ── Row 2: Season Stats Table ─────────────────────────────────
+        ax_season = fig.add_subplot(gs[2, 1:7])
+        ax_season.axis("off")
+
+        season_headers = []
+        season_values = []
+        for col, header, fmt in _TRAD_SUMMARY_STATS:
+            if col in player.index:
+                try:
+                    val = float(player[col])
+                    season_values.append(format(val, fmt))
+                    season_headers.append(header)
+                except (TypeError, ValueError):
+                    pass
+
+        if season_values:
+            tbl = ax_season.table(
+                cellText=[season_values],
+                colLabels=season_headers,
+                cellLoc="center",
+                bbox=[0.0, 0.0, 1, 1],
+            )
+            tbl.auto_set_font_size(False)
+            tbl.set_fontsize(20)
+            tbl.scale(1, 2.5)
+            for key, cell in tbl.get_celld().items():
+                cell.set_edgecolor("#cccccc")
+                if key[0] == 0:
+                    cell.set_facecolor("#f0f0f0")
+                    cell.set_text_props(fontweight="bold")
+
+        # ── Row 3: Game Log Trend + Radar Chart ───────────────────────
+        ax_trend = fig.add_subplot(gs[3, 1:4])
+        ax_radar_host = fig.add_subplot(gs[3, 4:7])
+
+        # Game log trend
+        has_gamelog = game_log and len(game_log) >= 2
+        if has_gamelog:
+            gl = game_log
+            game_nums = list(range(1, len(gl) + 1))
+            eras = [g.get("era", np.nan) for g in gl]
+            ks_per_9 = []
+            for g in gl:
+                ip = g.get("inningsPitched", 0) or 0
+                k = g.get("strikeOuts", 0) or 0
+                ks_per_9.append((k * 9 / ip) if ip > 0 else np.nan)
+
+            # ERA line
+            valid_eras = [(d, e) for d, e in zip(game_nums, eras)
+                          if not np.isnan(e)]
+            if valid_eras:
+                d_e, v_e = zip(*valid_eras)
+                ax_trend.plot(d_e, v_e, color="#d62828", linewidth=2.5,
+                              marker="o", markersize=5, label="ERA",
+                              zorder=3)
+            ax_trend.set_ylabel("ERA", fontsize=14, color="#d62828")
+
+            # K/9 on twin axis
+            ax_k9 = ax_trend.twinx()
+            valid_ks = [(d, k) for d, k in zip(game_nums, ks_per_9)
+                        if not np.isnan(k)]
+            if valid_ks:
+                d_k, v_k = zip(*valid_ks)
+                ax_k9.plot(d_k, v_k, color="#3a86ff", linewidth=2.5,
+                           marker="s", markersize=5, label="K/9",
+                           zorder=3)
+            ax_k9.set_ylabel("K/9", fontsize=14, color="#3a86ff")
+            ax_k9.tick_params(labelsize=10)
+
+            ax_trend.set_xlabel("Game #", fontsize=14)
+            ax_trend.set_title("ERA & K/9 by Game", fontsize=20,
+                               fontweight="bold")
+            ax_trend.grid(True, alpha=0.3)
+            ax_trend.tick_params(labelsize=10)
+
+            # Legend
+            lines1, labels1 = ax_trend.get_legend_handles_labels()
+            lines2, labels2 = ax_k9.get_legend_handles_labels()
+            ax_trend.legend(lines1 + lines2, labels1 + labels2,
+                            loc="upper right", fontsize=12)
+        else:
+            ax_trend.axis("off")
+            ax_trend.text(0.5, 0.5, "Not enough games for trend",
+                          ha="center", va="center", fontsize=16)
+
+        # Radar chart
+        has_radar = league_avgs and len(league_avgs) >= 3
+        ax_radar_host.axis("off")  # hide the grid subplot
+
+        if has_radar:
+            radar_stats = []
+            for col, label, higher_good in _RADAR_STATS:
+                if col in player.index and col in league_avgs:
+                    try:
+                        val = float(player[col])
+                    except (TypeError, ValueError):
+                        continue
+                    if pd.isna(val):
+                        continue
+                    avg = league_avgs[col]
+                    if higher_good:
+                        score = val / avg if avg > 0 else 1.0
+                    else:
+                        score = avg / val if val > 0 else 1.0
+                    score = max(0.2, min(2.0, score))
+                    radar_stats.append((label, score))
+
+            if len(radar_stats) >= 3:
+                # Create polar axes in the same region
+                pos = ax_radar_host.get_position()
+                radar_ax = fig.add_axes(
+                    [pos.x0 + 0.02, pos.y0, pos.width - 0.04, pos.height],
+                    polar=True,
+                )
+
+                labels_r = [s[0] for s in radar_stats]
+                scores = [s[1] for s in radar_stats]
+                angles = np.linspace(0, 2 * np.pi, len(labels_r),
+                                     endpoint=False).tolist()
+                scores_plot = scores + scores[:1]
+                angles_plot = angles + angles[:1]
+                avg_line = [1.0] * (len(labels_r) + 1)
+
+                radar_ax.plot(angles_plot, avg_line, color="#888888",
+                              linewidth=1.5, linestyle="--", alpha=0.6,
+                              label="Lg Avg")
+                radar_ax.fill(angles_plot, avg_line, color="#888888",
+                              alpha=0.05)
+                radar_ax.plot(angles_plot, scores_plot, color=accent,
+                              linewidth=2.5, label=name.split()[-1])
+                radar_ax.fill(angles_plot, scores_plot, color=accent,
+                              alpha=0.15)
+
+                radar_ax.set_xticks(angles)
+                radar_ax.set_xticklabels(labels_r, fontsize=14,
+                                         fontweight="bold")
+                radar_ax.set_yticklabels([])
+                radar_ax.set_ylim(0, 2.0)
+                radar_ax.grid(True, alpha=0.3)
+                radar_ax.set_title("vs League Average", fontsize=20,
+                                   fontweight="bold", pad=15)
+                radar_ax.legend(loc="lower right", fontsize=12,
+                                bbox_to_anchor=(1.3, -0.1))
+
+        # ── Row 4: Monthly Splits Table ───────────────────────────────
+        ax_monthly = fig.add_subplot(gs[4, 1:7])
+        ax_monthly.axis("off")
+
+        if monthly_splits and len(monthly_splits) >= 1:
+            month_headers = [
+                "$\\bf{Month}$", "$\\bf{IP}$", "$\\bf{ERA}$",
+                "$\\bf{WHIP}$", "$\\bf{K/9}$", "$\\bf{BB/9}$",
+                "$\\bf{BAVG}$", "$\\bf{GO/AO}$",
+            ]
+            month_cols = [
+                ("inningsPitched", ".1f"),
+                ("era", ".2f"),
+                ("whip", ".2f"),
+                ("strikeoutsPer9Inn", ".2f"),
+                ("walksPer9Inn", ".2f"),
+                ("avg", ".3f"),
+                ("groundOutsToAirouts", ".2f"),
+            ]
+
+            cell_text = []
+            for m in monthly_splits:
+                row_data = [m.get("month", "?")]
+                for col, fmt in month_cols:
+                    val = m.get(col, np.nan)
+                    try:
+                        val_f = float(val)
+                        if pd.isna(val_f):
+                            row_data.append("\u2014")
+                        else:
+                            row_data.append(format(val_f, fmt))
+                    except (TypeError, ValueError):
+                        row_data.append("\u2014")
+                cell_text.append(row_data)
+
+            if cell_text:
+                tbl = ax_monthly.table(
+                    cellText=cell_text,
+                    colLabels=month_headers,
+                    cellLoc="center",
+                    bbox=[0, -0.05, 1, 1],
+                )
+                tbl.auto_set_font_size(False)
+                tbl.set_fontsize(16)
+                tbl.scale(1, 2.2)
+                for key, cell in tbl.get_celld().items():
+                    cell.set_edgecolor("#cccccc")
+                    if key[0] == 0:
+                        cell.set_facecolor("#f0f0f0")
+                        cell.set_text_props(fontweight="bold")
+        else:
+            ax_monthly.text(0.5, 0.5, "Monthly splits not available",
+                            ha="center", va="center", fontsize=18,
+                            color="#888888")
+
+        # ── Footer ────────────────────────────────────────────────────
+        ax_footer = fig.add_subplot(gs[-1, 1:7])
+        ax_footer.axis("off")
+        ax_footer.text(0, 1, "By: @BachTalk1", ha="left", va="top",
+                       fontsize=22, fontweight="bold")
+        ax_footer.text(0.5, 1,
+                       "Traditional Stats \u2014 No Statcast at this level",
+                       ha="center", va="top", fontsize=14, color="#666666")
+        ax_footer.text(1, 1, "Data: MLB Stats API\nImages: MLB",
+                       ha="right", va="top", fontsize=22)
+
+        # ── Save ──────────────────────────────────────────────────────
+        safe = name.replace(" ", "_").lower()
+        out = SCREENSHOTS_DIR / f"trad_pitching_summary_{safe}.png"
+        _draw_watermark(fig)
+        fig.savefig(out, facecolor="white", dpi=150,
+                    bbox_inches="tight", pad_inches=0.3)
+        plt.close(fig)
+        log.info("Saved traditional pitching summary: %s", out)
+        return out
+
+    except Exception:
+        log.warning("plot_traditional_pitching_summary failed for %s", name,
+                    exc_info=True)
+        return None

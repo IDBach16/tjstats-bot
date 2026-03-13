@@ -343,6 +343,25 @@
         "Daniel Palencia",
         "AAA"
       ]
+    },
+    {
+      "date": "2026-03-13T00:32:50.888226",
+      "generator": "pitching_summary",
+      "tweet_id": "2032253434313802154",
+      "tags": [
+        "pitching_summary",
+        "Hunter Brown"
+      ]
+    },
+    {
+      "date": "2026-03-13T00:33:50.145601",
+      "generator": "milb_pitching_summary",
+      "tweet_id": "2032253693601407263",
+      "tags": [
+        "milb_pitching_summary",
+        "David Bednar",
+        "AA"
+      ]
     }
   ]
 }

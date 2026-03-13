@@ -15,7 +15,7 @@ from ..config import DEFAULT_HASHTAGS, MLB_SEASON
 log = logging.getLogger(__name__)
 
 # Rotate through levels
-_LEVELS = ["AA", "A+"]
+_LEVELS = ["AAA"]
 _level_idx = 0
 
 
@@ -27,7 +27,7 @@ class MiLBPitcherCardGenerator(ContentGenerator):
         level = _LEVELS[_level_idx % len(_LEVELS)]
         _level_idx += 1
 
-        player = pick_milb_player(level=level, min_pitches=200)
+        player = pick_milb_player(level=level, min_pitches=400, min_batters_faced=100)
         if not player:
             log.warning("No qualified MiLB pitcher found at %s", level)
             return PostContent(text="")

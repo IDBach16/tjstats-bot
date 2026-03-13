@@ -35,9 +35,13 @@ from .content.ss_arsenal_usage import ArsenalUsageGenerator
 from .content.pitcher_card import PitcherCardGenerator
 from .content.pitching_summary import PitchingSummaryGenerator
 
-# Card generators — MiLB
+# Card generators — MiLB (AAA Statcast)
 from .content.milb_pitcher_card import MiLBPitcherCardGenerator
 from .content.milb_pitching_summary import MiLBPitchingSummaryGenerator
+
+# Card generators — MiLB Traditional (AA, A+, A, Complex)
+from .content.milb_trad_pitcher_card import MiLBTradPitcherCardGenerator
+from .content.milb_trad_pitching_summary import MiLBTradPitchingSummaryGenerator
 
 log = logging.getLogger(__name__)
 
@@ -64,19 +68,22 @@ GENERATORS: dict[str, type[ContentGenerator]] = {
     "pitching_summary": PitchingSummaryGenerator,
     "milb_pitcher_card": MiLBPitcherCardGenerator,
     "milb_pitching_summary": MiLBPitchingSummaryGenerator,
+    "milb_trad_pitcher_card": MiLBTradPitcherCardGenerator,
+    "milb_trad_pitching_summary": MiLBTradPitchingSummaryGenerator,
 }
 
 # Weekly rotation: day-of-week → (morning_visual, afternoon_text, evening_summary)
 # Monday=0 … Sunday=6
-# Alternates: MLB days (Mon/Wed/Fri/Sun) vs MiLB days (Tue/Thu/Sat)
+# Alternates: MLB (Mon/Wed/Fri/Sun), MiLB AAA Statcast (Tue/Sat),
+#             MiLB Traditional AA/A+ (Thu)
 SCHEDULE: dict[int, tuple[type[ContentGenerator], type[ContentGenerator], type[ContentGenerator]]] = {
-    0: (PitcherCardGenerator, GuessThePitcherGenerator, PitchingSummaryGenerator),              # Mon — MLB
-    1: (MiLBPitcherCardGenerator, PitcherSpotlightGenerator, MiLBPitchingSummaryGenerator),     # Tue — MiLB
-    2: (VeloDistributionGenerator, ExplainerGenerator, PitchingSummaryGenerator),                # Wed — MLB
-    3: (MiLBPitcherCardGenerator, StatOfDayGenerator, MiLBPitchingSummaryGenerator),             # Thu — MiLB
-    4: (ReleasePointGenerator, ArsenalVsGenerator, PitchingSummaryGenerator),                    # Fri — MLB
-    5: (MiLBPitcherCardGenerator, HardestPitchGenerator, MiLBPitchingSummaryGenerator),          # Sat — MiLB
-    6: (MovementProfileGenerator, PitcherSpotlightGenerator, PitchingSummaryGenerator),          # Sun — MLB
+    0: (PitcherCardGenerator, GuessThePitcherGenerator, PitchingSummaryGenerator),                      # Mon — MLB
+    1: (MiLBPitcherCardGenerator, PitcherSpotlightGenerator, MiLBPitchingSummaryGenerator),             # Tue — MiLB AAA
+    2: (VeloDistributionGenerator, ExplainerGenerator, PitchingSummaryGenerator),                        # Wed — MLB
+    3: (MiLBTradPitcherCardGenerator, StatOfDayGenerator, MiLBTradPitchingSummaryGenerator),            # Thu — MiLB AA/A+
+    4: (ReleasePointGenerator, ArsenalVsGenerator, PitchingSummaryGenerator),                            # Fri — MLB
+    5: (MiLBPitcherCardGenerator, HardestPitchGenerator, MiLBPitchingSummaryGenerator),                 # Sat — MiLB AAA
+    6: (MovementProfileGenerator, PitcherSpotlightGenerator, PitchingSummaryGenerator),                  # Sun — MLB
 }
 
 
