@@ -3454,3 +3454,160 @@ def plot_traditional_pitching_summary(
         log.warning("plot_traditional_pitching_summary failed for %s", name,
                     exc_info=True)
         return None
+
+
+# ── Biomechanics Educational Charts ──────────────────────────────────
+
+# Accent colours for biomechanics charts
+_BIO_PRIMARY = "#3a86ff"
+_BIO_SECONDARY = "#ff6b6b"
+_BIO_HIGHLIGHT = "#ffbe0b"
+
+
+def plot_biomechanics(
+    topic: dict,
+    df: "pd.DataFrame",
+    stats: dict,
+) -> Path | None:
+    """Render a biomechanics educational chart (1200x675, dark theme).
+
+    Supports scatter plots (x vs y with trend line) and
+    distribution charts (histogram with percentile markers).
+    """
+    try:
+        import pandas as pd
+        from scipy import stats as sp_stats
+
+        chart_type = topic.get("chart_type", "scatter")
+        x_col = topic["x_col"]
+        y_col = topic.get("y_col")
+
+        fig = plt.figure(figsize=(FIG_W, FIG_H), dpi=100)
+        fig.set_facecolor(CARD_BG)
+
+        # Background noise
+        noise = np.random.default_rng(42).uniform(0.04, 0.07, (68, 120))
+        bg_ax = fig.add_axes([0, 0, 1, 1])
+        bg_ax.imshow(noise, aspect="auto", cmap="gray", alpha=0.03,
+                     extent=[0, 1, 0, 1])
+        bg_ax.axis("off")
+
+        # Accent stripe
+        stripe = fig.add_axes([0, 0.97, 1, 0.03])
+        stripe.set_xlim(0, 1)
+        stripe.set_ylim(0, 1)
+        stripe.add_patch(Rectangle((0, 0), 1, 1, color=_BIO_PRIMARY))
+        stripe.axis("off")
+
+        # Title
+        shadow = [patheffects.withStroke(linewidth=4, foreground=CARD_BG)]
+        fig.text(0.5, 0.94, topic["title"],
+                 fontsize=22, fontweight="bold", color=CARD_TEXT,
+                 ha="center", va="top", path_effects=shadow)
+
+        # Subtitle
+        n_pitchers = stats.get("n_pitchers", "?")
+        n_pitches = stats.get("n_pitches", "?")
+        fig.text(0.5, 0.89,
+                 f"Driveline Open Biomechanics  |  {n_pitches} pitches, "
+                 f"{n_pitchers} pitchers (mostly college)",
+                 fontsize=10, color=CARD_TEXT_MUTED,
+                 ha="center", va="top")
+
+        # Main chart area
+        ax = fig.add_axes([0.10, 0.13, 0.82, 0.70])
+        ax.set_facecolor(CARD_SURFACE)
+        for spine in ax.spines.values():
+            spine.set_color(CARD_BORDER)
+        ax.tick_params(colors=CARD_TEXT_MUTED, labelsize=9)
+        ax.grid(True, color=CARD_BORDER, alpha=0.3, linewidth=0.5)
+
+        if chart_type == "scatter" and y_col:
+            valid = df[[x_col, y_col]].dropna()
+            x = valid[x_col].values
+            y = valid[y_col].values
+
+            ax.scatter(x, y, c=_BIO_PRIMARY, alpha=0.5, s=40,
+                       edgecolors="white", linewidths=0.3, zorder=3)
+
+            # Trend line
+            if len(x) > 10:
+                slope, intercept, r_val, p_val, _ = sp_stats.linregress(x, y)
+                x_line = np.linspace(x.min(), x.max(), 100)
+                y_line = slope * x_line + intercept
+                ax.plot(x_line, y_line, color=_BIO_SECONDARY, linewidth=2.5,
+                        linestyle="--", alpha=0.8, zorder=4)
+
+                # R-squared annotation
+                r_sq = r_val ** 2
+                corr = stats.get("correlation", r_val)
+                ax.text(0.97, 0.95,
+                        f"r = {corr:.2f}  |  R\u00b2 = {r_sq:.2f}",
+                        transform=ax.transAxes, fontsize=11,
+                        fontweight="bold", color=_BIO_HIGHLIGHT,
+                        ha="right", va="top",
+                        bbox=dict(facecolor=CARD_BG, edgecolor=CARD_BORDER,
+                                  boxstyle="round,pad=0.4", alpha=0.9))
+
+            ax.set_xlabel(topic["x_label"], fontsize=12, color=CARD_TEXT,
+                          fontweight="bold")
+            ax.set_ylabel(topic["y_label"], fontsize=12, color=CARD_TEXT,
+                          fontweight="bold")
+
+        elif chart_type == "distribution":
+            vals = df[x_col].dropna().values
+
+            ax.hist(vals, bins=25, color=_BIO_PRIMARY, alpha=0.7,
+                    edgecolor=CARD_BORDER, linewidth=0.5, zorder=3)
+
+            # Percentile lines
+            p10 = stats.get("x_p10", np.percentile(vals, 10))
+            p50 = stats.get("x_median", np.median(vals))
+            p90 = stats.get("x_p90", np.percentile(vals, 90))
+
+            for pval, plabel, color in [
+                (p10, "10th %ile", CARD_TEXT_MUTED),
+                (p50, "Median", _BIO_HIGHLIGHT),
+                (p90, "90th %ile", _BIO_SECONDARY),
+            ]:
+                ax.axvline(pval, color=color, linewidth=2, linestyle="--",
+                           alpha=0.8, zorder=4)
+                ax.text(pval, ax.get_ylim()[1] * 0.92,
+                        f" {plabel}\n {pval:.1f}",
+                        fontsize=9, fontweight="bold", color=color,
+                        va="top", ha="left")
+
+            ax.set_xlabel(topic["x_label"], fontsize=12, color=CARD_TEXT,
+                          fontweight="bold")
+            ax.set_ylabel("Count", fontsize=12, color=CARD_TEXT,
+                          fontweight="bold")
+
+        # Footer
+        foot_ax = fig.add_axes([0.03, 0.0, 0.94, 0.003])
+        foot_ax.set_xlim(0, 1)
+        foot_ax.set_ylim(0, 1)
+        foot_ax.add_patch(Rectangle((0, 0), 1, 1, color=CARD_BORDER))
+        foot_ax.axis("off")
+
+        fig.text(0.04, 0.025, "@TJStatsBot", fontsize=10,
+                 color=_BIO_PRIMARY, ha="left", va="center",
+                 fontweight="bold")
+        fig.text(0.5, 0.025, "Data: Driveline Open Biomechanics Project",
+                 fontsize=9, color=CARD_TEXT_MUTED, ha="center", va="center")
+        fig.text(0.96, 0.025, "Biomechanics 101", fontsize=9,
+                 color=CARD_TEXT_MUTED, ha="right", va="center")
+
+        # Save
+        safe = topic["id"].replace(" ", "_").lower()
+        out = SCREENSHOTS_DIR / f"biomech_{safe}.png"
+        _draw_watermark(fig)
+        fig.savefig(out, facecolor=fig.get_facecolor(), dpi=100,
+                    bbox_inches="tight", pad_inches=0.02)
+        plt.close(fig)
+        log.info("Saved biomechanics chart: %s", out)
+        return out
+
+    except Exception:
+        log.warning("plot_biomechanics failed for topic %s",
+                    topic.get("id", "?"), exc_info=True)
+        return None

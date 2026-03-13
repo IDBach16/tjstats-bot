@@ -9,6 +9,8 @@ on:
     - cron: '0 19 * * *'
     # 5 PM EST (UTC-5) = 22:00 UTC — pitching summary
     - cron: '0 22 * * *'
+    # 8 PM EST (UTC-5) = 01:00 UTC — biomechanics (Mon/Wed/Fri only)
+    - cron: '0 1 * * 2,4,6'
   workflow_dispatch:
     inputs:
       slot:
@@ -21,6 +23,7 @@ on:
           - screenshot
           - text
           - evening
+          - biomechanics
       generator:
         description: 'Override: run a specific generator by name (leave empty for schedule)'
         required: false
@@ -47,6 +50,9 @@ on:
           - arsenal_usage
           - milb_pitcher_card
           - milb_pitching_summary
+          - milb_trad_pitcher_card
+          - milb_trad_pitching_summary
+          - biomechanics_101
 
 permissions:
   contents: write
@@ -76,7 +82,11 @@ jobs:
             echo "generator=${{ inputs.generator }}" >> $GITHUB_OUTPUT
           else
             HOUR=$(date -u +%H)
-            if [ "$HOUR" -ge 21 ]; then
+            if [ "$HOUR" -lt 3 ]; then
+              # 8 PM EST (01:00 UTC next day) — biomechanics
+              echo "slot=biomechanics" >> $GITHUB_OUTPUT
+              echo "generator=" >> $GITHUB_OUTPUT
+            elif [ "$HOUR" -ge 21 ]; then
               # 5 PM EST (22:00 UTC) — evening visual
               echo "slot=evening" >> $GITHUB_OUTPUT
               echo "generator=" >> $GITHUB_OUTPUT

@@ -22,7 +22,8 @@ DRY_RUN = False
 async def run_post(slot: str, generator_name: str | None = None) -> None:
     """Generate and post content for a given slot.
 
-    Slots: 'screenshot' (morning), 'text' (afternoon), 'evening', or 'all'.
+    Slots: 'screenshot' (morning), 'text' (afternoon), 'evening',
+           'biomechanics' (4th slot, some days), or 'all'.
     If generator_name is provided, run that specific generator instead.
     """
     if generator_name:
@@ -34,16 +35,21 @@ async def run_post(slot: str, generator_name: str | None = None) -> None:
         await _generate_and_post(cls())
         return
 
-    morning_gen, afternoon_gen, evening_gen = get_generators_for_today()
+    gens = get_generators_for_today()
 
     if slot == "screenshot":
-        await _generate_and_post(morning_gen)
+        await _generate_and_post(gens[0])
     elif slot == "text":
-        await _generate_and_post(afternoon_gen)
+        await _generate_and_post(gens[1])
     elif slot == "evening":
-        await _generate_and_post(evening_gen)
+        await _generate_and_post(gens[2])
+    elif slot == "biomechanics":
+        if len(gens) > 3:
+            await _generate_and_post(gens[3])
+        else:
+            log.info("No biomechanics slot scheduled for today")
     else:
-        for gen in (morning_gen, afternoon_gen, evening_gen):
+        for gen in gens:
             await _generate_and_post(gen)
 
 
@@ -126,7 +132,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="TJStats Baseball X Bot")
     parser.add_argument(
         "--slot",
-        choices=["screenshot", "text", "evening", "all"],
+        choices=["screenshot", "text", "evening", "biomechanics", "all"],
         default="all",
         help="Which content slot to run (default: all)",
     )

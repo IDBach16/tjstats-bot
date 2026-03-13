@@ -43,6 +43,9 @@ from .content.milb_pitching_summary import MiLBPitchingSummaryGenerator
 from .content.milb_trad_pitcher_card import MiLBTradPitcherCardGenerator
 from .content.milb_trad_pitching_summary import MiLBTradPitchingSummaryGenerator
 
+# Biomechanics educational content
+from .content.biomechanics_101 import BiomechanicsGenerator
+
 log = logging.getLogger(__name__)
 
 HISTORY_PATH = DATA_DIR / "post_history.json"
@@ -70,28 +73,29 @@ GENERATORS: dict[str, type[ContentGenerator]] = {
     "milb_pitching_summary": MiLBPitchingSummaryGenerator,
     "milb_trad_pitcher_card": MiLBTradPitcherCardGenerator,
     "milb_trad_pitching_summary": MiLBTradPitchingSummaryGenerator,
+    "biomechanics_101": BiomechanicsGenerator,
 }
 
-# Weekly rotation: day-of-week → (morning_visual, afternoon_text, evening_summary)
+# Weekly rotation: day-of-week → (morning, afternoon, evening, *optional_biomech)
 # Monday=0 … Sunday=6
 # Alternates: MLB (Mon/Wed/Fri/Sun), MiLB AAA Statcast (Tue/Sat),
 #             MiLB Traditional AA/A+ (Thu)
-SCHEDULE: dict[int, tuple[type[ContentGenerator], type[ContentGenerator], type[ContentGenerator]]] = {
-    0: (PitcherCardGenerator, GuessThePitcherGenerator, PitchingSummaryGenerator),                      # Mon — MLB
-    1: (MiLBPitcherCardGenerator, PitcherSpotlightGenerator, MiLBPitchingSummaryGenerator),             # Tue — MiLB AAA
-    2: (VeloDistributionGenerator, ExplainerGenerator, PitchingSummaryGenerator),                        # Wed — MLB
-    3: (MiLBTradPitcherCardGenerator, StatOfDayGenerator, MiLBTradPitchingSummaryGenerator),            # Thu — MiLB AA/A+
-    4: (ReleasePointGenerator, ArsenalVsGenerator, PitchingSummaryGenerator),                            # Fri — MLB
-    5: (MiLBPitcherCardGenerator, HardestPitchGenerator, MiLBPitchingSummaryGenerator),                 # Sat — MiLB AAA
-    6: (MovementProfileGenerator, PitcherSpotlightGenerator, PitchingSummaryGenerator),                  # Sun — MLB
+# Biomechanics 101 posts 3x/week: Mon, Wed, Fri (4th slot on MLB days)
+SCHEDULE: dict[int, tuple[type[ContentGenerator], ...]] = {
+    0: (PitcherCardGenerator, GuessThePitcherGenerator, PitchingSummaryGenerator, BiomechanicsGenerator),   # Mon — MLB + Biomech
+    1: (MiLBPitcherCardGenerator, PitcherSpotlightGenerator, MiLBPitchingSummaryGenerator),                 # Tue — MiLB AAA
+    2: (VeloDistributionGenerator, ExplainerGenerator, PitchingSummaryGenerator, BiomechanicsGenerator),     # Wed — MLB + Biomech
+    3: (MiLBTradPitcherCardGenerator, StatOfDayGenerator, MiLBTradPitchingSummaryGenerator),                # Thu — MiLB AA/A+
+    4: (ReleasePointGenerator, ArsenalVsGenerator, PitchingSummaryGenerator, BiomechanicsGenerator),         # Fri — MLB + Biomech
+    5: (MiLBPitcherCardGenerator, HardestPitchGenerator, MiLBPitchingSummaryGenerator),                     # Sat — MiLB AAA
+    6: (MovementProfileGenerator, PitcherSpotlightGenerator, PitchingSummaryGenerator),                      # Sun — MLB
 }
 
 
-def get_generators_for_today() -> tuple[ContentGenerator, ContentGenerator, ContentGenerator]:
-    """Return (morning, afternoon, evening) generators for today's schedule."""
+def get_generators_for_today() -> list[ContentGenerator]:
+    """Return generators for today's schedule (3 or 4 depending on day)."""
     dow = date.today().weekday()
-    morning_cls, afternoon_cls, evening_cls = SCHEDULE[dow]
-    return morning_cls(), afternoon_cls(), evening_cls()
+    return [cls() for cls in SCHEDULE[dow]]
 
 
 # ── Post history ──────────────────────────────────────────────────────
