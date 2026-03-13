@@ -9,13 +9,15 @@ from ..milb_statcast import (
     get_milb_season_pitchers, get_milb_season_pitches, pick_milb_player,
     LEVEL_NAMES,
 )
+from ..analysis import analyze_pitcher
 from ..charts import plot_pitching_summary
 from ..config import DEFAULT_HASHTAGS, MLB_SEASON
+from ..video_clips import get_pitcher_clip
 
 log = logging.getLogger(__name__)
 
 # Rotate through levels
-_LEVELS = ["AAA", "AA", "A+"]
+_LEVELS = ["AA", "A+"]
 _level_idx = 0
 
 
@@ -65,14 +67,33 @@ class MiLBPitchingSummaryGenerator(ContentGenerator):
             log.warning("MiLB pitching summary rendering failed for %s", name)
             return PostContent(text="")
 
+        # AI analysis
+        analysis_text = analyze_pitcher(name, season_df, pitches_df)
+
+        # Fetch video clip
+        video_path = None
+        if player_id:
+            try:
+                video_path = get_pitcher_clip(player_id, name)
+                if video_path:
+                    log.info("Got video clip for %s: %s", name, video_path)
+            except Exception:
+                log.warning("Video clip fetch failed for %s", name, exc_info=True)
+
         text = (
             f"{name}'s {MLB_SEASON} {level_name} Pitching Summary"
             f"\n\n@TJStats {DEFAULT_HASHTAGS} #MiLB"
         )
 
+        reply_content = None
+        if analysis_text:
+            reply_content = PostContent(text=analysis_text, tags=["analysis"])
+
         return PostContent(
             text=text,
             image_path=image_path,
+            video_path=video_path,
             alt_text=f"MiLB {level} pitching summary for {name}",
             tags=["milb_pitching_summary", name, level],
+            reply=reply_content,
         )

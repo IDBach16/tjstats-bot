@@ -1285,6 +1285,454 @@ def plot_pitcher_card(
         return None
 
 
+# ── Chart 6b: MiLB Pitcher Card (prospect-focused design) ────────────
+
+# MiLB left-panel stats: (column, display_label, lower_is_better)
+_MILB_CARD_STATS = [
+    ("strike_out_percentage", "K%", False),
+    ("walk_percentage", "BB%", True),
+    ("k_minus_bb", "K-BB%", False),
+    ("whiff_rate", "Whiff%", False),
+    ("chase_percentage", "Chase%", False),
+    ("called_strikes_plus_whiffs_percentage", "CSW%", False),
+    ("zone_percentage", "Zone%", False),
+    ("first_pitch_strike_percentage", "FPK%", False),
+    ("hard_hit_percentage", "Hard Hit%", True),
+    ("ground_ball_percentage", "GB%", False),
+]
+
+
+def plot_milb_pitcher_card(
+    name: str,
+    season_df: "pd.DataFrame",
+    pitches_df: "pd.DataFrame",
+    team: str | None = None,
+    player_id: int | None = None,
+    level: str = "AAA",
+) -> Path | None:
+    """Render a MiLB prospect pitcher card (1200×675, dark theme).
+
+    Left panel: prospect-relevant percentile bars (K%, BB%, K-BB%, Whiff%,
+    Chase%, CSW%, Zone%, FPK%, Hard Hit%, GB%).
+    Right panel: arsenal breakdown with velo, spin, movement, usage, whiff bars.
+    Header: headshot, name, team, level badge, hero stats.
+    """
+    try:
+        import pandas as pd
+
+        # ── Locate pitcher row ────────────────────────────────────────
+        name_col = None
+        for c in ("pitcher_name", "player_name", "name"):
+            if c in season_df.columns:
+                name_col = c
+                break
+        if not name_col:
+            return None
+
+        matches = season_df[season_df[name_col] == name]
+        if matches.empty:
+            return None
+        player = matches.iloc[0]
+
+        # ── Team colour accent ────────────────────────────────────────
+        if not team:
+            for tc in ("team", "team_abbreviation", "team_abbrev"):
+                if tc in player.index and player[tc]:
+                    team = str(player[tc]).upper()
+                    break
+        accent = TEAM_COLORS.get(team or "", "#3a86ff")
+
+        from .milb_statcast import LEVEL_NAMES
+        level_display = LEVEL_NAMES.get(level, level)
+
+        # ── Compute percentiles ───────────────────────────────────────
+        stat_labels: list[str] = []
+        stat_values: list[str] = []
+        stat_raw: list[float] = []
+        pctiles: list[float] = []
+
+        for col, label, ascending in _MILB_CARD_STATS:
+            if col not in season_df.columns or col not in player.index:
+                continue
+            vals = season_df[col].dropna()
+            if vals.empty:
+                continue
+            raw = player[col]
+            try:
+                raw_f = float(raw)
+            except (TypeError, ValueError):
+                continue
+
+            pctile = (vals < raw_f).sum() / len(vals) * 100
+            if ascending:
+                pctile = 100 - pctile
+
+            stat_labels.append(label)
+            stat_raw.append(raw_f)
+            if col in ("strike_out_percentage", "walk_percentage",
+                        "whiff_rate", "chase_percentage", "k_minus_bb",
+                        "called_strikes_plus_whiffs_percentage",
+                        "zone_percentage", "first_pitch_strike_percentage",
+                        "hard_hit_percentage", "ground_ball_percentage",
+                        "barrel_percentage"):
+                stat_values.append(f"{raw_f * 100:.1f}%")
+            else:
+                stat_values.append(f"{raw_f:.2f}")
+            pctiles.append(pctile)
+
+        if not stat_labels:
+            return None
+
+        # ── Arsenal data (expanded) ──────────────────────────────────
+        arsenal_rows: list[dict] = []
+        if pitches_df is not None and not pitches_df.empty:
+            pitch_name_col = None
+            for c in ("pitcher_name", "player_name", "name"):
+                if c in pitches_df.columns:
+                    pitch_name_col = c
+                    break
+            if pitch_name_col and "pitch_type" in pitches_df.columns:
+                prows = pitches_df[pitches_df[pitch_name_col] == name].copy()
+                prows = prows[~prows["pitch_type"].isin(_NOISE_PITCHES)]
+                if not prows.empty:
+                    num_cols = ["velocity", "whiff_rate", "percentage_thrown",
+                                "spin_rate", "ivb", "hb", "chase_percentage"]
+                    for nc in num_cols:
+                        if nc in prows.columns:
+                            prows[nc] = pd.to_numeric(prows[nc], errors="coerce")
+
+                    agg_map = {}
+                    for c in ["velocity", "whiff_rate", "percentage_thrown",
+                              "spin_rate", "ivb", "hb", "chase_percentage"]:
+                        if c in prows.columns:
+                            agg_map[c] = "mean" if c != "percentage_thrown" else "sum"
+
+                    grouped = prows.groupby("pitch_type", as_index=False).agg(
+                        agg_map if agg_map else {"pitch_type": "first"},
+                    )
+
+                    if "percentage_thrown" in grouped.columns:
+                        total = grouped["percentage_thrown"].sum()
+                        if total > 0:
+                            grouped["percentage_thrown"] = (
+                                grouped["percentage_thrown"] / total
+                            )
+
+                    for _, row in grouped.iterrows():
+                        pcode = str(row["pitch_type"])
+                        velo = row.get("velocity", None)
+                        whiff = row.get("whiff_rate", None)
+                        usage = row.get("percentage_thrown", 0)
+                        spin = row.get("spin_rate", None)
+                        ivb = row.get("ivb", None)
+                        hb = row.get("hb", None)
+                        chase = row.get("chase_percentage", None)
+                        try:
+                            velo_f = float(velo) if pd.notna(velo) else None
+                        except (TypeError, ValueError):
+                            velo_f = None
+                        try:
+                            whiff_f = float(whiff) * 100 if pd.notna(whiff) else None
+                        except (TypeError, ValueError):
+                            whiff_f = None
+                        try:
+                            usage_f = float(usage) if pd.notna(usage) else 0
+                        except (TypeError, ValueError):
+                            usage_f = 0
+                        try:
+                            spin_f = float(spin) if pd.notna(spin) else None
+                        except (TypeError, ValueError):
+                            spin_f = None
+                        try:
+                            ivb_f = float(ivb) if pd.notna(ivb) else None
+                        except (TypeError, ValueError):
+                            ivb_f = None
+                        try:
+                            hb_f = float(hb) if pd.notna(hb) else None
+                        except (TypeError, ValueError):
+                            hb_f = None
+                        try:
+                            chase_f = float(chase) * 100 if pd.notna(chase) else None
+                        except (TypeError, ValueError):
+                            chase_f = None
+
+                        color = PITCH_COLORS.get(pcode, DEFAULT_PITCH_COLOR)
+                        display = PITCH_NAMES.get(pcode, pcode)
+                        arsenal_rows.append({
+                            "name": display, "code": pcode,
+                            "velo": velo_f, "spin": spin_f,
+                            "ivb": ivb_f, "hb": hb_f,
+                            "whiff": whiff_f, "chase": chase_f,
+                            "usage": usage_f, "color": color,
+                        })
+                    arsenal_rows.sort(key=lambda r: r["usage"], reverse=True)
+
+        # ── Build figure ──────────────────────────────────────────────
+        fig = plt.figure(figsize=(FIG_W, FIG_H), dpi=100)
+        fig.set_facecolor(CARD_BG)
+
+        # Background noise texture
+        noise = np.random.default_rng(42).uniform(0.04, 0.07, (68, 120))
+        bg_ax = fig.add_axes([0, 0, 1, 1])
+        bg_ax.imshow(noise, aspect="auto", cmap="gray", alpha=0.03,
+                     extent=[0, 1, 0, 1])
+        bg_ax.axis("off")
+
+        # Header gradient
+        _draw_gradient_rect(fig, [0, 0.78, 1, 0.22], accent, CARD_BG, alpha=0.25)
+
+        # Accent stripe at top
+        stripe = fig.add_axes([0, 0.97, 1, 0.03])
+        stripe.set_xlim(0, 1)
+        stripe.set_ylim(0, 1)
+        stripe.add_patch(Rectangle((0, 0), 1, 1, color=accent))
+        stripe.axis("off")
+
+        # Headshot
+        name_x = 0.04
+        if player_id:
+            hs_arr = _fetch_headshot(player_id, accent)
+            if hs_arr is not None:
+                name_x = 0.18
+                hs_ax = fig.add_axes([0.02, 0.75, 0.13, 0.22])
+                hs_ax.imshow(hs_arr)
+                hs_ax.axis("off")
+
+        # Player name
+        shadow = [patheffects.withStroke(linewidth=4, foreground=CARD_BG)]
+        fig.text(
+            name_x, 0.95, name,
+            fontsize=28, fontweight="bold", color=CARD_TEXT,
+            ha="left", va="top", path_effects=shadow,
+        )
+
+        # Team + level subtitle
+        team_label = f"{team}  |  " if team else ""
+        fig.text(
+            name_x, 0.88, f"{team_label}{MLB_SEASON} {level_display}",
+            fontsize=13, color=CARD_TEXT_MUTED,
+            ha="left", va="top",
+        )
+
+        # Level badge (colored pill)
+        badge_x = 0.88
+        badge_ax = fig.add_axes([badge_x, 0.90, 0.10, 0.06])
+        badge_ax.set_xlim(0, 1)
+        badge_ax.set_ylim(0, 1)
+        badge_ax.add_patch(FancyBboxPatch(
+            (0.05, 0.1), 0.9, 0.8,
+            boxstyle="round,pad=0,rounding_size=0.3",
+            facecolor=accent, edgecolor="none", alpha=0.9,
+        ))
+        badge_ax.text(0.5, 0.5, level, fontsize=12, fontweight="bold",
+                      color="white", ha="center", va="center")
+        badge_ax.axis("off")
+
+        # ── Hero stat boxes (K%, Whiff%, CSW%, K-BB%) ───────────────
+        hero_map = {"K%": 0, "Whiff%": 1, "CSW%": 2, "K-BB%": 3}
+        hero_stats = []
+        for lbl, val, pct in zip(stat_labels, stat_values, pctiles):
+            if lbl in hero_map:
+                hero_stats.append((lbl, val, pct, hero_map[lbl]))
+        hero_stats.sort(key=lambda x: x[3])
+        hero_stats = hero_stats[:4]
+
+        box_y = 0.79
+        box_w = 0.095
+        box_h = 0.07
+        box_gap = 0.008
+        for i, (lbl, val, pct, _) in enumerate(hero_stats):
+            bx = name_x + i * (box_w + box_gap)
+            box_ax = fig.add_axes([bx, box_y, box_w, box_h])
+            box_ax.set_xlim(0, 1)
+            box_ax.set_ylim(0, 1)
+            box_ax.add_patch(FancyBboxPatch(
+                (0.02, 0.02), 0.96, 0.96,
+                boxstyle="round,pad=0,rounding_size=0.15",
+                facecolor=CARD_SURFACE, edgecolor=CARD_BORDER, linewidth=1,
+            ))
+            box_ax.plot([0.15, 0.85], [0.98, 0.98], color=_pctile_color(pct),
+                        linewidth=3, solid_capstyle="round")
+            box_ax.text(0.5, 0.62, val, fontsize=14, fontweight="bold",
+                        color=CARD_TEXT, ha="center", va="center")
+            box_ax.text(0.5, 0.22, lbl, fontsize=8,
+                        color=CARD_TEXT_MUTED, ha="center", va="center")
+            box_ax.axis("off")
+
+        # ── Accent divider line ───────────────────────────────────────
+        div_ax = fig.add_axes([0.03, 0.74, 0.94, 0.004])
+        div_ax.set_xlim(0, 1)
+        div_ax.set_ylim(0, 1)
+        grad = np.linspace(0, 1, 256).reshape(1, -1)
+        cmap_div = LinearSegmentedColormap.from_list("div", ["#00000000", accent, "#00000000"])
+        div_ax.imshow(grad, aspect="auto", cmap=cmap_div, extent=[0, 1, 0, 1])
+        div_ax.axis("off")
+
+        # ── Section header: PROSPECT PROFILE ────────────────────────
+        fig.text(0.05, 0.71, "\u2502", fontsize=14, color=accent,
+                 ha="left", va="top", fontweight="bold")
+        fig.text(0.065, 0.71, "PROSPECT PROFILE", fontsize=11,
+                 color=CARD_TEXT_MUTED, ha="left", va="top",
+                 fontweight="bold", style="italic")
+
+        # ── Left panel: percentile bars ───────────────────────────────
+        left_ax = fig.add_axes([0.04, 0.07, 0.43, 0.61])
+        left_ax.set_xlim(0, 1.12)
+        left_ax.set_ylim(-0.5, len(stat_labels) - 0.5)
+        left_ax.invert_yaxis()
+        left_ax.set_facecolor("none")
+        for spine in left_ax.spines.values():
+            spine.set_visible(False)
+        left_ax.tick_params(left=False, bottom=False, labelbottom=False,
+                            labelleft=False)
+
+        bar_track_w = 0.58
+        bar_x0 = 0.20
+        bar_h = 0.026
+
+        for i, (lbl, val, pct) in enumerate(zip(stat_labels, stat_values, pctiles)):
+            y = i
+            color = _pctile_color(pct)
+
+            left_ax.text(0.0, y, lbl, fontsize=10, fontweight="bold",
+                         color=CARD_TEXT, va="center", ha="left")
+
+            _rounded_bar(left_ax, bar_x0, y, bar_track_w, bar_h,
+                         CARD_BORDER, alpha=0.5)
+            fill_w = max((pct / 100) * bar_track_w, 0.008)
+            _rounded_bar(left_ax, bar_x0, y, fill_w, bar_h, color, alpha=0.9)
+
+            val_x = bar_x0 + fill_w - 0.01 if pct > 25 else bar_x0 + fill_w + 0.01
+            val_ha = "right" if pct > 25 else "left"
+            val_color = "white" if pct > 25 else CARD_TEXT
+            left_ax.text(val_x, y, val, fontsize=9, fontweight="bold",
+                         color=val_color, va="center", ha=val_ha)
+
+            left_ax.text(bar_x0 + bar_track_w + 0.03, y,
+                         f"{pct:.0f}th", fontsize=9, fontweight="bold",
+                         color=color, va="center", ha="left")
+
+        # ── Vertical divider ──────────────────────────────────────────
+        vdiv = fig.add_axes([0.505, 0.08, 0.003, 0.63])
+        vdiv.set_xlim(0, 1)
+        vdiv.set_ylim(0, 1)
+        vgrad = np.linspace(0, 1, 256).reshape(-1, 1)
+        cmap_v = LinearSegmentedColormap.from_list("vd", ["#00000000", CARD_BORDER, "#00000000"])
+        vdiv.imshow(vgrad, aspect="auto", cmap=cmap_v, extent=[0, 1, 0, 1])
+        vdiv.axis("off")
+
+        # ── Section header: ARSENAL ───────────────────────────────────
+        fig.text(0.53, 0.71, "\u2502", fontsize=14, color=accent,
+                 ha="left", va="top", fontweight="bold")
+        fig.text(0.545, 0.71, "ARSENAL", fontsize=11,
+                 color=CARD_TEXT_MUTED, ha="left", va="top",
+                 fontweight="bold", style="italic")
+
+        # ── Right panel: expanded arsenal ─────────────────────────────
+        if arsenal_rows:
+            right_ax = fig.add_axes([0.52, 0.07, 0.46, 0.61])
+            right_ax.set_xlim(0, 1)
+            n_pitches = len(arsenal_rows)
+            right_ax.set_ylim(-0.5, n_pitches - 0.5)
+            right_ax.invert_yaxis()
+            right_ax.set_facecolor("none")
+            for spine in right_ax.spines.values():
+                spine.set_visible(False)
+            right_ax.tick_params(left=False, bottom=False,
+                                 labelbottom=False, labelleft=False)
+
+            max_usage = max((r["usage"] for r in arsenal_rows), default=1) or 1
+
+            for i, pitch in enumerate(arsenal_rows):
+                y = i
+                c = pitch["color"]
+
+                # Color dot (centered vertically)
+                right_ax.plot(0.02, y - 0.08, "o", color=c, markersize=9,
+                              markeredgecolor="white", markeredgewidth=0.8)
+
+                # Pitch name + usage % on same line
+                usage_pct = pitch["usage"] * 100
+                right_ax.text(0.06, y - 0.28, pitch["name"],
+                              fontsize=10, fontweight="bold", color=c,
+                              va="center", ha="left")
+                right_ax.text(0.30, y - 0.28,
+                              f"{usage_pct:.0f}%",
+                              fontsize=9, fontweight="bold",
+                              color=CARD_TEXT, va="center", ha="left")
+
+                # Stat line below name: Velo | Spin | IVB/HB
+                stat_parts = []
+                if pitch["velo"]:
+                    stat_parts.append(f"{pitch['velo']:.1f}")
+                if pitch["spin"]:
+                    stat_parts.append(f"{pitch['spin']:.0f} rpm")
+                if pitch["ivb"] is not None and pitch["hb"] is not None:
+                    stat_parts.append(f"{pitch['ivb']:+.1f}\" iVB  {pitch['hb']:+.1f}\" HB")
+                stat_text = "  |  ".join(stat_parts) if stat_parts else ""
+                right_ax.text(0.06, y - 0.08, stat_text,
+                              fontsize=7, color=CARD_TEXT_MUTED,
+                              va="center", ha="left")
+
+                # Whiff + Chase as compact bars side by side below stats
+                bar_x0 = 0.06
+                bar_max_w = 0.38
+
+                # Whiff bar
+                if pitch["whiff"] is not None:
+                    whiff_w = (pitch["whiff"] / 50) * bar_max_w
+                    whiff_w = min(whiff_w, bar_max_w)
+                    _rounded_bar(right_ax, bar_x0, y + 0.12,
+                                 bar_max_w, 0.016, CARD_BORDER, alpha=0.35)
+                    _rounded_bar(right_ax, bar_x0, y + 0.12,
+                                 max(whiff_w, 0.004), 0.016, c, alpha=0.65)
+                    right_ax.text(bar_x0 + bar_max_w + 0.015, y + 0.12,
+                                  f"{pitch['whiff']:.0f}% whiff",
+                                  fontsize=7, color=CARD_TEXT_MUTED,
+                                  va="center", ha="left")
+
+                # Chase bar
+                if pitch["chase"] is not None:
+                    chase_w = (pitch["chase"] / 50) * bar_max_w
+                    chase_w = min(chase_w, bar_max_w)
+                    _rounded_bar(right_ax, bar_x0, y + 0.30,
+                                 bar_max_w, 0.016, CARD_BORDER, alpha=0.25)
+                    _rounded_bar(right_ax, bar_x0, y + 0.30,
+                                 max(chase_w, 0.004), 0.016, c, alpha=0.40)
+                    right_ax.text(bar_x0 + bar_max_w + 0.015, y + 0.30,
+                                  f"{pitch['chase']:.0f}% chase",
+                                  fontsize=7, color=CARD_TEXT_MUTED,
+                                  va="center", ha="left")
+
+        # ── Footer ────────────────────────────────────────────────────
+        foot_ax = fig.add_axes([0.03, 0.0, 0.94, 0.003])
+        foot_ax.set_xlim(0, 1)
+        foot_ax.set_ylim(0, 1)
+        foot_ax.add_patch(Rectangle((0, 0), 1, 1, color=CARD_BORDER))
+        foot_ax.axis("off")
+
+        fig.text(0.04, 0.025, "@TJStatsBot", fontsize=10, color=accent,
+                 ha="left", va="center", fontweight="bold")
+        fig.text(0.5, 0.025, "Data: Baseball Savant", fontsize=9,
+                 color=CARD_TEXT_MUTED, ha="center", va="center")
+        fig.text(0.96, 0.025, f"{MLB_SEASON} {level_display}", fontsize=9,
+                 color=CARD_TEXT_MUTED, ha="right", va="center")
+
+        # ── Save ──────────────────────────────────────────────────────
+        safe = name.replace(" ", "_").lower()
+        out = SCREENSHOTS_DIR / f"milb_pitcher_card_{safe}.png"
+        _draw_watermark(fig)
+        fig.savefig(out, facecolor=fig.get_facecolor(), dpi=100,
+                    bbox_inches="tight", pad_inches=0.02)
+        plt.close(fig)
+        log.info("Saved MiLB pitcher card: %s", out)
+        return out
+
+    except Exception:
+        log.warning("plot_milb_pitcher_card failed for %s", name, exc_info=True)
+        return None
+
+
 # ── TJStats Pitch Colours (from notebook) ────────────────────────────
 
 _TJ_PITCH_COLOURS = {
@@ -1330,6 +1778,21 @@ _PITCH_TABLE_COLS = [
     ("woba", "$\\bf{wOBA}$", ".3f", False),
 ]
 
+# MiLB pitch table — replaces RV/100, wOBA, Stuff+ with Savant-derived stats
+_MILB_PITCH_TABLE_COLS = [
+    ("velocity", "$\\bf{Velo}$", ".1f", True),
+    ("ivb", "$\\bf{iVB}$", ".1f", None),
+    ("hb", "$\\bf{HB}$", ".1f", None),
+    ("spin_rate", "$\\bf{Spin}$", ".0f", None),
+    ("release_extension", "$\\bf{Ext.}$", ".1f", True),
+    ("csw", "$\\bf{CSW\\%}$", ".1%", True),
+    ("zone_rate", "$\\bf{Zone\\%}$", ".1%", None),
+    ("swing_rate", "$\\bf{Swing\\%}$", ".1%", None),
+    ("avg_exit_velo", "$\\bf{EV}$", ".1f", False),
+    ("hard_hit_rate", "$\\bf{HH\\%}$", ".1%", False),
+    ("xba", "$\\bf{xBA}$", ".3f", False),
+]
+
 # Season overview stats (from season_df)
 _SUMMARY_STATS = [
     ("innings_pitched", "$\\bf{IP}$", ".1f"),
@@ -1342,6 +1805,20 @@ _SUMMARY_STATS = [
     ("whiff_rate", "$\\bf{Whiff\\%}$", ".1%"),
     ("stuff_plus", "$\\bf{Stf+}$", ".0f"),
     ("pitching_plus", "$\\bf{Pit+}$", ".0f"),
+]
+
+# MiLB season overview — replaces Stuff+/Pitching+ with prospect-relevant stats
+_MILB_SUMMARY_STATS = [
+    ("total_pitches", "$\\bf{Pitches}$", ".0f"),
+    ("batters_faced", "$\\bf{PA}$", ".0f"),
+    ("strike_out_percentage", "$\\bf{K\\%}$", ".1%"),
+    ("walk_percentage", "$\\bf{BB\\%}$", ".1%"),
+    ("k_minus_bb", "$\\bf{K-BB\\%}$", ".1%"),
+    ("whiff_rate", "$\\bf{Whiff\\%}$", ".1%"),
+    ("chase_percentage", "$\\bf{Chase\\%}$", ".1%"),
+    ("called_strikes_plus_whiffs_percentage", "$\\bf{CSW\\%}$", ".1%"),
+    ("zone_percentage", "$\\bf{Zone\\%}$", ".1%"),
+    ("hard_hit_percentage", "$\\bf{HH\\%}$", ".1%"),
 ]
 
 
@@ -1430,6 +1907,9 @@ def plot_pitching_summary(
                     "whiff_rate", "chase_percentage",
                     "percentage_thrown", "woba",
                     "run_value_per_100_pitches",
+                    # MiLB-specific columns
+                    "csw", "zone_rate", "swing_rate",
+                    "avg_exit_velo", "hard_hit_rate", "xba",
                 ]
                 for nc in num_cols:
                     if nc in prows.columns:
@@ -1506,9 +1986,9 @@ def plot_pitching_summary(
                     ha="center", fontsize=26, fontstyle="italic",
                     color="#666666")
 
-        # Team logo
+        # Team logo (MLB only — MiLB uses parent org logos which can be misleading)
         ax_logo.axis("off")
-        if team:
+        if team and level == "MLB":
             _LOGO_MAP = {
                 "AZ": "ari", "ARI": "ari", "ATL": "atl", "BAL": "bal",
                 "BOS": "bos", "CHC": "chc", "CWS": "chw", "CIN": "cin",
@@ -1544,7 +2024,8 @@ def plot_pitching_summary(
 
         season_headers = []
         season_values = []
-        for col, header, fmt in _SUMMARY_STATS:
+        summary_stats = _MILB_SUMMARY_STATS if level != "MLB" else _SUMMARY_STATS
+        for col, header, fmt in summary_stats:
             if col in player.index:
                 try:
                     val = float(player[col])
@@ -1714,8 +2195,9 @@ def plot_pitching_summary(
 
         if not pitch_rows.empty:
             # Build table data
+            pitch_table_cols = _MILB_PITCH_TABLE_COLS if level != "MLB" else _PITCH_TABLE_COLS
             tbl_headers = ["$\\bf{Pitch\\ Name}$", "$\\bf{Count\\%}$"]
-            tbl_headers += [h for _, h, _, _ in _PITCH_TABLE_COLS
+            tbl_headers += [h for _, h, _, _ in pitch_table_cols
                             if _ in pitch_rows.columns or True]
 
             # Use all_pitches_df for league comparison if available
@@ -1733,7 +2215,7 @@ def plot_pitching_summary(
                 row_colors = ["#ffffff", "#ffffff"]
                 row_label_colors.append(_TJ_COLOUR.get(pt, "#888888"))
 
-                for pp_col, _, fmt, higher_good in _PITCH_TABLE_COLS:
+                for pp_col, _, fmt, higher_good in pitch_table_cols:
                     # Always add exactly one cell per column
                     if pp_col not in row.index:
                         row_data.append("\u2014")
@@ -1779,7 +2261,7 @@ def plot_pitching_summary(
 
             # Determine which headers we actually have
             actual_headers = ["$\\bf{Pitch\\ Name}$", "$\\bf{Pitch\\%}$"]
-            for pp_col, header, _, _ in _PITCH_TABLE_COLS:
+            for pp_col, header, _, _ in pitch_table_cols:
                 actual_headers.append(header)
 
             n_cols = len(actual_headers)

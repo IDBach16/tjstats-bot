@@ -270,6 +270,14 @@ def aggregate_pitch_stats(raw: pd.DataFrame) -> pd.DataFrame:
     # Total pitches per pitcher
     total_per_pitcher = df.groupby(pid_col).size().rename("_total")
 
+    # Per-pitch batted ball flags
+    if "launch_speed" in df.columns:
+        df["_pt_has_bb"] = df["launch_speed"].notna()
+        df["_pt_hard_hit"] = df["launch_speed"] >= 95
+    else:
+        df["_pt_has_bb"] = False
+        df["_pt_hard_hit"] = False
+
     grouped = df.groupby([pid_col, pt_col])
 
     agg = grouped.agg(
@@ -283,9 +291,30 @@ def aggregate_pitch_stats(raw: pd.DataFrame) -> pd.DataFrame:
         release_extension=("release_extension", "mean"),
         swings=("_is_swing", "sum"),
         whiffs=("_is_whiff", "sum"),
+        called_strikes=("_is_called_strike", "sum"),
+        in_zone=("_in_zone", "sum"),
         chases=("_is_chase", "sum"),
         out_of_zone=("_in_zone", lambda x: (~x).sum()),
+        batted_balls=("_pt_has_bb", "sum"),
+        hard_hits=("_pt_hard_hit", "sum"),
     ).reset_index()
+
+    # Per-pitch-type exit velo and expected stats
+    if "launch_speed" in df.columns:
+        ev_pt = df[df["launch_speed"].notna()].groupby([pid_col, pt_col]).agg(
+            avg_exit_velo=("launch_speed", "mean"),
+        ).reset_index()
+        agg = agg.merge(ev_pt, on=[pid_col, pt_col], how="left")
+    else:
+        agg["avg_exit_velo"] = np.nan
+
+    if "estimated_ba_using_speedangle" in df.columns:
+        xba_pt = df[df["estimated_ba_using_speedangle"].notna()].groupby(
+            [pid_col, pt_col]
+        ).agg(xba=("estimated_ba_using_speedangle", "mean")).reset_index()
+        agg = agg.merge(xba_pt, on=[pid_col, pt_col], how="left")
+    else:
+        agg["xba"] = np.nan
 
     # Player name
     if name_col:
@@ -320,13 +349,27 @@ def aggregate_pitch_stats(raw: pd.DataFrame) -> pd.DataFrame:
                                   agg["whiffs"] / agg["swings"], 0)
     agg["chase_percentage"] = np.where(agg["out_of_zone"] > 0,
                                         agg["chases"] / agg["out_of_zone"], 0)
+    agg["csw"] = np.where(
+        agg["count"] > 0,
+        (agg["called_strikes"] + agg["whiffs"]) / agg["count"], 0
+    )
+    agg["zone_rate"] = np.where(
+        agg["count"] > 0, agg["in_zone"] / agg["count"], 0
+    )
+    agg["swing_rate"] = np.where(
+        agg["count"] > 0, agg["swings"] / agg["count"], 0
+    )
+    agg["hard_hit_rate"] = np.where(
+        agg["batted_balls"] > 0, agg["hard_hits"] / agg["batted_balls"], 0
+    )
 
     # Rename for compatibility
     agg = agg.rename(columns={pid_col: "player_id"})
 
     # Clean up
-    agg = agg.drop(columns=["_total", "swings", "whiffs", "chases",
-                             "out_of_zone"], errors="ignore")
+    agg = agg.drop(columns=["_total", "swings", "whiffs", "called_strikes",
+                             "in_zone", "chases", "out_of_zone",
+                             "batted_balls", "hard_hits"], errors="ignore")
 
     return agg
 
@@ -379,6 +422,37 @@ def aggregate_pitcher_stats(raw: pd.DataFrame) -> pd.DataFrame:
 
     df["_is_chase"] = df["_is_swing"] & ~df["_in_zone"]
 
+    # First-pitch strike detection
+    if all(c in df.columns for c in ("balls", "strikes")):
+        df["_is_first_pitch"] = (df["balls"] == 0) & (df["strikes"] == 0)
+        df["_is_first_pitch_strike"] = df["_is_first_pitch"] & (
+            df["_is_called_strike"] | df["_is_swing"]
+        )
+    else:
+        df["_is_first_pitch"] = False
+        df["_is_first_pitch_strike"] = False
+
+    # Batted ball stats from Statcast
+    if "launch_speed" in df.columns:
+        df["_has_batted_ball"] = df["launch_speed"].notna()
+        df["_is_hard_hit"] = df["launch_speed"] >= 95
+        df["_is_barrel"] = (
+            df["launch_speed"].ge(98) &
+            df["launch_angle"].between(26, 30)
+        ) if "launch_angle" in df.columns else False
+    else:
+        df["_has_batted_ball"] = False
+        df["_is_hard_hit"] = False
+        df["_is_barrel"] = False
+
+    # Ground ball detection
+    if "launch_angle" in df.columns:
+        df["_is_ground_ball"] = (
+            df["launch_angle"].notna() & (df["launch_angle"] < 10)
+        )
+    else:
+        df["_is_ground_ball"] = False
+
     # Strikeout/walk detection from events
     if "events" in df.columns:
         df["_is_strikeout"] = df["events"].str.lower().str.contains(
@@ -403,10 +477,51 @@ def aggregate_pitcher_stats(raw: pd.DataFrame) -> pd.DataFrame:
         whiffs=("_is_whiff", "sum"),
         called_strikes=("_is_called_strike", "sum"),
         chases=("_is_chase", "sum"),
+        in_zone=("_in_zone", "sum"),
         out_of_zone=("_in_zone", lambda x: (~x).sum()),
         strikeouts=("_is_strikeout", "sum"),
         walks=("_is_walk", "sum"),
+        first_pitches=("_is_first_pitch", "sum"),
+        first_pitch_strikes=("_is_first_pitch_strike", "sum"),
+        batted_balls=("_has_batted_ball", "sum"),
+        hard_hits=("_is_hard_hit", "sum"),
+        barrels=("_is_barrel", "sum"),
+        ground_balls=("_is_ground_ball", "sum"),
     ).reset_index()
+
+    # Batted ball quality stats from Savant columns
+    if "launch_speed" in df.columns:
+        ev_agg = df[df["launch_speed"].notna()].groupby(pid_col).agg(
+            avg_exit_velo=("launch_speed", "mean"),
+        ).reset_index()
+        agg = agg.merge(ev_agg, on=pid_col, how="left")
+    else:
+        agg["avg_exit_velo"] = np.nan
+
+    if "launch_angle" in df.columns:
+        la_agg = df[df["launch_angle"].notna()].groupby(pid_col).agg(
+            avg_launch_angle=("launch_angle", "mean"),
+        ).reset_index()
+        agg = agg.merge(la_agg, on=pid_col, how="left")
+    else:
+        agg["avg_launch_angle"] = np.nan
+
+    # Expected stats from Savant
+    if "estimated_ba_using_speedangle" in df.columns:
+        xba_agg = df[df["estimated_ba_using_speedangle"].notna()].groupby(pid_col).agg(
+            xba_against=("estimated_ba_using_speedangle", "mean"),
+        ).reset_index()
+        agg = agg.merge(xba_agg, on=pid_col, how="left")
+    else:
+        agg["xba_against"] = np.nan
+
+    if "estimated_woba_using_speedangle" in df.columns:
+        xwoba_agg = df[df["estimated_woba_using_speedangle"].notna()].groupby(pid_col).agg(
+            xwoba_against=("estimated_woba_using_speedangle", "mean"),
+        ).reset_index()
+        agg = agg.merge(xwoba_agg, on=pid_col, how="left")
+    else:
+        agg["xwoba_against"] = np.nan
 
     # Batters faced (unique game + at_bat combos)
     if game_col in df.columns and ab_col in df.columns:
@@ -451,6 +566,23 @@ def aggregate_pitcher_stats(raw: pd.DataFrame) -> pd.DataFrame:
         agg["total_pitches"] > 0,
         (agg["whiffs"] + agg["called_strikes"]) / agg["total_pitches"], 0
     )
+    agg["zone_percentage"] = np.where(
+        agg["total_pitches"] > 0, agg["in_zone"] / agg["total_pitches"], 0
+    )
+    agg["first_pitch_strike_percentage"] = np.where(
+        agg["first_pitches"] > 0,
+        agg["first_pitch_strikes"] / agg["first_pitches"], 0
+    )
+    agg["hard_hit_percentage"] = np.where(
+        agg["batted_balls"] > 0, agg["hard_hits"] / agg["batted_balls"], 0
+    )
+    agg["barrel_percentage"] = np.where(
+        agg["batted_balls"] > 0, agg["barrels"] / agg["batted_balls"], 0
+    )
+    agg["ground_ball_percentage"] = np.where(
+        agg["batted_balls"] > 0, agg["ground_balls"] / agg["batted_balls"], 0
+    )
+    agg["k_minus_bb"] = agg["strike_out_percentage"] - agg["walk_percentage"]
 
     # Rename & filter
     agg = agg.rename(columns={pid_col: "player_id"})
@@ -458,7 +590,10 @@ def aggregate_pitcher_stats(raw: pd.DataFrame) -> pd.DataFrame:
 
     # Clean up internal columns
     agg = agg.drop(columns=["swings", "whiffs", "called_strikes", "chases",
-                             "out_of_zone", "strikeouts", "walks"],
+                             "in_zone", "out_of_zone", "strikeouts", "walks",
+                             "first_pitches", "first_pitch_strikes",
+                             "batted_balls", "hard_hits", "barrels",
+                             "ground_balls"],
                     errors="ignore")
 
     return agg

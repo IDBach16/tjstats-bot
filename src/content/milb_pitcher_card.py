@@ -9,13 +9,13 @@ from ..milb_statcast import (
     get_milb_season_pitchers, get_milb_season_pitches, pick_milb_player,
     LEVEL_NAMES,
 )
-from ..charts import plot_pitcher_card
+from ..charts import plot_milb_pitcher_card
 from ..config import DEFAULT_HASHTAGS, MLB_SEASON
 
 log = logging.getLogger(__name__)
 
 # Rotate through levels
-_LEVELS = ["AAA", "AA", "A+"]
+_LEVELS = ["AA", "A+"]
 _level_idx = 0
 
 
@@ -57,7 +57,7 @@ class MiLBPitcherCardGenerator(ContentGenerator):
             pitches_df.loc[pitches_df[pid_col] == player_id, "pitcher_name"] = name
 
         level_name = LEVEL_NAMES.get(level, level)
-        image_path = plot_pitcher_card(
+        image_path = plot_milb_pitcher_card(
             name, season_df, pitches_df,
             team=team, player_id=player_id, level=level,
         )
