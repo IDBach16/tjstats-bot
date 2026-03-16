@@ -493,6 +493,15 @@
         "guess_pitcher",
         "Spencer Strider"
       ]
+    },
+    {
+      "date": "2026-03-16T22:25:11.895603",
+      "generator": "pitching_summary",
+      "tweet_id": "2033670866039673283",
+      "tags": [
+        "pitching_summary",
+        "Ryan Helsley"
+      ]
     }
   ]
 }
