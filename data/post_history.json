@@ -484,6 +484,15 @@
         "pitcher_card",
         "Garrett Crochet"
       ]
+    },
+    {
+      "date": "2026-03-16T19:46:20.799060",
+      "generator": "guess_pitcher",
+      "tweet_id": "2033630967919673819",
+      "tags": [
+        "guess_pitcher",
+        "Spencer Strider"
+      ]
     }
   ]
 }
