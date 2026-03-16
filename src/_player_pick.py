@@ -37,15 +37,19 @@ def pick_player(role: str = "pitchers") -> dict:
             {"name": "Corbin Burns", "id": 669203},
         ]
 
-    # Avoid recently posted players (last 7 entries)
+    # Avoid recently posted players — check ALL history, not just last 7
+    # Only count tags that match actual player names in the watchlist
+    player_names = {p["name"] for p in players}
     recent_names = set()
-    for entry in history.get("posts", [])[-7:]:
+    for entry in history.get("posts", [])[-50:]:
         for tag in entry.get("tags", []):
-            recent_names.add(tag)
+            if tag in player_names:
+                recent_names.add(tag)
 
     candidates = [p for p in players if p["name"] not in recent_names]
     if not candidates:
         candidates = players  # all used recently, reset
+        log.info("All players posted recently, resetting pool")
 
     player = random.choice(candidates)
     player.setdefault("season", MLB_SEASON)

@@ -9,7 +9,7 @@ on:
     - cron: '0 19 * * *'
     # 5 PM EST (UTC-5) = 22:00 UTC — pitching summary
     - cron: '0 22 * * *'
-    # 8 PM EST (UTC-5) = 01:00 UTC — biomechanics (Mon/Wed/Fri only)
+    # 8 PM EST (UTC-5) = 01:00 UTC next day — biomechanics (Mon/Wed/Fri EST)
     - cron: '0 1 * * 2,4,6'
   workflow_dispatch:
     inputs:
@@ -82,8 +82,9 @@ jobs:
             echo "generator=${{ inputs.generator }}" >> $GITHUB_OUTPUT
           else
             HOUR=$(date -u +%H)
-            if [ "$HOUR" -lt 3 ]; then
+            if [ "$HOUR" -lt 5 ]; then
               # 8 PM EST (01:00 UTC next day) — biomechanics
+              # Wide window (< 5) to handle GitHub Actions cron delays
               echo "slot=biomechanics" >> $GITHUB_OUTPUT
               echo "generator=" >> $GITHUB_OUTPUT
             elif [ "$HOUR" -ge 21 ]; then
