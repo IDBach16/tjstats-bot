@@ -32,11 +32,6 @@ class VeloDistributionGenerator(ContentGenerator):
             log.warning("Velocity distribution chart failed for %s", name)
             return PostContent(text="")
 
-        text = (
-            f"{name}'s velocity distribution by pitch type\n\n"
-            f"@TJStats {DEFAULT_HASHTAGS}"
-        )
-
         # Fetch video clip
         video_path = None
         try:
@@ -45,16 +40,30 @@ class VeloDistributionGenerator(ContentGenerator):
             log.warning("Video clip fetch failed for %s", name, exc_info=True)
 
         # AI analysis
-        reply_content = None
+        analysis_text = None
         try:
             season_df = pitch_profiler.get_season_pitchers()
             pitches_df = pitch_profiler.get_season_pitches()
             if not season_df.empty:
                 analysis_text = analyze_pitcher(name, season_df, pitches_df)
-                if analysis_text:
-                    reply_content = PostContent(text=analysis_text, tags=["analysis"])
         except Exception:
             log.warning("Analysis failed for %s", name, exc_info=True)
+
+        # Lead with the AI take in the main tweet
+        if analysis_text:
+            text = (
+                f"{analysis_text}\n\n"
+                f"{name}'s velocity distribution by pitch type\n\n"
+                f"@TJStats {DEFAULT_HASHTAGS}"
+            )
+        else:
+            text = (
+                f"{name}'s velocity distribution by pitch type\n\n"
+                f"@TJStats {DEFAULT_HASHTAGS}"
+            )
+
+        # Stats go in reply (graphic already shows them)
+        reply_content = None
 
         return PostContent(
             text=text,

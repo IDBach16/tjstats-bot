@@ -44,12 +44,6 @@ class HardestPitchGenerator(ContentGenerator):
             last, first = pitcher.split(", ", 1)
             pitcher = f"{first} {last}"
 
-        text = (
-            f"Hardest pitch thrown yesterday ({ds}):\n\n"
-            f"{pitcher} — {velo:.1f} mph {pitch_type}\n\n"
-            f"Data via @baseaboreball / Statcast {DEFAULT_HASHTAGS}"
-        )
-
         # Media: try chart + video (image as main tweet, video as reply)
         image_path = None
         video_path = None
@@ -62,17 +56,34 @@ class HardestPitchGenerator(ContentGenerator):
                 log.warning("Video clip fetch failed for %s", pitcher, exc_info=True)
 
         # AI analysis using Pitch Profiler season data
-        reply_content = None
+        analysis_text = None
         try:
             season_df = pitch_profiler.get_season_pitchers()
             if not season_df.empty:
                 analysis_text = analyze_pitcher(
                     pitcher, season_df, pitch_profiler.get_season_pitches()
                 )
-                if analysis_text:
-                    reply_content = PostContent(text=analysis_text, tags=["analysis"])
         except Exception:
             log.warning("Analysis generation failed for %s", pitcher, exc_info=True)
+
+        # Lead with the AI take in the main tweet
+        stat_line = f"{pitcher} — {velo:.1f} mph {pitch_type}"
+        if analysis_text:
+            text = (
+                f"{analysis_text}\n\n"
+                f"Hardest pitch thrown yesterday ({ds}):\n"
+                f"{stat_line}\n\n"
+                f"Data via @baseaboreball / Statcast {DEFAULT_HASHTAGS}"
+            )
+        else:
+            text = (
+                f"Hardest pitch thrown yesterday ({ds}):\n\n"
+                f"{stat_line}\n\n"
+                f"Data via @baseaboreball / Statcast {DEFAULT_HASHTAGS}"
+            )
+
+        # Stats go in reply (graphic already shows them)
+        reply_content = None
 
         return PostContent(
             text=text,

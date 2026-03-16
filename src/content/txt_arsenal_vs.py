@@ -139,16 +139,6 @@ class ArsenalVsGenerator(ContentGenerator):
         block_a = build_stat_block(player_a)
         block_b = build_stat_block(player_b)
 
-        text = (
-            f"Which arsenal would you rather have?\n\n"
-            f"Pitcher A: {name_a}\n"
-            f"{block_a}\n\n"
-            f"Pitcher B: {name_b}\n"
-            f"{block_b}\n\n"
-            f"Reply with A or B!\n\n"
-            f"Data via @mlbpitchprofiler {DEFAULT_HASHTAGS}"
-        )
-
         # Media: try chart + video (image as main tweet, video as reply)
         image_path = None
         video_path = None
@@ -165,10 +155,31 @@ class ArsenalVsGenerator(ContentGenerator):
                 log.warning("Video clip fetch failed for %s", name_a, exc_info=True)
 
         # AI comparison analysis
-        reply_content = None
         analysis_text = _extract_comparison_stats(player_a, name_a, player_b, name_b)
+
+        # Lead with the AI take in the main tweet
         if analysis_text:
-            reply_content = PostContent(text=analysis_text, tags=["analysis"])
+            text = (
+                f"{analysis_text}\n\n"
+                f"Which arsenal would you rather have?\n"
+                f"{name_a} vs {name_b} — Reply with A or B!\n\n"
+                f"Data via @mlbpitchprofiler {DEFAULT_HASHTAGS}"
+            )
+        else:
+            text = (
+                f"Which arsenal would you rather have?\n\n"
+                f"{name_a} vs {name_b} — Reply with A or B!\n\n"
+                f"Data via @mlbpitchprofiler {DEFAULT_HASHTAGS}"
+            )
+
+        # Stat dumps go in reply (graphic already shows them)
+        reply_content = None
+        stat_line = (
+            f"Pitcher A: {name_a}\n{block_a}\n\n"
+            f"Pitcher B: {name_b}\n{block_b}"
+        )
+        if stat_line.strip():
+            reply_content = PostContent(text=stat_line, tags=["stats"])
 
         return PostContent(
             text=text,

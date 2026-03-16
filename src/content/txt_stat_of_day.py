@@ -65,16 +65,15 @@ class StatOfDayGenerator(ContentGenerator):
             if "innings_pitched" in df.columns
             else f"{MLB_SEASON} {stat['label']} Leaders:\n"
         )
-        lines = [header]
+        leader_lines = [header]
         for i, (_, row) in enumerate(leaders.iterrows(), 1):
             val = row[col]
             if stat.get("pct"):
                 val = val * 100
             formatted = f"{val:{stat['fmt']}}{stat['suffix']}"
-            lines.append(f"{i}. {row[name_col]} — {formatted}")
+            leader_lines.append(f"{i}. {row[name_col]} — {formatted}")
 
-        lines.append(f"\nData via @mlbpitchprofiler {DEFAULT_HASHTAGS}")
-        text = "\n".join(lines)
+        leaderboard_text = "\n".join(leader_lines)
 
         # Media: try chart + video (image as main tweet, video as reply)
         image_path = None
@@ -91,11 +90,25 @@ class StatOfDayGenerator(ContentGenerator):
                 log.warning("Video clip fetch failed for %s", top_name, exc_info=True)
 
         # AI analysis of the #1 leader
-        reply_content = None
+        analysis_text = None
         if top_name:
             analysis_text = analyze_pitcher(top_name, df, pitch_profiler.get_season_pitches())
-            if analysis_text:
-                reply_content = PostContent(text=analysis_text, tags=["analysis"])
+
+        # Lead with the AI take in the main tweet
+        if analysis_text:
+            text = (
+                f"{analysis_text}\n\n"
+                f"{leaderboard_text}\n\n"
+                f"Data via @mlbpitchprofiler {DEFAULT_HASHTAGS}"
+            )
+        else:
+            text = (
+                f"{leaderboard_text}\n\n"
+                f"Data via @mlbpitchprofiler {DEFAULT_HASHTAGS}"
+            )
+
+        # Stats go in reply (graphic already shows them)
+        reply_content = None
 
         return PostContent(
             text=text,

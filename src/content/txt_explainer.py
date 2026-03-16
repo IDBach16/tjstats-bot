@@ -162,13 +162,6 @@ class ExplainerGenerator(ContentGenerator):
             except Exception:
                 log.warning("Failed to fetch leader for explainer topic", exc_info=True)
 
-        text = (
-            f"{topic['title']}\n\n"
-            f"{topic['body']}"
-            f"{leader_line}\n\n"
-            f"Data via @mlbpitchprofiler {DEFAULT_HASHTAGS}"
-        )
-
         # Media: movement profile chart from Pitch Profiler data
         image_path = None
         chart_name = leader_name
@@ -184,16 +177,34 @@ class ExplainerGenerator(ContentGenerator):
             log.warning("Movement profile chart failed", exc_info=True)
 
         # AI analysis of the leader (if we have one)
-        reply_content = None
+        analysis_text = None
         if leader_name:
             try:
                 season_df = pitch_profiler.get_season_pitchers()
                 pitches_df = pitch_profiler.get_season_pitches()
                 analysis_text = analyze_pitcher(leader_name, season_df, pitches_df)
-                if analysis_text:
-                    reply_content = PostContent(text=analysis_text, tags=["analysis"])
             except Exception:
                 log.warning("Analysis failed for %s", leader_name, exc_info=True)
+
+        # Lead with the AI take in the main tweet if we have one
+        if analysis_text:
+            text = (
+                f"{analysis_text}\n\n"
+                f"{topic['title']}\n\n"
+                f"{topic['body']}"
+                f"{leader_line}\n\n"
+                f"Data via @mlbpitchprofiler {DEFAULT_HASHTAGS}"
+            )
+        else:
+            text = (
+                f"{topic['title']}\n\n"
+                f"{topic['body']}"
+                f"{leader_line}\n\n"
+                f"Data via @mlbpitchprofiler {DEFAULT_HASHTAGS}"
+            )
+
+        # Stats go in reply (graphic already shows them)
+        reply_content = None
 
         return PostContent(
             text=text,

@@ -80,14 +80,21 @@ class MiLBPitchingSummaryGenerator(ContentGenerator):
             except Exception:
                 log.warning("Video clip fetch failed for %s", name, exc_info=True)
 
-        text = (
-            f"{name}'s {MLB_SEASON} {level_name} Pitching Summary"
-            f"\n\n@TJStats {DEFAULT_HASHTAGS} #MiLB"
-        )
-
-        reply_content = None
+        # Lead with the AI take in the main tweet
         if analysis_text:
-            reply_content = PostContent(text=analysis_text, tags=["analysis"])
+            text = (
+                f"{analysis_text}\n\n"
+                f"{name}'s {MLB_SEASON} {level_name} Pitching Summary"
+                f"\n\n@TJStats {DEFAULT_HASHTAGS} #MiLB"
+            )
+        else:
+            text = (
+                f"{name}'s {MLB_SEASON} {level_name} Pitching Summary"
+                f"\n\n@TJStats {DEFAULT_HASHTAGS} #MiLB"
+            )
+
+        # Stats go in reply (graphic already shows them)
+        reply_content = None
 
         return PostContent(
             text=text,

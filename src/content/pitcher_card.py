@@ -78,17 +78,27 @@ class PitcherCardGenerator(ContentGenerator):
                 log.warning("Video clip fetch failed for %s", name, exc_info=True)
 
         stat_line = " | ".join(summary_parts) if summary_parts else ""
-        stat_section = f"\n\n{stat_line}" if stat_line else ""
 
-        text = (
-            f"{name}'s {MLB_SEASON} Pitcher Card"
-            f"{stat_section}"
-            f"\n\n@TJStats {DEFAULT_HASHTAGS}"
-        )
-
-        reply_content = None
+        # Lead with the take, not the title
         if analysis_text:
-            reply_content = PostContent(text=analysis_text, tags=["analysis"])
+            text = (
+                f"{analysis_text}"
+                f"\n\n{name}'s {MLB_SEASON} Pitcher Card"
+                f"\n\n@TJStats {DEFAULT_HASHTAGS}"
+            )
+        else:
+            text = (
+                f"{name}'s {MLB_SEASON} Pitcher Card"
+                f"\n\n@TJStats {DEFAULT_HASHTAGS}"
+            )
+
+        # Stats go in the reply (the graphic already shows them)
+        reply_content = None
+        if stat_line:
+            reply_content = PostContent(
+                text=f"{name} | {stat_line}",
+                tags=["stats"],
+            )
 
         return PostContent(
             text=text,

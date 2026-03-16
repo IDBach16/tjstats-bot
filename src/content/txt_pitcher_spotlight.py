@@ -93,7 +93,7 @@ _FALLBACK_HOOKS = [
 ]
 
 
-def _build_creative_text(player, name: str) -> str:
+def _build_creative_text(player, name: str) -> tuple[str, str]:
     """Build a short, creative spotlight tweet based on the pitcher's standout stats."""
     # Collect formatted stat values for template substitution
     stat_vals = {
@@ -124,8 +124,8 @@ def _build_creative_text(player, name: str) -> str:
 
     stat_block = build_stat_block(player)
 
-    text = f"{hook}\n\n{stat_block}\n\nData via @mlbpitchprofiler {DEFAULT_HASHTAGS}"
-    return text
+    text = f"{hook}\n\nData via @mlbpitchprofiler {DEFAULT_HASHTAGS}"
+    return text, stat_block
 
 
 class PitcherSpotlightGenerator(ContentGenerator):
@@ -169,7 +169,7 @@ class PitcherSpotlightGenerator(ContentGenerator):
         player = top.sample(1).iloc[0]
         name = str(player.get("pitcher_name", player.get("player_name", "Unknown")))
 
-        text = _build_creative_text(player, name)
+        text, stat_block = _build_creative_text(player, name)
 
         # Media: try chart + video (image as main tweet, video as reply)
         image_path = None
@@ -182,11 +182,17 @@ class PitcherSpotlightGenerator(ContentGenerator):
             except Exception:
                 log.warning("Video clip fetch failed for %s", name, exc_info=True)
 
-        # AI analysis
+        # AI analysis — merge into main tweet alongside the hook
         analysis_text = analyze_pitcher(name, df, pitch_profiler.get_season_pitches())
-        reply_content = None
         if analysis_text:
-            reply_content = PostContent(text=analysis_text, tags=["analysis"])
+            text = (
+                f"{analysis_text}\n\n{text}"
+            )
+
+        # Stat block goes in reply (graphic already shows them)
+        reply_content = None
+        if stat_block:
+            reply_content = PostContent(text=f"{name} | {stat_block}", tags=["stats"])
 
         return PostContent(
             text=text,
