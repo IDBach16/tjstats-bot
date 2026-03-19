@@ -577,6 +577,16 @@
         "stat_of_day",
         "chase_percentage"
       ]
+    },
+    {
+      "date": "2026-03-19T22:20:30.221137",
+      "generator": "milb_trad_pitching_summary",
+      "tweet_id": "2034756906573820412",
+      "tags": [
+        "milb_trad_pitching_summary",
+        "Walbert Urena",
+        "AA"
+      ]
     }
   ]
 }
