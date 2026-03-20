@@ -2376,10 +2376,6 @@ def plot_release_points(pitcher_id: int, name: str) -> Path | None:
             x_vals = subset["release_pos_x"]
             z_vals = subset["release_pos_z"]
 
-            # Flip x for RHP (catcher perspective)
-            if pitcher_hand == "R":
-                x_vals = x_vals * -1
-
             ax.scatter(
                 x_vals, z_vals,
                 c=color, label=label, alpha=0.5, s=35,
@@ -2396,9 +2392,10 @@ def plot_release_points(pitcher_id: int, name: str) -> Path | None:
         ax.set_xlim(-4, 4)
         ax.set_ylim(0, 8)
 
-        # Arm/glove side labels
+        # Arm/glove side labels (catcher's perspective: positive x = catcher's right)
+        # RHP releases from catcher's left (negative x), LHP from catcher's right (positive x)
         if pitcher_hand == "R":
-            ax.text(-3.8, 0.15, "\u2190 Arm Side", fontstyle="italic",
+            ax.text(-3.8, 0.15, "\u2190 Arm Side (RHP)", fontstyle="italic",
                     fontsize=10, ha="left", va="bottom",
                     bbox=dict(facecolor="white", edgecolor="#cccccc", pad=3))
             ax.text(3.8, 0.15, "Glove Side \u2192", fontstyle="italic",
@@ -2408,7 +2405,7 @@ def plot_release_points(pitcher_id: int, name: str) -> Path | None:
             ax.text(-3.8, 0.15, "\u2190 Glove Side", fontstyle="italic",
                     fontsize=10, ha="left", va="bottom",
                     bbox=dict(facecolor="white", edgecolor="#cccccc", pad=3))
-            ax.text(3.8, 0.15, "Arm Side \u2192", fontstyle="italic",
+            ax.text(3.8, 0.15, "Arm Side (LHP) \u2192", fontstyle="italic",
                     fontsize=10, ha="right", va="bottom",
                     bbox=dict(facecolor="white", edgecolor="#cccccc", pad=3))
 
