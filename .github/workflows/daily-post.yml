@@ -88,8 +88,9 @@ jobs:
             HOUR=$(date -u +%H)
             if [ "$HOUR" -lt 5 ]; then
               # 8 PM EST (01:00 UTC next day) — biomechanics
+              # Force the generator directly since date.today() is the next day in UTC
               echo "slot=biomechanics" >> $GITHUB_OUTPUT
-              echo "generator=" >> $GITHUB_OUTPUT
+              echo "generator=biomechanics_101" >> $GITHUB_OUTPUT
             elif [ "$HOUR" -ge 21 ]; then
               # 5 PM EST (22:00 UTC) — evening visual
               echo "slot=evening" >> $GITHUB_OUTPUT
