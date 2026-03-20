@@ -17,6 +17,7 @@ class PostContent:
     alt_text: str = ""
     tags: list[str] = field(default_factory=list)
     reply: PostContent | None = None
+    replies: list[PostContent] = field(default_factory=list)
 
 
 class ContentGenerator(abc.ABC):

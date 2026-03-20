@@ -8,7 +8,7 @@ import logging
 import sys
 
 from . import poster
-from .scheduler import get_generators_for_today, record_post, GENERATORS
+from .scheduler import get_generators_for_today, get_daily_generators, record_post, GENERATORS
 
 logging.basicConfig(
     level=logging.INFO,
@@ -23,7 +23,7 @@ async def run_post(slot: str, generator_name: str | None = None) -> None:
     """Generate and post content for a given slot.
 
     Slots: 'screenshot' (morning), 'text' (afternoon), 'evening',
-           'biomechanics' (4th slot, some days), or 'all'.
+           'biomechanics' (4th slot, some days), 'daily', or 'all'.
     If generator_name is provided, run that specific generator instead.
     """
     if generator_name:
@@ -48,8 +48,14 @@ async def run_post(slot: str, generator_name: str | None = None) -> None:
             await _generate_and_post(gens[3])
         else:
             log.info("No biomechanics slot scheduled for today")
+    elif slot == "daily":
+        for gen in get_daily_generators():
+            await _generate_and_post(gen)
     else:
+        # "all" — run rotation + daily generators
         for gen in gens:
+            await _generate_and_post(gen)
+        for gen in get_daily_generators():
             await _generate_and_post(gen)
 
 
@@ -125,6 +131,50 @@ async def _generate_and_post(generator) -> None:
             reply_id = poster.post_text(reply.text)
             log.info("Posted reveal as standalone tweet %s", reply_id)
 
+    # Handle replies list (thread posting — e.g. Reds summary)
+    if content.replies:
+        reply_to_id = tweet_id
+        for i, reply in enumerate(content.replies):
+            if DRY_RUN:
+                media_parts = []
+                if reply.image_path and reply.image_path.exists():
+                    media_parts.append(f"image {reply.image_path}")
+                if reply.video_path and reply.video_path.exists():
+                    media_parts.append(f"video {reply.video_path}")
+                media_info = f" with {' + '.join(media_parts)}" if media_parts else ""
+                print(f"[DRY RUN] Would reply #{i+1}{media_info}:\n{reply.text}\n")
+                continue
+
+            try:
+                has_reply_image = reply.image_path and reply.image_path.exists()
+                has_reply_video = reply.video_path and reply.video_path.exists()
+
+                if has_reply_video:
+                    # Video reply
+                    rid = poster.post_video_reply(
+                        in_reply_to=reply_to_id,
+                        video_path=reply.video_path,
+                        text=reply.text,
+                    )
+                elif has_reply_image:
+                    # Image reply
+                    rid = poster.post_reply(
+                        text=reply.text,
+                        in_reply_to=reply_to_id,
+                        image_path=reply.image_path,
+                        alt_text=reply.alt_text,
+                    )
+                else:
+                    # Text-only reply
+                    rid = poster.post_reply(
+                        text=reply.text,
+                        in_reply_to=reply_to_id,
+                    )
+                log.info("Posted thread reply #%d — tweet %s", i + 1, rid)
+                reply_to_id = rid  # chain replies
+            except Exception:
+                log.warning("Thread reply #%d failed", i + 1, exc_info=True)
+
 
 def main() -> None:
     global DRY_RUN
@@ -132,7 +182,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="TJStats Baseball X Bot")
     parser.add_argument(
         "--slot",
-        choices=["screenshot", "text", "evening", "biomechanics", "all"],
+        choices=["screenshot", "text", "evening", "biomechanics", "daily", "all"],
         default="all",
         help="Which content slot to run (default: all)",
     )

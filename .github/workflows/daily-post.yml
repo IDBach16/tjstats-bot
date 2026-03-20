@@ -3,6 +3,8 @@ name: Daily Baseball Post
 
 on:
   schedule:
+    # 9 AM EST (UTC-5) = 14:00 UTC — Reds daily summary (yesterday's game)
+    - cron: '0 14 * * *'
     # 10 AM EST (UTC-5) = 15:00 UTC — screenshot post
     - cron: '0 15 * * *'
     # 2 PM EST (UTC-5) = 19:00 UTC — text post
@@ -20,6 +22,7 @@ on:
         type: choice
         options:
           - all
+          - daily
           - screenshot
           - text
           - evening
@@ -53,6 +56,7 @@ on:
           - milb_trad_pitcher_card
           - milb_trad_pitching_summary
           - biomechanics_101
+          - reds_summary
 
 permissions:
   contents: write
@@ -84,12 +88,15 @@ jobs:
             HOUR=$(date -u +%H)
             if [ "$HOUR" -lt 5 ]; then
               # 8 PM EST (01:00 UTC next day) — biomechanics
-              # Wide window (< 5) to handle GitHub Actions cron delays
               echo "slot=biomechanics" >> $GITHUB_OUTPUT
               echo "generator=" >> $GITHUB_OUTPUT
             elif [ "$HOUR" -ge 21 ]; then
               # 5 PM EST (22:00 UTC) — evening visual
               echo "slot=evening" >> $GITHUB_OUTPUT
+              echo "generator=" >> $GITHUB_OUTPUT
+            elif [ "$HOUR" -lt 15 ]; then
+              # 9 AM EST (14:00 UTC) — Reds daily summary
+              echo "slot=daily" >> $GITHUB_OUTPUT
               echo "generator=" >> $GITHUB_OUTPUT
             elif [ "$HOUR" -lt 17 ]; then
               # 10 AM EST (15:00 UTC) — morning visual

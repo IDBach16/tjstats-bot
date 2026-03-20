@@ -46,6 +46,9 @@ from .content.milb_trad_pitching_summary import MiLBTradPitchingSummaryGenerator
 # Biomechanics educational content
 from .content.biomechanics_101 import BiomechanicsGenerator
 
+# Daily generators (run every day regardless of rotation)
+from .content.reds_summary import RedsSummaryGenerator
+
 log = logging.getLogger(__name__)
 
 HISTORY_PATH = DATA_DIR / "post_history.json"
@@ -74,7 +77,13 @@ GENERATORS: dict[str, type[ContentGenerator]] = {
     "milb_trad_pitcher_card": MiLBTradPitcherCardGenerator,
     "milb_trad_pitching_summary": MiLBTradPitchingSummaryGenerator,
     "biomechanics_101": BiomechanicsGenerator,
+    "reds_summary": RedsSummaryGenerator,
 }
+
+# Daily generators — these run every day in addition to the rotation schedule
+DAILY_GENERATORS: list[type[ContentGenerator]] = [
+    RedsSummaryGenerator,
+]
 
 # Weekly rotation: day-of-week → (morning, afternoon, evening, *optional_biomech)
 # Monday=0 … Sunday=6
@@ -96,6 +105,11 @@ def get_generators_for_today() -> list[ContentGenerator]:
     """Return generators for today's schedule (3 or 4 depending on day)."""
     dow = date.today().weekday()
     return [cls() for cls in SCHEDULE[dow]]
+
+
+def get_daily_generators() -> list[ContentGenerator]:
+    """Return daily generators that run every day (e.g. Reds summary)."""
+    return [cls() for cls in DAILY_GENERATORS]
 
 
 # ── Post history ──────────────────────────────────────────────────────

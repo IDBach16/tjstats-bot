@@ -271,6 +271,109 @@ def _cleanup_old_clips(max_age_hours: int = 24) -> None:
             log.debug("Cleaned up old clip: %s", f.name)
 
 
+def get_game_strikeout_clip(game_pk: int, pitcher_id: int, pitcher_name: str) -> Path | None:
+    """Fetch a strikeout video clip for a specific pitcher in a specific game.
+
+    Uses the MLB Stats API play-by-play endpoint to find strikeouts,
+    then fetches the sporty-clips mp4 from Baseball Savant.
+
+    Returns the Path to the downloaded MP4, or None if unavailable.
+    """
+    _cleanup_old_clips()
+
+    log.info("Fetching game %d play-by-play for pitcher %d (%s)",
+             game_pk, pitcher_id, pitcher_name)
+
+    # 1. Get play-by-play data from MLB Stats API
+    pbp_url = f"https://statsapi.mlb.com/api/v1/game/{game_pk}/playByPlay"
+    try:
+        resp = requests.get(pbp_url, timeout=20)
+        resp.raise_for_status()
+        pbp_data = resp.json()
+    except Exception:
+        log.warning("Failed to fetch play-by-play for game %d", game_pk, exc_info=True)
+        return None
+
+    all_plays = pbp_data.get("allPlays", [])
+    if not all_plays:
+        log.info("No plays found in game %d", game_pk)
+        return None
+
+    # 2. Find this pitcher's strikeouts
+    strikeout_play_ids: list[str] = []
+    for play in all_plays:
+        # Check if this play's pitcher matches
+        matchup = play.get("matchup", {})
+        play_pitcher = matchup.get("pitcher", {})
+        if play_pitcher.get("id") != pitcher_id:
+            continue
+
+        # Check if the result is a strikeout
+        result = play.get("result", {})
+        event = (result.get("event") or "").lower()
+        if "strikeout" not in event:
+            continue
+
+        # Get the playId from the last pitch event
+        play_events = play.get("playEvents", [])
+        for pe in reversed(play_events):
+            play_id = pe.get("playId")
+            if play_id:
+                strikeout_play_ids.append(play_id)
+                break
+
+    if not strikeout_play_ids:
+        log.info("No strikeouts found for pitcher %d in game %d", pitcher_id, game_pk)
+        return None
+
+    # 3. Pick the last strikeout (most dramatic / late-game)
+    target_play_id = strikeout_play_ids[-1]
+    log.info("Found %d strikeout(s) for %s; using playId=%s",
+             len(strikeout_play_ids), pitcher_name, target_play_id)
+
+    # 4. Fetch mp4 URL from Baseball Savant sporty-videos
+    sporty_url = f"https://baseballsavant.mlb.com/sporty-videos?playId={target_play_id}"
+    try:
+        resp = requests.get(sporty_url, timeout=15)
+        resp.raise_for_status()
+        video_data = resp.json()
+    except Exception:
+        log.warning("Failed to fetch sporty-videos for playId=%s", target_play_id,
+                    exc_info=True)
+        return None
+
+    # The response may be a list of video URLs or a dict with a video_url field
+    mp4_url = None
+    if isinstance(video_data, list) and video_data:
+        # Usually returns a list of dicts with "video_url" or just URLs
+        for item in video_data:
+            if isinstance(item, dict):
+                mp4_url = item.get("video_url") or item.get("url")
+            elif isinstance(item, str) and item.endswith(".mp4"):
+                mp4_url = item
+            if mp4_url:
+                break
+    elif isinstance(video_data, dict):
+        mp4_url = video_data.get("video_url") or video_data.get("url")
+
+    if not mp4_url:
+        log.info("No video URL returned for playId=%s", target_play_id)
+        return None
+
+    # 5. Download the clip
+    safe_name = pitcher_name.replace(" ", "_").lower()
+    output_path = CLIPS_DIR / f"game_{game_pk}_{safe_name}_k.mp4"
+
+    if output_path.exists():
+        log.info("Game K clip already downloaded: %s", output_path.name)
+        return output_path
+
+    if _download_mp4(mp4_url, output_path):
+        return output_path
+
+    return None
+
+
 def get_pitcher_clip(pitcher_id: int, pitcher_name: str) -> Path | None:
     """Main entry point: find and download a video clip for a pitcher.
 
