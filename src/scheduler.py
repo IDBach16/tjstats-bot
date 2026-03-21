@@ -89,15 +89,15 @@ DAILY_GENERATORS: list[type[ContentGenerator]] = [
 # Monday=0 … Sunday=6
 # Alternates: MLB (Mon/Wed/Fri/Sun), MiLB AAA Statcast (Tue/Sat),
 #             MiLB Traditional AA/A+ (Thu)
-# Biomechanics 101 posts 3x/week: Mon, Wed, Fri (4th slot on MLB days)
+# Biomechanics 101 posts daily (4th slot every day)
 SCHEDULE: dict[int, tuple[type[ContentGenerator], ...]] = {
     0: (PitcherCardGenerator, GuessThePitcherGenerator, PitchingSummaryGenerator, BiomechanicsGenerator),   # Mon — MLB + Biomech
-    1: (MiLBPitcherCardGenerator, PitcherSpotlightGenerator, MiLBPitchingSummaryGenerator),                 # Tue — MiLB AAA
+    1: (MiLBPitcherCardGenerator, PitcherSpotlightGenerator, MiLBPitchingSummaryGenerator, BiomechanicsGenerator),  # Tue — MiLB AAA + Biomech
     2: (VeloDistributionGenerator, ExplainerGenerator, PitchingSummaryGenerator, BiomechanicsGenerator),     # Wed — MLB + Biomech
-    3: (MiLBTradPitcherCardGenerator, StatOfDayGenerator, MiLBTradPitchingSummaryGenerator),                # Thu — MiLB AA/A+
+    3: (MiLBTradPitcherCardGenerator, StatOfDayGenerator, MiLBTradPitchingSummaryGenerator, BiomechanicsGenerator), # Thu — MiLB AA/A+ + Biomech
     4: (ReleasePointGenerator, ArsenalVsGenerator, PitchingSummaryGenerator, BiomechanicsGenerator),         # Fri — MLB + Biomech
-    5: (MiLBPitcherCardGenerator, HardestPitchGenerator, MiLBPitchingSummaryGenerator),                     # Sat — MiLB AAA
-    6: (MovementProfileGenerator, PitcherSpotlightGenerator, PitchingSummaryGenerator),                      # Sun — MLB
+    5: (MiLBPitcherCardGenerator, HardestPitchGenerator, MiLBPitchingSummaryGenerator, BiomechanicsGenerator),      # Sat — MiLB AAA + Biomech
+    6: (MovementProfileGenerator, PitcherSpotlightGenerator, PitchingSummaryGenerator, BiomechanicsGenerator),       # Sun — MLB + Biomech
 }
 
 

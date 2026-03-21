@@ -105,6 +105,80 @@ Rules:
         return None
 
 
+def _generate_deep_dive(topic: dict, stats: dict) -> str | None:
+    """Generate a deeper follow-up reply with training implications and context."""
+    client = _get_client()
+    if not client:
+        return None
+
+    stats_lines = []
+    stats_lines.append(f"Dataset: {stats.get('n_pitches', '?')} fastballs "
+                       f"from {stats.get('n_pitchers', '?')} pitchers "
+                       f"(mostly college level)")
+
+    if topic["chart_type"] == "scatter":
+        stats_lines.append(
+            f"X ({topic['x_label']}): mean={stats.get('x_mean', '?'):.1f}, "
+            f"range=[{stats.get('x_min', '?'):.1f}, {stats.get('x_max', '?'):.1f}]"
+        )
+        if "y_mean" in stats:
+            stats_lines.append(f"Y ({topic['y_label']}): mean={stats['y_mean']:.1f}")
+        if "correlation" in stats:
+            stats_lines.append(f"Correlation (r): {stats['correlation']:.2f}")
+    else:
+        stats_lines.append(
+            f"{topic['x_label']}: mean={stats.get('x_mean', '?'):.1f}, "
+            f"median={stats.get('x_median', '?'):.1f}, "
+            f"10th %ile={stats.get('x_p10', '?'):.1f}, "
+            f"90th %ile={stats.get('x_p90', '?'):.1f}"
+        )
+
+    stats_text = "\n".join(stats_lines)
+
+    prompt = f"""You are a baseball biomechanics expert writing a deep-dive thread reply on Twitter/X. This is a follow-up to a chart post about {topic['prompt_context']}.
+
+Chart: {topic['title']}
+Background: {topic['education']}
+
+Data Summary:
+{stats_text}
+
+Write a 2-tweet thread (each tweet UNDER 275 chars, separated by ---).
+
+Tweet 1: Explain WHY this matters for player development. What should a pitcher or pitching coach take away from this data? Reference specific numbers (percentiles, averages). Think like a pitching coordinator explaining this to their staff.
+
+Tweet 2: Give 1-2 actionable training cues or drills that target this mechanic. Be specific — name real exercises, constraints, or movement patterns that coaches actually use (e.g. rocker drills, pivot pickoffs, hip lead wall drills, PlyoCare, connection ball). End with a practical takeaway.
+
+Rules:
+- Sound like an elite pitching development coach, not a professor
+- Reference specific data points from the stats
+- Do NOT use hashtags, emojis, or @ mentions
+- Do NOT use dashes or hyphens (use commas, periods, or other punctuation instead)
+- Each tweet must be UNDER 275 characters
+- Separate the two tweets with ---
+"""
+
+    try:
+        message = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=350,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        text = message.content[0].text.strip()
+        parts = [p.strip() for p in text.split("---") if p.strip()]
+        # Cap each part
+        capped = []
+        for p in parts[:2]:
+            if len(p) > 280:
+                p = p[:277] + "..."
+            capped.append(p)
+        log.info("Generated biomech deep dive (%d parts)", len(capped))
+        return capped
+    except Exception:
+        log.warning("Biomech deep dive generation failed", exc_info=True)
+        return None
+
+
 class BiomechanicsGenerator(ContentGenerator):
     name = "biomechanics_101"
 
@@ -131,24 +205,49 @@ class BiomechanicsGenerator(ContentGenerator):
         # Generate AI explanation
         explanation = _generate_explanation(topic, stats)
 
+        # Generate deep dive thread
+        deep_dive = _generate_deep_dive(topic, stats)
+
         # Main tweet text
         text = (
             f"Biomechanics 101: {topic['title']}"
             f"\n\n@TJStats {DEFAULT_HASHTAGS} #Biomechanics"
         )
 
-        # Explanation as reply
-        reply_content = None
+        # Build reply chain: explanation → deep dive part 1 → deep dive part 2
+        reply_chain = None
         if explanation:
-            reply_content = PostContent(
+            # Start with the explanation reply
+            reply_chain = PostContent(
                 text=explanation,
                 tags=["biomech_explanation"],
             )
+            # Append deep dive parts as nested replies
+            if deep_dive:
+                current = reply_chain
+                for i, part in enumerate(deep_dive):
+                    next_reply = PostContent(
+                        text=part,
+                        tags=[f"biomech_deep_dive_{i+1}"],
+                    )
+                    current.reply = next_reply
+                    current = next_reply
+        elif deep_dive:
+            # No explanation but have deep dive — lead with first part
+            reply_chain = PostContent(
+                text=deep_dive[0],
+                tags=["biomech_deep_dive_1"],
+            )
+            if len(deep_dive) > 1:
+                reply_chain.reply = PostContent(
+                    text=deep_dive[1],
+                    tags=["biomech_deep_dive_2"],
+                )
 
         return PostContent(
             text=text,
             image_path=image_path,
             alt_text=f"Biomechanics chart: {topic['title']}",
             tags=["biomechanics_101", f"biomech_{topic['id']}"],
-            reply=reply_content,
+            reply=reply_chain,
         )

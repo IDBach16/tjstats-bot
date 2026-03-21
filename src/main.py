@@ -83,7 +83,12 @@ async def _generate_and_post(generator) -> None:
         if has_image and has_video:
             print("[DRY RUN] Would reply with video clip\n")
         if content.reply:
-            print(f"[DRY RUN] Would reply (after 5 min):\n{content.reply.text}\n")
+            r = content.reply
+            i = 1
+            while r:
+                print(f"[DRY RUN] Would reply #{i} (after 5 min):\n{r.text}\n")
+                r = r.reply
+                i += 1
         tweet_id = "dry-run-0"
     elif has_image:
         tweet_id = poster.post_with_image(
@@ -111,25 +116,30 @@ async def _generate_and_post(generator) -> None:
     record_post(generator.name, tweet_id, content.tags)
     log.info("Done — tweet %s", tweet_id)
 
-    # Handle reply (delayed for reveals, immediate for analysis)
+    # Handle reply chain (walks nested .reply links for threads)
     if content.reply and not DRY_RUN:
         is_reveal = "analysis" not in (content.reply.tags or [])
         if is_reveal:
             log.info("Waiting 5 minutes before posting reply...")
             await asyncio.sleep(300)
         reply = content.reply
-        try:
-            reply_id = poster.post_reply(
-                reply.text,
-                in_reply_to=tweet_id,
-                image_path=reply.image_path,
-                alt_text=reply.alt_text,
-            )
-            log.info("Posted reply — tweet %s", reply_id)
-        except Exception:
-            log.warning("Reply failed, posting as standalone tweet", exc_info=True)
-            reply_id = poster.post_text(reply.text)
-            log.info("Posted reveal as standalone tweet %s", reply_id)
+        reply_to_id = tweet_id
+        while reply:
+            try:
+                rid = poster.post_reply(
+                    reply.text,
+                    in_reply_to=reply_to_id,
+                    image_path=reply.image_path,
+                    alt_text=reply.alt_text,
+                )
+                log.info("Posted reply — tweet %s", rid)
+                reply_to_id = rid
+            except Exception:
+                log.warning("Reply failed, posting as standalone tweet", exc_info=True)
+                rid = poster.post_text(reply.text)
+                log.info("Posted as standalone tweet %s", rid)
+                reply_to_id = rid
+            reply = reply.reply
 
     # Handle replies list (thread posting — e.g. Reds summary)
     if content.replies:
