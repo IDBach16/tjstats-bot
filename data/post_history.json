@@ -652,6 +652,16 @@
         "hardest_pitch",
         "2026-03-20"
       ]
+    },
+    {
+      "date": "2026-03-21T22:18:18.870682",
+      "generator": "milb_pitching_summary",
+      "tweet_id": "2035481110646337867",
+      "tags": [
+        "milb_pitching_summary",
+        "Bryan Mata",
+        "AAA"
+      ]
     }
   ]
 }
