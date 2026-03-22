@@ -680,6 +680,15 @@
         "movement_profile",
         "Paul Skenes"
       ]
+    },
+    {
+      "date": "2026-03-22T18:42:05.182647",
+      "generator": "biomechanics_101",
+      "tweet_id": "2035789123722662072",
+      "tags": [
+        "biomechanics_101",
+        "biomech_torso_rotation_velo"
+      ]
     }
   ]
 }
