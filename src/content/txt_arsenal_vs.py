@@ -62,7 +62,8 @@ Rules:
 - Keep it UNDER 260 characters (strict Twitter limit)
 - Do NOT use hashtags, emojis, or @ mentions
 - Do NOT use dashes or hyphens (use commas, periods, or other punctuation instead)
-- Sound like a knowledgeable baseball person"""
+- Sound like a knowledgeable baseball person
+- Do NOT use the word "elite" — find more creative ways to describe top performance"""
 
     try:
         message = client.messages.create(

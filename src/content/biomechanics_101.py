@@ -86,6 +86,7 @@ Rules:
 - Do NOT use hashtags, emojis, or @ mentions
 - Do NOT use dashes or hyphens (use commas, periods, or other punctuation instead)
 - Start with a hook or key takeaway, not "This chart shows..."
+- Do NOT use the word "elite" — use more creative language
 """
 
     try:
@@ -150,7 +151,8 @@ Tweet 1: Explain WHY this matters for player development. What should a pitcher 
 Tweet 2: Give 1-2 actionable training cues or drills that target this mechanic. Be specific — name real exercises, constraints, or movement patterns that coaches actually use (e.g. rocker drills, pivot pickoffs, hip lead wall drills, PlyoCare, connection ball). End with a practical takeaway.
 
 Rules:
-- Sound like an elite pitching development coach, not a professor
+- Sound like a top-tier pitching development coach, not a professor
+- Do NOT use the word "elite" — find more creative descriptors
 - Reference specific data points from the stats
 - Do NOT use hashtags, emojis, or @ mentions
 - Do NOT use dashes or hyphens (use commas, periods, or other punctuation instead)

@@ -163,7 +163,8 @@ Arsenal:
 {arsenal_text}
 
 Rules:
-- Be insightful — highlight what makes this pitcher interesting (elite, underrated, improved, concerning, etc.)
+- Be insightful — highlight what makes this pitcher interesting (dominant, underrated, improved, concerning, etc.)
+- Do NOT use the word "elite" — find more creative ways to describe top performance
 - Reference specific stats to back up your take
 - Sound like a knowledgeable baseball person, not a robot
 - Keep it UNDER 260 characters total (strict Twitter limit)
