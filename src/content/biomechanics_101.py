@@ -144,11 +144,11 @@ Background: {topic['education']}
 Data Summary:
 {stats_text}
 
-Write a 2-tweet thread (each tweet UNDER 275 chars, separated by ---).
+Write two separate passages (each UNDER 275 chars, separated by ---).
 
-Tweet 1: Explain WHY this matters for player development. What should a pitcher or pitching coach take away from this data? Reference specific numbers (percentiles, averages). Think like a pitching coordinator explaining this to their staff.
+First passage: Explain WHY this matters for player development. What should a pitcher or pitching coach take away from this data? Reference specific numbers (percentiles, averages). Think like a pitching coordinator explaining this to their staff.
 
-Tweet 2: Give 1-2 actionable training cues or drills that target this mechanic. Be specific — name real exercises, constraints, or movement patterns that coaches actually use (e.g. rocker drills, pivot pickoffs, hip lead wall drills, PlyoCare, connection ball). End with a practical takeaway.
+Second passage: Give 1-2 actionable training cues or drills that target this mechanic. Be specific — name real exercises, constraints, or movement patterns that coaches actually use (e.g. rocker drills, pivot pickoffs, hip lead wall drills, PlyoCare, connection ball). End with a practical takeaway.
 
 Rules:
 - Sound like a top-tier pitching development coach, not a professor
@@ -156,8 +156,9 @@ Rules:
 - Reference specific data points from the stats
 - Do NOT use hashtags, emojis, or @ mentions
 - Do NOT use dashes or hyphens (use commas, periods, or other punctuation instead)
-- Each tweet must be UNDER 275 characters
-- Separate the two tweets with ---
+- Each passage must be UNDER 275 characters
+- Separate the two passages with ---
+- Do NOT label them "Tweet 1", "Tweet 2", "1.", "2." or any numbering — just write the content directly
 """
 
     try:
