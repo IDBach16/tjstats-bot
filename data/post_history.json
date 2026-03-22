@@ -698,6 +698,15 @@
         "pitcher_spotlight",
         "Framber Valdez"
       ]
+    },
+    {
+      "date": "2026-03-22T22:17:18.199234",
+      "generator": "pitching_summary",
+      "tweet_id": "2035843256878092534",
+      "tags": [
+        "pitching_summary",
+        "Corbin Burnes"
+      ]
     }
   ]
 }
