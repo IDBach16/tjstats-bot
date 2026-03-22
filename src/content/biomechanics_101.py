@@ -144,11 +144,7 @@ Background: {topic['education']}
 Data Summary:
 {stats_text}
 
-Write two separate passages (each UNDER 275 chars, separated by ---).
-
-First passage: Explain WHY this matters for player development. What should a pitcher or pitching coach take away from this data? Reference specific numbers (percentiles, averages). Think like a pitching coordinator explaining this to their staff.
-
-Second passage: Give 1-2 actionable training cues or drills that target this mechanic. Be specific — name real exercises, constraints, or movement patterns that coaches actually use (e.g. rocker drills, pivot pickoffs, hip lead wall drills, PlyoCare, connection ball). End with a practical takeaway.
+Write a single passage (UNDER 275 chars) explaining WHY this matters for player development. What should a pitcher or pitching coach take away from this data? Reference specific numbers (percentiles, averages). Think like a pitching coordinator explaining this to their staff.
 
 Rules:
 - Sound like a top-tier pitching development coach, not a professor
@@ -156,27 +152,22 @@ Rules:
 - Reference specific data points from the stats
 - Do NOT use hashtags, emojis, or @ mentions
 - Do NOT use dashes or hyphens (use commas, periods, or other punctuation instead)
-- Each passage must be UNDER 275 characters
-- Separate the two passages with ---
-- Do NOT label them "Tweet 1", "Tweet 2", "1.", "2." or any numbering — just write the content directly
+- Keep it UNDER 275 characters
+- Do NOT suggest drills, exercises, or training cues — just explain the data and why it matters
 """
 
     try:
         message = client.messages.create(
             model="claude-haiku-4-5-20251001",
-            max_tokens=350,
+            max_tokens=200,
             messages=[{"role": "user", "content": prompt}],
         )
         text = message.content[0].text.strip()
-        parts = [p.strip() for p in text.split("---") if p.strip()]
-        # Cap each part
-        capped = []
-        for p in parts[:2]:
-            if len(p) > 280:
-                p = p[:277] + "..."
-            capped.append(p)
-        log.info("Generated biomech deep dive (%d parts)", len(capped))
-        return capped
+        if len(text) > 280:
+            text = text[:277] + "..."
+        log.info("Generated biomech deep dive (%d chars): %s",
+                 len(text), text[:80])
+        return [text]
     except Exception:
         log.warning("Biomech deep dive generation failed", exc_info=True)
         return None
