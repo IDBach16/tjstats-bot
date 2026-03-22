@@ -11,8 +11,8 @@ on:
     - cron: '0 19 * * *'
     # 5 PM EST (UTC-5) = 22:00 UTC — pitching summary
     - cron: '0 22 * * *'
-    # 8 PM EST (UTC-5) = 01:00 UTC next day — biomechanics (Mon/Wed/Fri EST)
-    - cron: '0 1 * * 2,4,6'
+    # 1 PM EST (UTC-5) = 18:00 UTC — biomechanics (daily)
+    - cron: '0 18 * * *'
   workflow_dispatch:
     inputs:
       slot:
@@ -86,26 +86,25 @@ jobs:
             echo "generator=${{ inputs.generator }}" >> $GITHUB_OUTPUT
           else
             HOUR=$(date -u +%H)
-            if [ "$HOUR" -lt 5 ]; then
-              # 8 PM EST (01:00 UTC next day) — biomechanics
-              # Force the generator directly since date.today() is the next day in UTC
-              echo "slot=biomechanics" >> $GITHUB_OUTPUT
-              echo "generator=biomechanics_101" >> $GITHUB_OUTPUT
-            elif [ "$HOUR" -ge 21 ]; then
+            if [ "$HOUR" -ge 21 ]; then
               # 5 PM EST (22:00 UTC) — evening visual
               echo "slot=evening" >> $GITHUB_OUTPUT
               echo "generator=" >> $GITHUB_OUTPUT
-            elif [ "$HOUR" -lt 15 ]; then
-              # 9 AM EST (14:00 UTC) — Reds daily summary
-              echo "slot=daily" >> $GITHUB_OUTPUT
+            elif [ "$HOUR" -ge 19 ]; then
+              # 2 PM EST (19:00 UTC) — afternoon text
+              echo "slot=text" >> $GITHUB_OUTPUT
               echo "generator=" >> $GITHUB_OUTPUT
-            elif [ "$HOUR" -lt 17 ]; then
+            elif [ "$HOUR" -ge 18 ]; then
+              # 1 PM EST (18:00 UTC) — biomechanics
+              echo "slot=biomechanics" >> $GITHUB_OUTPUT
+              echo "generator=biomechanics_101" >> $GITHUB_OUTPUT
+            elif [ "$HOUR" -ge 15 ]; then
               # 10 AM EST (15:00 UTC) — morning visual
               echo "slot=screenshot" >> $GITHUB_OUTPUT
               echo "generator=" >> $GITHUB_OUTPUT
             else
-              # 2 PM EST (19:00 UTC) — afternoon text
-              echo "slot=text" >> $GITHUB_OUTPUT
+              # 9 AM EST (14:00 UTC) — Reds daily summary
+              echo "slot=daily" >> $GITHUB_OUTPUT
               echo "generator=" >> $GITHUB_OUTPUT
             fi
           fi
