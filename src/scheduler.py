@@ -24,6 +24,7 @@ from .content.txt_stat_of_day import StatOfDayGenerator
 from .content.txt_guess_pitcher import GuessThePitcherGenerator
 from .content.txt_explainer import ExplainerGenerator
 from .content.txt_arsenal_vs import ArsenalVsGenerator
+from .content.txt_undervalued_relievers import UndervaluedRelieverGenerator
 
 # Screenshot generators (new)
 from .content.ss_movement_profile import MovementProfileGenerator
@@ -61,6 +62,7 @@ GENERATORS: dict[str, type[ContentGenerator]] = {
     "guess_pitcher": GuessThePitcherGenerator,
     "explainer": ExplainerGenerator,
     "arsenal_vs": ArsenalVsGenerator,
+    "undervalued_relievers": UndervaluedRelieverGenerator,
     "movement_profile": MovementProfileGenerator,
     "ss_pitching_summary": PitchingSummaryScreenshot,
     "ss_statcast_cards": StatcastCardsScreenshot,
@@ -91,7 +93,7 @@ DAILY_GENERATORS: list[type[ContentGenerator]] = [
 #             MiLB Traditional AA/A+ (Thu)
 # Biomechanics 101 posts Mon/Wed/Fri/Sun (4th slot on those days)
 SCHEDULE: dict[int, tuple[type[ContentGenerator], ...]] = {
-    0: (PitcherCardGenerator, GuessThePitcherGenerator, PitchingSummaryGenerator, BiomechanicsGenerator),   # Mon — MLB + Biomech
+    0: (PitcherCardGenerator, UndervaluedRelieverGenerator, PitchingSummaryGenerator, BiomechanicsGenerator),   # Mon — MLB + Biomech
     1: (MiLBPitcherCardGenerator, PitcherSpotlightGenerator, MiLBPitchingSummaryGenerator),                 # Tue — MiLB AAA
     2: (VeloDistributionGenerator, ExplainerGenerator, PitchingSummaryGenerator, BiomechanicsGenerator),     # Wed — MLB + Biomech
     3: (MiLBTradPitcherCardGenerator, StatOfDayGenerator, MiLBTradPitchingSummaryGenerator),                # Thu — MiLB AA/A+

@@ -58,6 +58,7 @@ on:
           - milb_trad_pitcher_card
           - milb_trad_pitching_summary
           - biomechanics_101
+          - undervalued_relievers
           - reds_summary
 
 permissions:
