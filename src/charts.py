@@ -121,7 +121,7 @@ _WATERMARK_PATH = _ASSETS_DIR / "BachTalk.png"
 _watermark_cache: "np.ndarray | None" = None
 
 
-def _draw_watermark(fig, alpha=0.12, scale=0.45):
+def _draw_watermark(fig, alpha=0.15, scale=0.45):
     """Overlay BachTalk logo as a watermark in the center of the figure."""
     global _watermark_cache
     if _watermark_cache is None:
@@ -129,14 +129,24 @@ def _draw_watermark(fig, alpha=0.12, scale=0.45):
             return
         try:
             img = _PILImage.open(_WATERMARK_PATH).convert("RGBA")
-            _watermark_cache = np.array(img)
+            arr = np.array(img, dtype=np.float32)
+            # Make white/near-white pixels fully transparent
+            is_white = (arr[:, :, 0] > 240) & (arr[:, :, 1] > 240) & (arr[:, :, 2] > 240)
+            arr[is_white, 3] = 0
+            # Convert remaining logo art pixels to white so they show on dark bg
+            not_transparent = arr[:, :, 3] > 0
+            arr[not_transparent, 0] = 255
+            arr[not_transparent, 1] = 255
+            arr[not_transparent, 2] = 255
+            _watermark_cache = arr.astype(np.uint8)
         except Exception:
             return
     if _watermark_cache is None:
         return
     ax_wm = fig.add_axes([0.5 - scale / 2, 0.5 - scale / 2, scale, scale],
-                         zorder=-1)
+                         zorder=10)
     ax_wm.imshow(_watermark_cache, alpha=alpha)
+    ax_wm.set_facecolor("none")
     ax_wm.axis("off")
 
 
