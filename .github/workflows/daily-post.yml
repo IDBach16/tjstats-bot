@@ -13,6 +13,8 @@ on:
     - cron: '0 22 * * *'
     # 1 PM EST (UTC-5) = 18:00 UTC — biomechanics (daily)
     - cron: '0 18 * * *'
+    # 11 AM EST (UTC-5) = 16:00 UTC — catch-up: run any missed morning slots
+    - cron: '0 16 * * *'
   workflow_dispatch:
     inputs:
       slot:
@@ -84,28 +86,40 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "slot=${{ inputs.slot }}" >> $GITHUB_OUTPUT
             echo "generator=${{ inputs.generator }}" >> $GITHUB_OUTPUT
+            echo "catchup=" >> $GITHUB_OUTPUT
           else
             HOUR=$(date -u +%H)
             if [ "$HOUR" -ge 21 ]; then
               # 5 PM EST (22:00 UTC) — evening visual
               echo "slot=evening" >> $GITHUB_OUTPUT
               echo "generator=" >> $GITHUB_OUTPUT
+              echo "catchup=" >> $GITHUB_OUTPUT
             elif [ "$HOUR" -ge 19 ]; then
               # 2 PM EST (19:00 UTC) — afternoon text
               echo "slot=text" >> $GITHUB_OUTPUT
               echo "generator=" >> $GITHUB_OUTPUT
+              echo "catchup=" >> $GITHUB_OUTPUT
             elif [ "$HOUR" -ge 18 ]; then
               # 1 PM EST (18:00 UTC) — biomechanics
               echo "slot=biomechanics" >> $GITHUB_OUTPUT
               echo "generator=biomechanics_101" >> $GITHUB_OUTPUT
+              echo "catchup=" >> $GITHUB_OUTPUT
+            elif [ "$HOUR" -ge 16 ]; then
+              # 11 AM EST (16:00 UTC) — catch-up window
+              # Check if the morning slots ran today by looking at post history
+              echo "slot=catchup" >> $GITHUB_OUTPUT
+              echo "generator=" >> $GITHUB_OUTPUT
+              echo "catchup=true" >> $GITHUB_OUTPUT
             elif [ "$HOUR" -ge 15 ]; then
               # 10 AM EST (15:00 UTC) — morning visual
               echo "slot=screenshot" >> $GITHUB_OUTPUT
               echo "generator=" >> $GITHUB_OUTPUT
+              echo "catchup=" >> $GITHUB_OUTPUT
             else
               # 9 AM EST (14:00 UTC) — Reds daily summary
               echo "slot=daily" >> $GITHUB_OUTPUT
               echo "generator=" >> $GITHUB_OUTPUT
+              echo "catchup=" >> $GITHUB_OUTPUT
             fi
           fi
 
@@ -119,12 +133,42 @@ jobs:
           PITCH_PROFILER_API_KEY: ${{ secrets.PITCH_PROFILER_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          if [ -n "${{ steps.slot.outputs.generator }}" ]; then
+          if [ "${{ steps.slot.outputs.catchup }}" = "true" ]; then
+            # Catch-up: check post history and run any missed morning slots
+            echo "=== CATCH-UP MODE ==="
+            python -c "
+          import json, sys
+          from datetime import datetime, timezone
+          history = json.load(open('data/post_history.json'))
+          today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+          today_posts = [p for p in history.get('posts', []) if p['date'].startswith(today)]
+          today_gens = {p['generator'] for p in today_posts}
+          print(f'Posts today: {len(today_posts)} — generators: {today_gens}')
+          missed = []
+          if 'reds_summary' not in today_gens:
+              missed.append('daily')
+          if not today_gens & {'pitcher_card', 'milb_pitcher_card', 'milb_trad_pitcher_card', 'velo_distribution', 'release_points', 'movement_profile'}:
+              missed.append('screenshot')
+          print(f'Missed slots: {missed}')
+          with open('missed_slots.txt', 'w') as f:
+              f.write('\n'.join(missed))
+          "
+            if [ -s missed_slots.txt ]; then
+              while IFS= read -r slot; do
+                echo "--- Running missed slot: $slot ---"
+                python -m src.main --slot "$slot"
+                sleep 10
+              done < missed_slots.txt
+            else
+              echo "All morning slots already ran today — nothing to catch up."
+            fi
+          elif [ -n "${{ steps.slot.outputs.generator }}" ]; then
             ARGS="--generator ${{ steps.slot.outputs.generator }}"
+            python -m src.main $ARGS
           else
             ARGS="--slot ${{ steps.slot.outputs.slot }}"
+            python -m src.main $ARGS
           fi
-          python -m src.main $ARGS
 
       - name: Commit post history
         continue-on-error: true
