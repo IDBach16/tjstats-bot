@@ -707,6 +707,15 @@
         "reds_summary",
         "no_pitchers"
       ]
+    },
+    {
+      "date": "2026-03-23T14:52:49.609390",
+      "generator": "pitcher_card",
+      "tweet_id": "2036093794635202733",
+      "tags": [
+        "pitcher_card",
+        "Yoshinobu Yamamoto"
+      ]
     }
   ]
 }
