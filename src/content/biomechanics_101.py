@@ -204,8 +204,9 @@ class BiomechanicsGenerator(ContentGenerator):
 
         # Main tweet text
         text = (
-            f"Biomechanics 101: {topic['title']}"
-            f"\n\n@TJStats {DEFAULT_HASHTAGS} #Biomechanics"
+            f"Data from Driveline OpenBiomechanics"
+            f"\n\nBiomechanics 101: {topic['title']}"
+            f"\n\n@drivelinekyle {DEFAULT_HASHTAGS} #Biomechanics"
         )
 
         # Build reply chain: explanation → deep dive part 1 → deep dive part 2
