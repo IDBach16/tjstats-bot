@@ -725,6 +725,15 @@
         "pitcher_card",
         "Seth Lugo"
       ]
+    },
+    {
+      "date": "2026-03-23T18:59:47.657948",
+      "generator": "biomechanics_101",
+      "tweet_id": "2036155968153870600",
+      "tags": [
+        "biomechanics_101",
+        "biomech_cog_velo_vs_pitch_speed"
+      ]
     }
   ]
 }
