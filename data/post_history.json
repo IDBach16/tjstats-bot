@@ -698,6 +698,15 @@
         "biomechanics_101",
         "biomech_lead_leg_block"
       ]
+    },
+    {
+      "date": "2026-03-23T14:45:22.666342",
+      "generator": "reds_summary",
+      "tweet_id": "2036091942623203686",
+      "tags": [
+        "reds_summary",
+        "no_pitchers"
+      ]
     }
   ]
 }
