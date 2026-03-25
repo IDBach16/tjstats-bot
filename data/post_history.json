@@ -808,6 +808,15 @@
         "reds_summary",
         "no_pitchers"
       ]
+    },
+    {
+      "date": "2026-03-25T15:57:52.026444",
+      "generator": "velo_distribution",
+      "tweet_id": "2036834845230313752",
+      "tags": [
+        "velo_distribution",
+        "Sonny Gray"
+      ]
     }
   ]
 }
