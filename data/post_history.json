@@ -835,6 +835,15 @@
         "explainer",
         "explainer_extension"
       ]
+    },
+    {
+      "date": "2026-03-25T22:27:13.526875",
+      "generator": "pitching_summary",
+      "tweet_id": "2036932919218897239",
+      "tags": [
+        "pitching_summary",
+        "Blake Snell"
+      ]
     }
   ]
 }
