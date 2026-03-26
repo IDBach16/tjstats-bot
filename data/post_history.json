@@ -871,6 +871,16 @@
         "stat_of_day",
         "strike_out_percentage"
       ]
+    },
+    {
+      "date": "2026-03-26T22:20:48.352475",
+      "generator": "milb_trad_pitching_summary",
+      "tweet_id": "2037293717002784979",
+      "tags": [
+        "milb_trad_pitching_summary",
+        "Zach Peek",
+        "AA"
+      ]
     }
   ]
 }
