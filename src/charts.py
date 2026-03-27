@@ -3972,7 +3972,7 @@ def plot_reds_game_summary(
         gs = gridspec.GridSpec(
             7, 9,
             height_ratios=[2, 18, 8, 35, 30, 5, 2],
-            width_ratios=[1, 6, 6, 6, 6, 6, 6, 6, 1],
+            width_ratios=[1, 7, 7, 5, 5, 5, 7, 7, 1],
             hspace=0.3, wspace=0.4,
         )
 
