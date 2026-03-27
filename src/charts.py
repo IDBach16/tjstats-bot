@@ -1887,7 +1887,7 @@ def plot_pitching_summary(
 
     Uses Pitch Profiler API data instead of raw Statcast.
     Layout: header (headshot + bio + logo), season stats table,
-    movement chart + percentile bars, pitch stats table, footer.
+    movement chart + percentile bars, butterfly chart, pitch stats table, footer.
     """
     try:
         import pandas as pd
