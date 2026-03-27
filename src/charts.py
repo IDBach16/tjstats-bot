@@ -4133,80 +4133,62 @@ def plot_reds_game_summary(
             ax_break.text(0.5, 0.5, "No movement data",
                           ha="center", va="center", fontsize=16)
 
-        # ── Row 3 (right): Percentile bars ──────────────────────────
-        ax_pctile = fig.add_subplot(gs[3, 6:8])
+        # ── Row 3 (right): Strike Zone from PBP data ──────────────
+        ax_zone = fig.add_subplot(gs[3, 6:8])
+        ax_zone.set_facecolor("#fafafa")
+        ax_zone.set_title("Strike Zone", fontsize=20, fontweight="bold")
 
-        pctile_stats = [
-            ("era", "ERA", True),
-            ("fip", "FIP", True),
-            ("strike_out_percentage", "K%", False),
-            ("walk_percentage", "BB%", True),
-            ("whiff_rate", "Whiff%", False),
-            ("chase_percentage", "Chase%", False),
-            ("stuff_plus", "Stuff+", False),
-            ("pitching_plus", "Pitching+", False),
-        ]
+        _RESULT_COLORS_ZONE = {
+            "swinging_strike": "#ff6b6b", "swinging_strike_blocked": "#ff6b6b",
+            "called_strike": "#3a86ff", "foul": "#ffbe0b", "foul_tip": "#ffbe0b",
+            "ball": "#8b949e", "hit_into_play": "#2ec4b6",
+            "hit_into_play_no_out": "#2ec4b6", "hit_into_play_score": "#2ec4b6",
+        }
 
-        labels_p = []
-        values_p = []
-        pctiles_p = []
-        compare_df = season_df if season_df is not None else pd.DataFrame()
-        for col, label, ascending in pctile_stats:
-            if col not in compare_df.columns or col not in game_stats.index:
-                continue
-            vals = pd.to_numeric(compare_df[col], errors="coerce").dropna()
-            if vals.empty:
-                continue
-            try:
-                raw_f = float(game_stats[col])
-            except (TypeError, ValueError):
-                continue
-            pctile = (vals < raw_f).sum() / len(vals) * 100
-            if ascending:
-                pctile = 100 - pctile
-            labels_p.append(label)
-            pctiles_p.append(pctile)
-            if col in ("strike_out_percentage", "walk_percentage",
-                        "whiff_rate", "chase_percentage"):
-                values_p.append(f"{raw_f * 100:.1f}%")
-            elif col in ("era", "fip"):
-                values_p.append(f"{raw_f:.2f}")
-            else:
-                values_p.append(f"{raw_f:.0f}")
+        zone_rect = Rectangle((-0.83, 1.5), 1.66, 2.0, linewidth=2.5,
+                               edgecolor="#1a1a2e", facecolor="none", zorder=3)
+        ax_zone.add_patch(zone_rect)
+        for zx in [-0.277, 0.277]:
+            ax_zone.plot([zx, zx], [1.5, 3.5], color="#cccccc", linewidth=0.8, alpha=0.5)
+        for zy in [2.167, 2.833]:
+            ax_zone.plot([-0.83, 0.83], [zy, zy], color="#cccccc", linewidth=0.8, alpha=0.5)
 
-        if labels_p:
-            y_pos = np.arange(len(labels_p))
-            colors_p = [_pctile_color(p) for p in pctiles_p]
-            bars = ax_pctile.barh(y_pos, pctiles_p, color=colors_p,
-                                  height=0.6, edgecolor="none")
-            ax_pctile.set_yticks(y_pos)
-            ax_pctile.set_yticklabels(labels_p, fontsize=14)
-            ax_pctile.set_xlim(0, 108)
-            ax_pctile.invert_yaxis()
-            ax_pctile.set_title("Percentile Rankings", fontsize=20,
-                                fontweight="bold")
-            ax_pctile.grid(True, axis="x", alpha=0.3)
-            for spine in ax_pctile.spines.values():
-                spine.set_visible(False)
-            ax_pctile.tick_params(left=False, bottom=False,
-                                  labelbottom=False)
+        if (pbp_df is not None and not pbp_df.empty
+                and "plate_x" in pbp_df.columns and "plate_z" in pbp_df.columns):
+            zdf = pbp_df.dropna(subset=["plate_x", "plate_z"]).copy()
+            zdf["plate_x"] = pd.to_numeric(zdf["plate_x"], errors="coerce")
+            zdf["plate_z"] = pd.to_numeric(zdf["plate_z"], errors="coerce")
+            zdf = zdf.dropna(subset=["plate_x", "plate_z"])
 
-            for bar, val, pct, color in zip(bars, values_p, pctiles_p,
-                                             colors_p):
-                ax_pctile.text(
-                    3, bar.get_y() + bar.get_height() / 2,
-                    val, va="center", ha="left",
-                    fontsize=12, fontweight="bold",
-                    color="white" if pct > 25 else "#333333",
-                )
-                ax_pctile.text(
-                    bar.get_width() + 1.5,
-                    bar.get_y() + bar.get_height() / 2,
-                    f"{pct:.0f}th", va="center", ha="left",
-                    fontsize=12, fontweight="bold", color=color,
-                )
-        else:
-            ax_pctile.axis("off")
+            for _, zrow in zdf.iterrows():
+                desc = str(zrow.get("description", zrow.get("pitch_result", "")))
+                zcolor = _RESULT_COLORS_ZONE.get(desc, "#888888")
+                ax_zone.scatter(zrow["plate_x"], zrow["plate_z"], c=zcolor, s=80,
+                               edgecolors="white", linewidths=0.8, alpha=0.8, zorder=4)
+
+            from matplotlib.lines import Line2D as _ZLine
+            zone_legend = [
+                _ZLine([0],[0],marker="o",color="none",markerfacecolor="#ff6b6b",
+                       markeredgecolor="white",markersize=7,label="Whiff"),
+                _ZLine([0],[0],marker="o",color="none",markerfacecolor="#3a86ff",
+                       markeredgecolor="white",markersize=7,label="Called K"),
+                _ZLine([0],[0],marker="o",color="none",markerfacecolor="#8b949e",
+                       markeredgecolor="white",markersize=7,label="Ball"),
+                _ZLine([0],[0],marker="o",color="none",markerfacecolor="#2ec4b6",
+                       markeredgecolor="white",markersize=7,label="In Play"),
+            ]
+            ax_zone.legend(handles=zone_legend, loc="lower center", ncol=2,
+                          fontsize=8, framealpha=0.9, edgecolor="#dddddd",
+                          bbox_to_anchor=(0.5, -0.08))
+
+        ax_zone.set_xlim(-2.5, 2.5)
+        ax_zone.set_ylim(-0.5, 5.0)
+        ax_zone.set_aspect("equal")
+        ax_zone.set_xlabel("Plate Side (ft)", fontsize=12)
+        ax_zone.set_ylabel("Height (ft)", fontsize=12)
+        ax_zone.tick_params(labelsize=10)
+        for spine in ax_zone.spines.values():
+            spine.set_color("#dddddd")
 
         # ── Row 3 (center): Pitch location scatter plot ──────────────
         ax_loc = fig.add_subplot(gs[3, 3:6])
