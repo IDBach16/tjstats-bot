@@ -1,105 +1,112 @@
 """Content generator: Weekly Top 10 Swing+ leaderboard (Mondays).
 
-Pure mechanics model — trained on bat tracking features only (no delta run exp).
-Uses Baseball Savant bat tracking data + FanGraphs xwOBA for validation.
+Pure mechanics model — trained on bat tracking features only.
+Uses Baseball Savant bat tracking data. Thread format: header image
++ individual replies with Savant video for each hitter.
 """
 
 from __future__ import annotations
 
+import io
 import logging
 import os
+import re
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
+import requests
+
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import matplotlib.patheffects as patheffects
 from matplotlib.patches import Rectangle
-from PIL import Image as PILImage
+from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+from PIL import Image as PILImage, ImageDraw
 
 from .base import ContentGenerator, PostContent
-from ..config import SCREENSHOTS_DIR, MLB_SEASON
+from ..config import SCREENSHOTS_DIR, MLB_SEASON, DEFAULT_HASHTAGS
+from ..video_clips import _download_mp4
 
 log = logging.getLogger(__name__)
 
-# Theme
-CARD_BG = "#0d1117"
-CARD_SURFACE = "#161b22"
-CARD_BORDER = "#30363d"
-CARD_TEXT = "#f0f6fc"
-CARD_TEXT_MUTED = "#8b949e"
-BIO_PRIMARY = "#3a86ff"
-GOLD = "#ffbe0b"
-
 WATERMARK_PATH = Path(__file__).resolve().parent.parent.parent / "assets" / "BachTalk.png"
 
+# Pure mechanics features (no delta_run_exp)
 FEATURES = [
     "bat_speed", "squared_up_rate", "squared_up_speed_rate",
-    "ideal_attack_angle_rate", "swing_length",
-    "sweetspot_speed_high", "hit_into_play_rate", "swords",
+    "swing_length", "sweetspot_speed_high", "hit_into_play_rate", "swords",
+]
+
+# Column mapping: Savant CSV name -> model feature name
+# Handles both 2025 and 2026 column formats
+_COL_MAPS = [
+    # 2026 format
+    {"avg_bat_speed": "bat_speed", "squared_up_per_bat_contact": "squared_up_rate",
+     "blast_per_bat_contact": "squared_up_speed_rate", "swing_length": "swing_length",
+     "hard_swing_rate": "sweetspot_speed_high",
+     "batted_ball_event_per_swing": "hit_into_play_rate", "swords": "swords"},
+    # 2025 format
+    {"avg_sweetspot_speed_mph": "bat_speed", "squared_up_per_bat_contact": "squared_up_rate",
+     "squared_up_with_speed_per_bat_contact": "squared_up_speed_rate",
+     "swing_length": "swing_length", "avg_is_sweetspot_speed_high": "sweetspot_speed_high",
+     "hit_into_play_per_swing": "hit_into_play_rate", "swords": "swords"},
 ]
 
 
 def _compute_swing_plus():
-    """Compute Swing+ for all qualified hitters using pure mechanics model."""
-    from pybaseball import batting_stats
+    """Compute Swing+ for all qualified hitters."""
     from sklearn.linear_model import RidgeCV
     from sklearn.preprocessing import StandardScaler
-    import pandas as pd
-    import requests
+    from pybaseball import batting_stats
 
-    # Pull bat tracking from Savant
-    url = "https://baseballsavant.mlb.com/leaderboard/bat-tracking?attackZone=&batSide=&contactType=&count=&dateStart=&dateEnd=&gameType=&isHardHit=&minSwings=100&minGroupSwings=1&pitchHand=&pitchType=&playerPool=All&season={}&seasonStart=&seasonEnd=&team=&type=batter&csv=true".format(MLB_SEASON)
+    # Fetch bat tracking CSV
+    url = (
+        f"https://baseballsavant.mlb.com/leaderboard/bat-tracking?"
+        f"attackZone=&batSide=&contactType=&count=&dateStart=&dateEnd=&gameType=&"
+        f"isHardHit=&minSwings=50&minGroupSwings=1&pitchHand=&pitchType=&"
+        f"playerPool=All&season={MLB_SEASON}&seasonStart=&seasonEnd=&team=&"
+        f"type=batter&csv=true"
+    )
     try:
         resp = requests.get(url, timeout=30)
-        if resp.status_code != 200 or len(resp.text) < 100:
-            log.warning("Bat tracking CSV fetch failed: %d", resp.status_code)
-            return None
-        import io
         bt = pd.read_csv(io.StringIO(resp.text))
     except Exception:
-        log.warning("Failed to fetch bat tracking data", exc_info=True)
+        log.warning("Bat tracking fetch failed", exc_info=True)
         return None
 
-    if bt.empty:
+    if bt.empty or len(bt) < 20:
+        log.warning("Not enough bat tracking data: %d rows", len(bt))
         return None
 
-    # Map column names
-    col_map = {
-        "avg_sweetspot_speed_mph": "bat_speed",
-        "squared_up_per_bat_contact": "squared_up_rate",
-        "squared_up_with_speed_per_bat_contact": "squared_up_speed_rate",
-        "rate_ideal_attack_angle": "ideal_attack_angle_rate",
-        "swing_length": "swing_length",
-        "avg_is_sweetspot_speed_high": "sweetspot_speed_high",
-        "hit_into_play_per_swing": "hit_into_play_rate",
-        "swords": "swords",
-    }
-
-    # Try to find correct column names
-    for savant_col, feat in list(col_map.items()):
-        if savant_col not in bt.columns:
-            # Try qualified versions
-            qual = savant_col.replace("_mph", "_mph_qualified").replace("swing_length", "swing_length_qualified")
+    # Find the right column mapping
+    col_map = None
+    for cm in _COL_MAPS:
+        missing = [k for k in cm.keys() if k not in bt.columns]
+        if not missing:
+            col_map = cm
+            break
+        # Try qualified versions
+        adjusted = dict(cm)
+        for k in missing:
+            qual = k + "_qualified"
             if qual in bt.columns:
-                col_map[savant_col] = feat
-                bt[savant_col] = bt[qual]
+                bt[k] = bt[qual]
+        missing2 = [k for k in cm.keys() if k not in bt.columns]
+        if not missing2:
+            col_map = cm
+            break
 
-    # Check we have the needed columns
-    missing = [c for c in col_map.keys() if c not in bt.columns]
-    if missing:
-        log.warning("Missing bat tracking columns: %s. Available: %s", missing, bt.columns.tolist()[:20])
+    if col_map is None:
+        log.warning("Cannot map bat tracking columns. Available: %s", bt.columns.tolist()[:15])
         return None
 
     bt_clean = bt.rename(columns=col_map)
 
-    # Get name column
-    name_col = None
-    for c in ["batter_name", "name", "player_name"]:
-        if c in bt_clean.columns:
-            name_col = c
-            break
+    # Name + ID columns
+    name_col = next((c for c in ["name", "batter_name", "player_name"] if c in bt_clean.columns), None)
+    id_col = next((c for c in ["id", "batter_id", "player_id", "savant_batter_id"] if c in bt_clean.columns), None)
+
     if not name_col:
         return None
 
@@ -107,53 +114,72 @@ def _compute_swing_plus():
         lambda x: " ".join(str(x).split(", ")[::-1]).strip() if ", " in str(x) else str(x).strip()
     )
 
-    # Pull xwOBA for training
+    # Convert features to numeric
+    for f in FEATURES:
+        if f in bt_clean.columns:
+            bt_clean[f] = pd.to_numeric(bt_clean[f], errors="coerce")
+
+    bt_clean = bt_clean.dropna(subset=FEATURES)
+
+    if len(bt_clean) < 20:
+        log.warning("Only %d hitters after dropna", len(bt_clean))
+        return None
+
+    # Get xwOBA for training
     try:
-        fg = batting_stats(MLB_SEASON, qual=50)
+        fg = batting_stats(MLB_SEASON, qual=20)
         fg["name_fg"] = fg["Name"].str.strip()
         merged = bt_clean.merge(fg[["name_fg", "xwOBA"]], on="name_fg", how="inner")
-        merged = merged.dropna(subset=["xwOBA"] + FEATURES)
+        merged = merged.dropna(subset=["xwOBA"])
     except Exception:
-        log.warning("FanGraphs merge failed", exc_info=True)
+        log.warning("FanGraphs xwOBA fetch failed — using raw z-scores", exc_info=True)
+        merged = bt_clean.copy()
+        merged["xwOBA"] = 0  # fallback: no training target
+
+    if len(merged) < 20:
+        log.warning("Only %d merged rows", len(merged))
         return None
 
-    if len(merged) < 50:
-        log.warning("Only %d merged rows, not enough", len(merged))
-        return None
+    # Train model
+    X = merged[FEATURES].values
+    from sklearn.preprocessing import StandardScaler
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
 
-    # Train ridge regression
-    X = StandardScaler().fit_transform(merged[FEATURES].values)
-    y = merged["xwOBA"].values
-    ridge = RidgeCV(alphas=np.logspace(-3, 3, 50), cv=10).fit(X, y)
-    pred = ridge.predict(X)
+    if merged["xwOBA"].sum() > 0:
+        from sklearn.linear_model import RidgeCV
+        ridge = RidgeCV(alphas=np.logspace(-3, 3, 50), cv=min(10, len(merged))).fit(X_scaled, merged["xwOBA"].values)
+        pred = ridge.predict(X_scaled)
+    else:
+        # Fallback: simple z-score composite with equal weights
+        pred = X_scaled.mean(axis=1)
+
     pm, ps = pred.mean(), pred.std()
+    if ps == 0:
+        ps = 1
     merged["swing_plus"] = np.round(100 + ((pred - pm) / ps) * 15, 1)
 
-    # Get team info
-    team_col = None
-    for c in ["team_name", "team", "team_abbreviation"]:
-        if c in merged.columns:
-            team_col = c
-            break
+    # Store player_id
+    if id_col and id_col in merged.columns:
+        merged["player_id"] = pd.to_numeric(merged[id_col], errors="coerce")
+    else:
+        merged["player_id"] = None
 
-    return merged, team_col
+    return merged
 
 
 def _fetch_headshot(player_id):
-    """Download and make circular headshot."""
-    from PIL import Image, ImageDraw
-    from io import BytesIO
-    import requests
-    url = f"https://securea.mlb.com/mlb/images/players/head_shot/{player_id}.jpg"
+    """Download circular headshot."""
+    from PIL import Image
     try:
+        url = f"https://securea.mlb.com/mlb/images/players/head_shot/{int(player_id)}.jpg"
         resp = requests.get(url, timeout=10, allow_redirects=True)
         if resp.status_code != 200:
             return None
-        img = Image.open(BytesIO(resp.content)).convert("RGBA")
+        img = Image.open(io.BytesIO(resp.content)).convert("RGBA")
         size = min(img.size)
-        left = (img.width - size) // 2
-        top = (img.height - size) // 2
-        img = img.crop((left, top, left + size, top + size)).resize((100, 100), Image.LANCZOS)
+        l = (img.width - size) // 2; t = (img.height - size) // 2
+        img = img.crop((l, t, l + size, t + size)).resize((100, 100), Image.LANCZOS)
         mask = Image.new("L", (100, 100), 0)
         ImageDraw.Draw(mask).ellipse((0, 0, 100, 100), fill=255)
         img.putalpha(mask)
@@ -162,10 +188,8 @@ def _fetch_headshot(player_id):
         return None
 
 
-def _build_top10_image(df, team_col):
-    """Build the top 10 Swing+ bar chart with headshots — dark theme."""
-    from matplotlib.offsetbox import OffsetImage, AnnotationBbox
-
+def _build_top10_image(df):
+    """Build horizontal bar chart with headshots — dark theme."""
     top10 = df.nlargest(10, "swing_plus").reset_index(drop=True)
     n = len(top10)
 
@@ -178,10 +202,7 @@ def _build_top10_image(df, team_col):
     max_swing = top10["swing_plus"].max()
     x_max = max_swing + 6
 
-    rank_x = 93.0
-    hs_x = 94.5
-    bar_left = 96.0
-
+    rank_x = 93.0; hs_x = 94.5; bar_left = 96.0
     y_positions = np.arange(n - 1, -1, -1)
 
     for i in range(n):
@@ -189,21 +210,17 @@ def _build_top10_image(df, team_col):
         y = y_positions[i]
         sp_val = row["swing_plus"]
         name = row.get("name_fg", "?")
-        team = str(row.get(team_col, "")) if team_col else ""
         xwoba = row.get("xwOBA", 0)
         bat_spd = row.get("bat_speed", 0)
 
-        # Bar
         ax.barh(y, sp_val - bar_left, left=bar_left, height=0.7,
                 color=bar_color, edgecolor="none", zorder=2)
 
-        # Rank
         ax.text(rank_x, y, f"#{i+1}", ha="center", va="center",
                 fontsize=11, fontweight="bold", color="#888888")
 
-        # Headshot
-        pid = row.get("player_id", None)
-        if pid:
+        pid = row.get("player_id")
+        if pid and not np.isnan(pid):
             try:
                 hs = _fetch_headshot(int(pid))
                 if hs is not None:
@@ -215,23 +232,21 @@ def _build_top10_image(df, team_col):
             except Exception:
                 pass
 
-        # Name on bar
         ax.text(bar_left + 0.2, y + 0.16, name, ha="left", va="center",
                 fontsize=10.5, fontweight="bold", color="white", zorder=5)
 
-        # Subtitle: team · bat speed · xwOBA
-        subtitle = f"{team}  ·  {bat_spd:.1f} mph  ·  .{str(xwoba)[2:5]} xwOBA"
+        xw_str = f".{str(xwoba)[2:5]}" if xwoba and xwoba > 0 else ""
+        subtitle = f"{bat_spd:.1f} mph"
+        if xw_str:
+            subtitle += f"  ·  {xw_str} xwOBA"
         ax.text(bar_left + 0.2, y - 0.17, subtitle, ha="left", va="center",
                 fontsize=7, color="#cc3333", zorder=5)
 
-        # Swing+ value
         ax.text(sp_val + 0.4, y, f"{sp_val:.1f}", ha="left", va="center",
                 fontsize=11.5, fontweight="bold", color="white")
 
-    # 100 = Avg line
     ax.axvline(x=100, color="#666666", linestyle="--", linewidth=0.7, zorder=1, alpha=0.5)
-    ax.text(100, n - 0.55, "100 = Avg", ha="center", va="bottom",
-            fontsize=7.5, color="#777777")
+    ax.text(100, n - 0.55, "100 = Avg", ha="center", va="bottom", fontsize=7.5, color="#777777")
 
     ax.set_xlim(rank_x - 1.0, x_max)
     ax.set_ylim(-0.6, n - 0.4)
@@ -244,28 +259,21 @@ def _build_top10_image(df, team_col):
 
     fig.suptitle(f"Top 10 Hitters by Swing+ ({MLB_SEASON})",
                  fontsize=19, fontweight="bold", color="white", y=0.97)
-    ax.set_title(f"{MLB_SEASON} Season  ·  Pure Mechanics Model  ·  Min 100 Swings",
+    ax.set_title(f"{MLB_SEASON} Season  ·  Pure Mechanics Model  ·  Min 50 Swings",
                  fontsize=8.5, color="#777777", pad=10)
 
-    fig.text(0.03, 0.01, "Data: Baseball Savant Bat Tracking",
-             fontsize=6.5, color="#555555")
-    fig.text(0.97, 0.01, "@BachTalk1",
-             fontsize=6.5, color="#555555", ha="right")
+    fig.text(0.03, 0.01, "Data: Baseball Savant Bat Tracking", fontsize=6.5, color="#555555")
+    fig.text(0.97, 0.01, "@BachTalk1", fontsize=6.5, color="#555555", ha="right")
 
-    # Watermark
     if WATERMARK_PATH.exists():
         try:
             img = PILImage.open(WATERMARK_PATH).convert("RGBA")
             arr = np.array(img, dtype=np.float32)
-            is_white = (arr[:, :, 0] > 240) & (arr[:, :, 1] > 240) & (arr[:, :, 2] > 240)
-            arr[is_white, 3] = 0
-            not_t = arr[:, :, 3] > 0
-            arr[not_t, 0] = 255; arr[not_t, 1] = 255; arr[not_t, 2] = 255
-            arr = arr.astype(np.uint8)
+            arr[(arr[:, :, 0] > 240) & (arr[:, :, 1] > 240) & (arr[:, :, 2] > 240), 3] = 0
+            nt = arr[:, :, 3] > 0; arr[nt, 0] = 255; arr[nt, 1] = 255; arr[nt, 2] = 255
             ax_wm = fig.add_axes([0.375, 0.3, 0.25, 0.25], zorder=10)
-            ax_wm.imshow(arr, alpha=0.12)
-            ax_wm.set_facecolor("none")
-            ax_wm.axis("off")
+            ax_wm.imshow(arr.astype(np.uint8), alpha=0.12)
+            ax_wm.set_facecolor("none"); ax_wm.axis("off")
         except Exception:
             pass
 
@@ -277,6 +285,57 @@ def _build_top10_image(df, team_col):
     return out
 
 
+def _get_savant_video(player_id, player_name):
+    """Get a Savant video clip for a hitter (home run or hard hit)."""
+    from pybaseball import statcast_batter
+    from datetime import date, timedelta
+
+    end = date.today() - timedelta(days=1)
+    start = end - timedelta(days=14)
+
+    try:
+        df = statcast_batter(start.strftime("%Y-%m-%d"), end.strftime("%Y-%m-%d"), int(player_id))
+        if df is None or df.empty:
+            return None
+
+        # Prefer home runs, then doubles/triples, then hardest hit
+        hrs = df[df["events"] == "home_run"]
+        xbh = df[df["events"].isin(["double", "triple", "home_run"])]
+        target = hrs if not hrs.empty else xbh if not xbh.empty else df.dropna(subset=["launch_speed"]).nlargest(1, "launch_speed")
+
+        if target.empty:
+            return None
+
+        row = target.iloc[0]
+        game_pk = int(row["game_pk"])
+
+        # Get playId from play-by-play
+        pbp = requests.get(f"https://statsapi.mlb.com/api/v1/game/{game_pk}/playByPlay", timeout=15).json()
+        for play in pbp.get("allPlays", []):
+            if play.get("matchup", {}).get("batter", {}).get("id") != int(player_id):
+                continue
+            event = (play.get("result", {}).get("event") or "").lower()
+            if "home_run" in event or "double" in event or "triple" in event or "single" in event:
+                for pe in reversed(play.get("playEvents", [])):
+                    play_id = pe.get("playId")
+                    if play_id:
+                        surl = f"https://baseballsavant.mlb.com/sporty-videos?playId={play_id}"
+                        sr = requests.get(surl, timeout=10)
+                        mp4s = re.findall(r'https?://sporty-clips\.mlb\.com/[^\s"<>]+\.mp4', sr.text)
+                        if mp4s:
+                            safe = player_name.replace(" ", "_").lower()
+                            clip_path = SCREENSHOTS_DIR.parent / "data" / "clips" / f"swing_{safe}.mp4"
+                            clip_path.parent.mkdir(parents=True, exist_ok=True)
+                            if _download_mp4(mp4s[0], clip_path):
+                                return clip_path
+                        break
+                break
+    except Exception:
+        log.debug("Savant video failed for %s", player_name, exc_info=True)
+
+    return None
+
+
 class SwingPlusTop10Generator(ContentGenerator):
     name = "swing_plus_top10"
 
@@ -286,24 +345,54 @@ class SwingPlusTop10Generator(ContentGenerator):
             log.warning("Swing+ computation failed")
             return PostContent(text="")
 
-        df, team_col = result
-        image_path = _build_top10_image(df, team_col)
+        df = result
+        image_path = _build_top10_image(df)
         if not image_path:
             return PostContent(text="")
 
-        top = df.nlargest(3, "swing_plus")
-        names = [r["name_fg"] for _, r in top.iterrows()]
+        top10 = df.nlargest(10, "swing_plus").reset_index(drop=True)
+        names = [r["name_fg"] for _, r in top10.head(3).iterrows()]
 
+        # Header tweet
         text = (
             f"Updated Swing+ Top 10 — {MLB_SEASON}\n\n"
             f"Pure mechanics model trained on bat tracking data. "
             f"{names[0]}, {names[1]}, and {names[2]} lead the way.\n\n"
-            f"@TJStats #MLB #Statcast #BatTracking"
+            f"Full thread with video for each hitter below\n\n"
+            f"@TJStats {DEFAULT_HASHTAGS} #BatTracking"
         )
+
+        # Build replies for each hitter 1-10
+        replies = []
+        for i, (_, row) in enumerate(top10.iterrows()):
+            hitter_name = row["name_fg"]
+            sp = row["swing_plus"]
+            xwoba = row.get("xwOBA", 0)
+            bat_spd = row.get("bat_speed", 0)
+            pid = row.get("player_id")
+
+            line = f"#{i+1} {hitter_name} — Swing+ {sp:.1f}"
+            details = f"Bat Speed: {bat_spd:.1f} mph"
+            if xwoba and xwoba > 0:
+                details += f" | xwOBA: {xwoba:.3f}"
+
+            reply_text = f"{line}\n{details}"
+
+            # Get video
+            video_path = None
+            if pid and not np.isnan(pid):
+                video_path = _get_savant_video(int(pid), hitter_name)
+
+            replies.append(PostContent(
+                text=reply_text,
+                video_path=video_path,
+                tags=["swing_plus_top10", hitter_name],
+            ))
 
         return PostContent(
             text=text,
             image_path=image_path,
             alt_text=f"Swing+ Top 10 leaderboard for {MLB_SEASON}",
             tags=["swing_plus_top10"],
+            replies=replies,
         )
