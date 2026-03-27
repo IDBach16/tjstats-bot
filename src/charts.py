@@ -121,31 +121,51 @@ _WATERMARK_PATH = _ASSETS_DIR / "BachTalk.png"
 _watermark_cache: "np.ndarray | None" = None
 
 
-def _draw_watermark(fig, alpha=0.15, scale=0.45):
+_watermark_cache_dark = None  # dark logo pixels on transparent bg (for light cards)
+
+def _draw_watermark(fig, alpha=0.15, scale=0.45, dark_bg=True):
     """Overlay BachTalk logo as a watermark in the center of the figure."""
-    global _watermark_cache
-    if _watermark_cache is None:
-        if not _WATERMARK_PATH.exists():
-            return
-        try:
-            img = _PILImage.open(_WATERMARK_PATH).convert("RGBA")
-            arr = np.array(img, dtype=np.float32)
-            # Make white/near-white pixels fully transparent
-            is_white = (arr[:, :, 0] > 240) & (arr[:, :, 1] > 240) & (arr[:, :, 2] > 240)
-            arr[is_white, 3] = 0
-            # Convert remaining logo art pixels to white so they show on dark bg
-            not_transparent = arr[:, :, 3] > 0
-            arr[not_transparent, 0] = 255
-            arr[not_transparent, 1] = 255
-            arr[not_transparent, 2] = 255
-            _watermark_cache = arr.astype(np.uint8)
-        except Exception:
-            return
-    if _watermark_cache is None:
+    global _watermark_cache, _watermark_cache_dark
+
+    if dark_bg:
+        # White logo for dark backgrounds
+        if _watermark_cache is None:
+            if not _WATERMARK_PATH.exists():
+                return
+            try:
+                img = _PILImage.open(_WATERMARK_PATH).convert("RGBA")
+                arr = np.array(img, dtype=np.float32)
+                is_white = (arr[:, :, 0] > 240) & (arr[:, :, 1] > 240) & (arr[:, :, 2] > 240)
+                arr[is_white, 3] = 0
+                not_transparent = arr[:, :, 3] > 0
+                arr[not_transparent, 0] = 255
+                arr[not_transparent, 1] = 255
+                arr[not_transparent, 2] = 255
+                _watermark_cache = arr.astype(np.uint8)
+            except Exception:
+                return
+        cache = _watermark_cache
+    else:
+        # Dark logo for light/white backgrounds
+        if _watermark_cache_dark is None:
+            if not _WATERMARK_PATH.exists():
+                return
+            try:
+                img = _PILImage.open(_WATERMARK_PATH).convert("RGBA")
+                arr = np.array(img, dtype=np.float32)
+                is_white = (arr[:, :, 0] > 240) & (arr[:, :, 1] > 240) & (arr[:, :, 2] > 240)
+                arr[is_white, 3] = 0
+                # Keep original dark colors for light backgrounds
+                _watermark_cache_dark = arr.astype(np.uint8)
+            except Exception:
+                return
+        cache = _watermark_cache_dark
+
+    if cache is None:
         return
     ax_wm = fig.add_axes([0.5 - scale / 2, 0.5 - scale / 2, scale, scale],
                          zorder=10)
-    ax_wm.imshow(_watermark_cache, alpha=alpha)
+    ax_wm.imshow(cache, alpha=alpha)
     ax_wm.set_facecolor("none")
     ax_wm.axis("off")
 
@@ -2328,7 +2348,7 @@ def plot_pitching_summary(
         # ── Save ──────────────────────────────────────────────────────
         safe = name.replace(" ", "_").lower()
         out = SCREENSHOTS_DIR / f"pitching_summary_{safe}.png"
-        _draw_watermark(fig)
+        _draw_watermark(fig, alpha=0.08, dark_bg=False)
         fig.savefig(out, facecolor="white", dpi=150,
                     bbox_inches="tight", pad_inches=0.3)
         plt.close(fig)
@@ -3450,7 +3470,7 @@ def plot_traditional_pitching_summary(
         # ── Save ──────────────────────────────────────────────────────
         safe = name.replace(" ", "_").lower()
         out = SCREENSHOTS_DIR / f"trad_pitching_summary_{safe}.png"
-        _draw_watermark(fig)
+        _draw_watermark(fig, alpha=0.08, dark_bg=False)
         fig.savefig(out, facecolor="white", dpi=150,
                     bbox_inches="tight", pad_inches=0.3)
         plt.close(fig)
@@ -4227,7 +4247,7 @@ def plot_reds_game_summary(
         # ── Save ─────────────────────────────────────────────────────
         safe = name.replace(" ", "_").lower()
         out = SCREENSHOTS_DIR / f"game_summary_{safe}.png"
-        _draw_watermark(fig)
+        _draw_watermark(fig, alpha=0.08, dark_bg=False)
         fig.savefig(out, facecolor="white", dpi=150,
                     bbox_inches="tight", pad_inches=0.3)
         plt.close(fig)
