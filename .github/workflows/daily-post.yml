@@ -60,6 +60,7 @@ on:
           - biomechanics_101
           - undervalued_relievers
           - reds_summary
+          - best_outing
 
 permissions:
   contents: write
