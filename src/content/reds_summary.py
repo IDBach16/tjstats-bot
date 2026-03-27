@@ -90,7 +90,7 @@ class RedsSummaryGenerator(ContentGenerator):
         if game_info is None:
             log.info("No Reds game found for %s", date_str)
             return PostContent(
-                text=f"No Reds game yesterday \u2014 {display_date}\n\n@TJStats #Reds #MLB",
+                text=f"No Reds game yesterday \u2014 {display_date}\n\n@TJStats @PitchProfiler #Reds #MLB",
                 tags=["reds_summary", "no_game"],
             )
 
@@ -108,7 +108,7 @@ class RedsSummaryGenerator(ContentGenerator):
             log.warning("Failed to fetch Pitch Profiler data", exc_info=True)
             return PostContent(
                 text=f"Reds {score_line} vs {opponent} ({display_date})\n\n"
-                     f"Pitch data unavailable today.\n\n@TJStats #Reds #MLB",
+                     f"Pitch data unavailable today.\n\n@TJStats @PitchProfiler #Reds #MLB",
                 tags=["reds_summary", "data_error"],
             )
 
@@ -138,7 +138,7 @@ class RedsSummaryGenerator(ContentGenerator):
             log.warning("No Reds pitchers found for game_pk=%d", game_pk)
             return PostContent(
                 text=f"Reds {score_line} vs {opponent} ({display_date})\n\n"
-                     f"Pitcher data not yet available.\n\n@TJStats #Reds #MLB",
+                     f"Pitcher data not yet available.\n\n@TJStats @PitchProfiler #Reds #MLB",
                 tags=["reds_summary", "no_pitchers"],
             )
 
@@ -253,7 +253,7 @@ class RedsSummaryGenerator(ContentGenerator):
             log.warning("No cards were generated for game %d", game_pk)
             return PostContent(
                 text=f"Reds {score_line} vs {opponent} ({display_date})\n\n"
-                     f"Card generation failed.\n\n@TJStats #Reds #MLB",
+                     f"Card generation failed.\n\n@TJStats @PitchProfiler #Reds #MLB",
                 tags=["reds_summary", "card_error"],
             )
 
@@ -264,7 +264,7 @@ class RedsSummaryGenerator(ContentGenerator):
             f"Reds Pitching Recap \u2014 {display_date}\n"
             f"{score_line}\n\n"
             f"{all_summaries}\n\n"
-            f"@TJStats #Reds #MLB"
+            f"@TJStats @PitchProfiler #Reds #MLB"
         )
 
         # Truncate if over character limit (280 for tweet)
@@ -280,7 +280,7 @@ class RedsSummaryGenerator(ContentGenerator):
                 f"Reds Pitching Recap \u2014 {display_date}\n"
                 f"{score_line}\n\n"
                 + "\n".join(short_summaries)
-                + "\n\n@TJStats #Reds #MLB"
+                + "\n\n@TJStats @PitchProfiler #Reds #MLB"
             )
 
         main_card = cards[0]
