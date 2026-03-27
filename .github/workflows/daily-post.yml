@@ -61,6 +61,8 @@ on:
           - undervalued_relievers
           - reds_summary
           - best_outing
+          - swing_plus_top10
+          - best_pitch_week
 
 permissions:
   contents: write
