@@ -4386,3 +4386,239 @@ def plot_reds_game_summary(
         log.warning("plot_reds_game_summary failed for %s", name,
                     exc_info=True)
         return None
+
+
+# ── Best Pitch Card ──────────────────────────────────────────────────
+
+_BEST_PITCH_COLORS = {
+    "FF": "#d62828", "SI": "#f77f00", "FC": "#8338ec", "SL": "#3a86ff",
+    "SV": "#00b4d8", "ST": "#00b4d8", "CU": "#2ec4b6", "KC": "#06d6a0",
+    "CH": "#ffbe0b", "FS": "#fb5607", "KN": "#9d4edd", "CT": "#8338ec",
+}
+_BEST_PITCH_NAMES = {
+    "FF": "4-Seam Fastball", "SI": "Sinker", "FC": "Cutter", "SL": "Slider",
+    "SV": "Sweeper", "ST": "Sweeper", "CU": "Curveball", "KC": "Knuckle Curve",
+    "CH": "Changeup", "FS": "Splitter", "KN": "Knuckleball", "CT": "Cutter",
+}
+_LOGO_SLUG_MAP = {
+    "ARI": "ari", "ATL": "atl", "BAL": "bal", "BOS": "bos",
+    "CHC": "chc", "CWS": "chw", "CIN": "cin", "CLE": "cle",
+    "COL": "col", "DET": "det", "HOU": "hou", "KC": "kc",
+    "LAA": "laa", "LAD": "lad", "MIA": "mia", "MIL": "mil",
+    "MIN": "min", "NYM": "nym", "NYY": "nyy", "OAK": "oak",
+    "PHI": "phi", "PIT": "pit", "SD": "sd", "SF": "sf",
+    "SEA": "sea", "STL": "stl", "TB": "tb", "TEX": "tex",
+    "TOR": "tor", "WSH": "wsh",
+}
+
+
+def plot_best_pitch_card(
+    pitcher_name: str,
+    pitch_type: str,
+    team: str,
+    player_id: int | None,
+    game_date: str,
+    pitch_data: dict,
+    title: str = "Best Pitch Last Night",
+) -> Path | None:
+    """Render a best-pitch card with headshot, logo, movement chart, and metrics table."""
+    try:
+        import matplotlib.gridspec as gridspec
+        from PIL import Image, ImageDraw
+        from io import BytesIO
+
+        pitch_display = _BEST_PITCH_NAMES.get(pitch_type, pitch_type)
+        accent = _BEST_PITCH_COLORS.get(pitch_type, "#3a86ff")
+
+        # Fetch headshot
+        headshot = None
+        if player_id:
+            headshot = _fetch_headshot(player_id, accent=accent)
+
+        # Fetch team logo
+        team_logo = None
+        slug = _LOGO_SLUG_MAP.get(team)
+        if slug:
+            try:
+                logo_url = (f"https://a.espncdn.com/combiner/i?img="
+                            f"/i/teamlogos/mlb/500/scoreboard/{slug}.png&h=500&w=500")
+                resp = _requests.get(logo_url, timeout=10, allow_redirects=True)
+                team_logo = Image.open(BytesIO(resp.content)).convert("RGBA")
+            except Exception:
+                pass
+
+        p_throws = pitch_data.get("p_throws", "")
+        hand_label = "LHP" if p_throws == "L" else "RHP" if p_throws == "R" else ""
+
+        # Team name lookup
+        _TEAM_DISPLAY = {
+            "ARI": "Arizona", "ATL": "Atlanta", "BAL": "Baltimore", "BOS": "Boston",
+            "CHC": "Cubs", "CWS": "White Sox", "CIN": "Cincinnati", "CLE": "Cleveland",
+            "COL": "Colorado", "DET": "Detroit Tigers", "HOU": "Houston", "KC": "Kansas City",
+            "LAA": "Angels", "LAD": "Dodgers", "MIA": "Miami", "MIL": "Milwaukee",
+            "MIN": "Minnesota", "NYM": "Mets", "NYY": "Yankees", "OAK": "Oakland",
+            "PHI": "Philadelphia", "PIT": "Pittsburgh", "SD": "San Diego", "SF": "San Francisco",
+            "SEA": "Seattle", "STL": "St. Louis", "TB": "Tampa Bay", "TEX": "Texas",
+            "TOR": "Toronto", "WSH": "Washington",
+        }
+        team_display = _TEAM_DISPLAY.get(team, team)
+
+        fig = plt.figure(figsize=(20, 20), dpi=150)
+        fig.set_facecolor("white")
+
+        gs = gridspec.GridSpec(4, 6, height_ratios=[3, 1.5, 7, 0.5],
+                               hspace=0.35, wspace=0.3)
+
+        # Header background
+        ax_head = fig.add_subplot(gs[0, :])
+        ax_head.axis("off")
+
+        # Headshot
+        if headshot is not None:
+            ax_hs = fig.add_axes([0.03, 0.82, 0.07, 0.1])
+            ax_hs.imshow(headshot)
+            ax_hs.axis("off")
+
+        # Team logo
+        if team_logo:
+            ax_logo = fig.add_axes([0.88, 0.82, 0.07, 0.1])
+            ax_logo.set_xlim(0, 1.3)
+            ax_logo.set_ylim(0, 1)
+            ax_logo.imshow(team_logo, extent=[0.3, 1.3, 0, 1], origin="upper")
+            ax_logo.axis("off")
+
+        # Name + info
+        name_x = 0.12 if headshot is not None else 0.04
+        fig.text(name_x, 0.925, pitcher_name, fontsize=36,
+                 fontweight="bold", color="#1a1a2e", va="top")
+        fig.text(name_x, 0.895,
+                 f"{pitch_display}  |  {hand_label}  |  {team_display}",
+                 fontsize=16, color="#666666", va="top")
+        fig.text(name_x, 0.865,
+                 f"{title}  |  {game_date}",
+                 fontsize=13, color=accent, va="top", fontweight="bold")
+
+        # Hero stats
+        velo = pitch_data.get("velocity", "")
+        stuff = pitch_data.get("stuff_plus", "")
+        whiff = pitch_data.get("whiff_rate", "")
+        rv100 = pitch_data.get("run_value_per_100_pitches", "")
+        woba = pitch_data.get("woba", "")
+        thrown = pitch_data.get("thrown", "")
+
+        def _fval(v, fmt=".1f", mult=1):
+            if v is None or v == "" or (isinstance(v, float) and np.isnan(v)):
+                return "-"
+            return f"{float(v) * mult:{fmt}}"
+
+        hero = [
+            (_fval(velo), "Velo"),
+            (_fval(stuff, ".0f"), "Stuff+"),
+            (_fval(whiff, ".1f", 100) + "%", "Whiff%"),
+            (_fval(rv100), "RV/100"),
+            (_fval(woba, ".3f"), "wOBA"),
+            (str(int(thrown)) if thrown else "-", "Pitches"),
+        ]
+        for i, (val, label) in enumerate(hero):
+            x = 0.08 + i * 0.15
+            fig.text(x, 0.80, val, fontsize=26, fontweight="bold",
+                     color="#1a1a2e", ha="center", va="top")
+            fig.text(x, 0.775, label, fontsize=11, color="#888888",
+                     ha="center", va="top")
+
+        fig.add_artist(plt.Line2D([0.03, 0.97], [0.765, 0.765],
+                                  transform=fig.transFigure,
+                                  color="#dddddd", linewidth=1))
+
+        # Movement chart
+        ax_move = fig.add_subplot(gs[2, :3])
+        ax_move.set_facecolor("#fafafa")
+        ax_move.set_title("Pitch Movement", fontsize=20, fontweight="bold", pad=14)
+        ax_move.axhline(0, color="#cccccc", linewidth=0.8)
+        ax_move.axvline(0, color="#cccccc", linewidth=0.8)
+
+        hb = float(pitch_data.get("hb", 0) or 0)
+        ivb = float(pitch_data.get("ivb", 0) or 0)
+        ax_move.scatter(hb, ivb, c=accent, s=700, edgecolors="#1a1a2e",
+                        linewidths=2.5, zorder=5)
+        ax_move.text(hb, ivb + 2, pitch_display, fontsize=14,
+                     fontweight="bold", color=accent, ha="center")
+        ax_move.set_xlim(-22, 22)
+        ax_move.set_ylim(-15, 25)
+        ax_move.set_xlabel("Horizontal Break (in)", fontsize=14, fontweight="bold")
+        ax_move.set_ylabel("Induced Vertical Break (in)", fontsize=14, fontweight="bold")
+        ax_move.tick_params(labelsize=12)
+        ax_move.grid(True, alpha=0.3)
+        ax_move.set_aspect("equal", adjustable="box")
+        for spine in ax_move.spines.values():
+            spine.set_color("#dddddd")
+
+        # Metrics table
+        ax_metrics = fig.add_subplot(gs[2, 3:])
+        ax_metrics.axis("off")
+        ax_metrics.set_title("Pitch Metrics", fontsize=20, fontweight="bold", pad=14)
+
+        def _mv(key, fmt=".1f", mult=1, suffix=""):
+            v = pitch_data.get(key)
+            if v is None or v == "" or (isinstance(v, float) and np.isnan(v)):
+                return "\u2014"
+            return f"{float(v) * mult:{fmt}}{suffix}"
+
+        metric_data = [
+            ("Spin Rate", _mv("spin_rate", ".0f") + " rpm"),
+            ("IVB", _mv("ivb") + '"'),
+            ("HB", _mv("hb") + '"'),
+            ("VAA", _mv("vaa", ".2f") + "\u00b0"),
+            ("Extension", _mv("release_extension") + " ft"),
+            ("FB Velo Diff", _mv("max_fb_velo_diff") + " mph"),
+            ("Strike%", _mv("strike_percentage", ".1f", 100) + "%"),
+            ("Chase%", _mv("chase_percentage", ".1f", 100) + "%"),
+            ("CSW%", _mv("called_strikes_plus_whiffs_percentage", ".1f", 100) + "%"),
+            ("Zone%", _mv("zone_percentage", ".1f", 100) + "%"),
+            ("Barrel%", _mv("barrel_percentage", ".1f", 100) + "%"),
+            ("Stuff+", _mv("stuff_plus", ".0f")),
+        ]
+
+        import pandas as pd
+        tbl = ax_metrics.table(
+            cellText=[[m[1]] for m in metric_data],
+            rowLabels=[m[0] for m in metric_data],
+            cellLoc="center", rowLoc="right",
+            bbox=[0.0, 0.0, 1, 1],
+        )
+        tbl.auto_set_font_size(False)
+        tbl.set_fontsize(18)
+        tbl.scale(1, 2.2)
+        for key, cell in tbl.get_celld().items():
+            cell.set_edgecolor("#eeeeee")
+            if key[1] == -1:
+                cell.set_facecolor("#f0f0f0")
+                cell.set_text_props(fontweight="bold", color="#444444")
+            else:
+                cell.set_facecolor("white")
+                cell.set_text_props(fontweight="bold", color="#1a1a2e")
+
+        # Footer
+        fig.text(0.03, 0.015, "By: @BachTalk1", fontsize=18,
+                 fontweight="bold", color="#1a1a2e")
+        fig.text(0.5, 0.015,
+                 "Data: Pitch Profiler  |  Images: MLB, ESPN",
+                 fontsize=12, color="#888888", ha="center")
+        fig.text(0.97, 0.015, title, fontsize=12,
+                 color="#888888", ha="right")
+
+        # Watermark (dark for white bg)
+        _draw_watermark(fig, alpha=0.08, scale=0.4, dark_bg=False)
+
+        safe = pitcher_name.replace(" ", "_").lower()
+        out = SCREENSHOTS_DIR / f"best_pitch_{safe}.png"
+        fig.savefig(out, facecolor="white", dpi=150,
+                    bbox_inches="tight", pad_inches=0.3)
+        plt.close(fig)
+        log.info("Saved best pitch card: %s", out)
+        return out
+
+    except Exception:
+        log.warning("plot_best_pitch_card failed for %s", pitcher_name,
+                    exc_info=True)
+        return None

@@ -21,7 +21,6 @@ from .. import pitch_profiler
 from ..charts import plot_pitching_summary
 from ..config import DEFAULT_HASHTAGS, MLB_SEASON, MLB_API_BASE
 from ..video_clips import get_game_strikeout_clip
-from ..scheduler import was_recently_posted
 
 log = logging.getLogger(__name__)
 
@@ -134,6 +133,7 @@ class BestOutingGenerator(ContentGenerator):
         )
 
         # Skip recently posted pitchers
+        from ..scheduler import was_recently_posted
         starters = starters[
             ~starters["pitcher_name"].apply(lambda n: was_recently_posted(n, lookback=10))
         ]

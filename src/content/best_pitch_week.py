@@ -27,9 +27,9 @@ import requests
 
 from .base import ContentGenerator, PostContent
 from .. import pitch_profiler
+from ..charts import plot_best_pitch_card
 from ..config import SCREENSHOTS_DIR, MLB_SEASON, MLB_API_BASE, DEFAULT_HASHTAGS
 from ..video_clips import get_game_strikeout_clip
-from ..scheduler import was_recently_posted
 
 log = logging.getLogger(__name__)
 
@@ -259,6 +259,7 @@ class BestPitchWeekGenerator(ContentGenerator):
         )
 
         # Skip recently posted
+        from ..scheduler import was_recently_posted
         qualified = qualified[
             ~qualified["pitcher_name"].apply(lambda n: was_recently_posted(str(n), lookback=10))
         ]
@@ -281,8 +282,27 @@ class BestPitchWeekGenerator(ContentGenerator):
                  best.get("stuff_plus", 0) or 0,
                  (best.get("whiff_rate", 0) or 0) * 100)
 
+        # Get team from season data
+        team = None
+        try:
+            season_df = pitch_profiler.get_season_pitchers(MLB_SEASON)
+            match = season_df[season_df["pitcher_name"] == pitcher_name]
+            if not match.empty and "season_teams" in match.columns:
+                team = str(match.iloc[0].get("season_teams", "")).split(",")[0].strip()
+        except Exception:
+            pass
+
         # Build card
-        image_path = _build_best_pitch_card(best, pitcher_name, pitch_display, game_date)
+        pitch_dict = best.to_dict()
+        image_path = plot_best_pitch_card(
+            pitcher_name=pitcher_name,
+            pitch_type=pitch_type,
+            team=team or "",
+            player_id=pitcher_id,
+            game_date=game_date,
+            pitch_data=pitch_dict,
+            title="Best Pitch of the Week",
+        )
 
         # Get video
         video_path = None
