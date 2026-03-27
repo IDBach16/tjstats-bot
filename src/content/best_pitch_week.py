@@ -282,15 +282,27 @@ class BestPitchWeekGenerator(ContentGenerator):
                  best.get("stuff_plus", 0) or 0,
                  (best.get("whiff_rate", 0) or 0) * 100)
 
-        # Get team from season data
+        # Get team from MLB API
         team = None
-        try:
-            season_df = pitch_profiler.get_season_pitchers(MLB_SEASON)
-            match = season_df[season_df["pitcher_name"] == pitcher_name]
-            if not match.empty and "season_teams" in match.columns:
-                team = str(match.iloc[0].get("season_teams", "")).split(",")[0].strip()
-        except Exception:
-            pass
+        if pitcher_id:
+            try:
+                mlb_resp = requests.get(
+                    f"https://statsapi.mlb.com/api/v1/people/{pitcher_id}?hydrate=currentTeam",
+                    timeout=10)
+                team_name = mlb_resp.json()["people"][0].get("currentTeam", {}).get("name", "")
+                _N2A = {"Arizona Diamondbacks":"ARI","Atlanta Braves":"ATL","Baltimore Orioles":"BAL",
+                    "Boston Red Sox":"BOS","Chicago Cubs":"CHC","Chicago White Sox":"CWS",
+                    "Cincinnati Reds":"CIN","Cleveland Guardians":"CLE","Colorado Rockies":"COL",
+                    "Detroit Tigers":"DET","Houston Astros":"HOU","Kansas City Royals":"KC",
+                    "Los Angeles Angels":"LAA","Los Angeles Dodgers":"LAD","Miami Marlins":"MIA",
+                    "Milwaukee Brewers":"MIL","Minnesota Twins":"MIN","New York Mets":"NYM",
+                    "New York Yankees":"NYY","Oakland Athletics":"OAK","Philadelphia Phillies":"PHI",
+                    "Pittsburgh Pirates":"PIT","San Diego Padres":"SD","San Francisco Giants":"SF",
+                    "Seattle Mariners":"SEA","St. Louis Cardinals":"STL","Tampa Bay Rays":"TB",
+                    "Texas Rangers":"TEX","Toronto Blue Jays":"TOR","Washington Nationals":"WSH"}
+                team = _N2A.get(team_name)
+            except Exception:
+                pass
 
         # Build card
         pitch_dict = best.to_dict()

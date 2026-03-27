@@ -50,19 +50,36 @@ pt = str(best["pitch_type"])
 pid = int(best["pitcher_id"])
 gpk = int(best["game_pk"])
 pitch_display = PITCH_NAMES.get(pt, pt)
-accent = PITCH_COLORS.get(pt, "#3a86ff")
 
 print(f"Best: {name} {pitch_display} stuff+={best.get('stuff_plus', 0):.0f} whiff={float(best.get('whiff_rate', 0)) * 100:.1f}%")
 
-# Get team
+# Get team from Statcast game data or MLB API
 team = ""
 try:
-    sp = pitch_profiler.get_season_pitchers(MLB_SEASON)
-    match = sp[sp["pitcher_name"] == name]
-    if not match.empty and "season_teams" in match.columns:
-        team = str(match.iloc[0].get("season_teams", "")).split(",")[0].strip()
-except Exception:
-    pass
+    # Try from the game data first
+    game_pitches = gpp[(gpp['game_type']=='R') & (gpp['game_pk']==gpk)]
+    pitcher_rows = game_pitches[game_pitches['pitcher_name']==name]
+    # Fall back to MLB API
+    mlb_resp = requests.get(f'https://statsapi.mlb.com/api/v1/people/{pid}?hydrate=currentTeam', timeout=10)
+    mlb_data = mlb_resp.json()
+    team_name = mlb_data['people'][0].get('currentTeam',{}).get('name','')
+    # Map full name to abbreviation
+    _NAME_TO_ABBREV = {
+        "Arizona Diamondbacks":"ARI","Atlanta Braves":"ATL","Baltimore Orioles":"BAL",
+        "Boston Red Sox":"BOS","Chicago Cubs":"CHC","Chicago White Sox":"CWS",
+        "Cincinnati Reds":"CIN","Cleveland Guardians":"CLE","Colorado Rockies":"COL",
+        "Detroit Tigers":"DET","Houston Astros":"HOU","Kansas City Royals":"KC",
+        "Los Angeles Angels":"LAA","Los Angeles Dodgers":"LAD","Miami Marlins":"MIA",
+        "Milwaukee Brewers":"MIL","Minnesota Twins":"MIN","New York Mets":"NYM",
+        "New York Yankees":"NYY","Oakland Athletics":"OAK","Philadelphia Phillies":"PHI",
+        "Pittsburgh Pirates":"PIT","San Diego Padres":"SD","San Francisco Giants":"SF",
+        "Seattle Mariners":"SEA","St. Louis Cardinals":"STL","Tampa Bay Rays":"TB",
+        "Texas Rangers":"TEX","Toronto Blue Jays":"TOR","Washington Nationals":"WSH",
+    }
+    team = _NAME_TO_ABBREV.get(team_name, "")
+    print(f"Team: {team_name} -> {team}")
+except Exception as e:
+    print(f"Team lookup error: {e}")
 
 # Build card
 out = plot_best_pitch_card(

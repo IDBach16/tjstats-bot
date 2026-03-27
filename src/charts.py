@@ -831,14 +831,26 @@ def _fetch_headshot(player_id: int, accent: str = "#3a86ff") -> "np.ndarray | No
     if player_id in _headshot_cache:
         return _headshot_cache[player_id]
 
-    url = (
+    # Try multiple headshot URLs (img.mlb.com has DNS issues on some networks)
+    urls = [
+        f"https://img.mlbstatic.com/mlb-photos/image/upload/"
+        f"w_213,q_auto:best/v1/people/{player_id}/headshot/67/current",
+        f"https://securea.mlb.com/mlb/images/players/head_shot/{player_id}.jpg",
         f"https://img.mlb.com/mlb-photos/image/upload/"
         f"d_people:generic:headshot:67:current.png/"
-        f"w_213,q_auto:best/v1/people/{player_id}/headshot/67/current"
-    )
+        f"w_213,q_auto:best/v1/people/{player_id}/headshot/67/current",
+    ]
+    resp = None
+    for url in urls:
+        try:
+            resp = _requests.get(url, timeout=10, allow_redirects=True)
+            if resp.status_code == 200 and len(resp.content) > 500:
+                break
+        except Exception:
+            continue
     try:
-        resp = _requests.get(url, timeout=10)
-        resp.raise_for_status()
+        if resp is None or resp.status_code != 200:
+            raise ValueError("No headshot URL worked")
         from PIL import Image, ImageDraw
 
         img = Image.open(BytesIO(resp.content)).convert("RGBA")
