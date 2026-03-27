@@ -3971,7 +3971,7 @@ def plot_reds_game_summary(
 
         gs = gridspec.GridSpec(
             7, 9,
-            height_ratios=[2, 18, 8, 35, 30, 5, 2],
+            height_ratios=[2, 10, 8, 35, 30, 5, 2],
             width_ratios=[1, 7, 7, 5, 5, 5, 7, 7, 1],
             hspace=0.3, wspace=0.4,
         )
@@ -3981,48 +3981,21 @@ def plot_reds_game_summary(
             bax = fig.add_subplot(pos)
             bax.axis("off")
 
-        # ── Row 1: Header — headshot / bio / logo ────────────────────
-        ax_headshot = fig.add_subplot(gs[1, 1:3])
-        ax_bio = fig.add_subplot(gs[1, 3:7])
-        ax_logo = fig.add_subplot(gs[1, 7:8])
+        # ── Row 1: Header — headshot / bio / logo (figure-level) ────
+        # Hide the grid-based header axes
+        for pos in [gs[1, 1:3], gs[1, 3:7], gs[1, 7:8]]:
+            _ax = fig.add_subplot(pos)
+            _ax.axis("off")
 
-        # Headshot
-        ax_headshot.axis("off")
+        # Headshot (left side, fixed position)
         if player_id:
-            try:
-                hs_url = (
-                    f"https://img.mlbstatic.com/mlb-photos/image/upload/"
-                    f"d_people:generic:headshot:67:current.png/"
-                    f"w_640,q_auto:best/v1/people/{player_id}"
-                    f"/headshot/silo/current.png"
-                )
-                resp = _requests.get(hs_url, timeout=10)
-                resp.raise_for_status()
-                img = _PILImage.open(BytesIO(resp.content))
-                ax_headshot.set_xlim(0, 1.3)
-                ax_headshot.set_ylim(0, 1)
-                ax_headshot.imshow(img, extent=[0, 1, 0, 1], origin="upper")
-            except Exception:
-                log.debug("Headshot failed for %s", player_id)
+            hs_arr = _fetch_headshot(player_id, accent)
+            if hs_arr is not None:
+                ax_hs = fig.add_axes([0.06, 0.82, 0.09, 0.12])
+                ax_hs.imshow(hs_arr)
+                ax_hs.axis("off")
 
-        # Bio text
-        ax_bio.axis("off")
-        hand_str = f"{p_throws}HP"
-        ax_bio.text(0.5, 1.0, name, va="top", ha="center",
-                    fontsize=42, fontweight="bold")
-        ax_bio.text(0.5, 0.62, hand_str, va="top", ha="center",
-                    fontsize=22, color="#555555")
-        subtitle = "Game Summary"
-        if game_date and opponent:
-            subtitle = f"Game Summary \u2014 {game_date} vs {opponent}"
-        ax_bio.text(0.5, 0.38, subtitle,
-                    va="top", ha="center", fontsize=26, fontweight="bold")
-        ax_bio.text(0.5, 0.12, f"{season} MLB Season", va="top",
-                    ha="center", fontsize=20, fontstyle="italic",
-                    color="#666666")
-
-        # Team logo
-        ax_logo.axis("off")
+        # Team logo (right side, fixed position)
         slug = _LOGO_MAP.get(team)
         if slug:
             try:
@@ -4031,14 +4004,30 @@ def plot_reds_game_summary(
                     f"/i/teamlogos/mlb/500/scoreboard/{slug}.png"
                     f"&h=500&w=500"
                 )
-                resp = _requests.get(logo_url, timeout=10)
+                resp = _requests.get(logo_url, timeout=10, allow_redirects=True)
                 resp.raise_for_status()
-                img = _PILImage.open(BytesIO(resp.content))
-                ax_logo.set_xlim(0, 1.3)
-                ax_logo.set_ylim(0, 1)
-                ax_logo.imshow(img, extent=[0.3, 1.3, 0, 1], origin="upper")
+                logo_img = _PILImage.open(BytesIO(resp.content))
+                ax_logo = fig.add_axes([0.86, 0.82, 0.09, 0.12])
+                ax_logo.imshow(logo_img)
+                ax_logo.axis("off")
             except Exception:
                 log.debug("Logo failed for %s", team)
+
+        # Bio text (centered, using figure coordinates)
+        hand_str = f"{p_throws}HP"
+        fig.text(0.5, 0.94, name, va="top", ha="center",
+                 fontsize=42, fontweight="bold")
+        fig.text(0.5, 0.905, hand_str, va="top", ha="center",
+                 fontsize=22, color="#555555")
+        subtitle = "Game Summary"
+        if game_date and opponent:
+            subtitle = f"Game Summary \u2014 {game_date} vs {opponent}"
+        fig.text(0.5, 0.875, subtitle,
+                 va="top", ha="center", fontsize=26, fontweight="bold",
+                 color=accent)
+        fig.text(0.5, 0.845, f"{season} MLB Season", va="top",
+                 ha="center", fontsize=20, fontstyle="italic",
+                 color="#666666")
 
         # ── Row 2: Game Stats Table ──────────────────────────────────
         ax_season = fig.add_subplot(gs[2, 1:8])
@@ -4190,69 +4179,92 @@ def plot_reds_game_summary(
         for spine in ax_zone.spines.values():
             spine.set_color("#dddddd")
 
-        # ── Row 3 (center): Pitch location scatter plot ──────────────
-        ax_loc = fig.add_subplot(gs[3, 3:6])
+        # ── Row 3 (center): Spray Chart — Batted Balls Allowed ──────
+        import math
+        ax_spray = fig.add_subplot(gs[3, 3:6])
+        ax_spray.set_facecolor("#fafafa")
+        ax_spray.set_title("Batted Balls Allowed", fontsize=20, fontweight="bold")
 
+        _BIP_COLORS = {
+            "ground_ball": "#2ec4b6", "line_drive": "#3a86ff",
+            "fly_ball": "#ff6b6b", "popup": "#ffbe0b",
+        }
+        _HIT_EVENTS = {"single", "double", "triple", "home_run"}
+
+        # Draw field outline
+        from matplotlib.patches import Arc as _SprayArc, Wedge as _SprayWedge
+        grass = _SprayWedge((125.42, 199.27), 170, -135, -45,
+                            color="#1a3a1a", alpha=0.15, zorder=0)
+        ax_spray.add_patch(grass)
+        fence = _SprayArc((125.42, 199.27), 340, 340, angle=0,
+                          theta1=-135, theta2=-45,
+                          color="#333333", linewidth=1.5, alpha=0.4)
+        ax_spray.add_patch(fence)
+        # Foul lines
+        ax_spray.plot([125.42, 125.42 - 170 * math.cos(math.radians(45))],
+                      [199.27, 199.27 - 170 * math.sin(math.radians(45))],
+                      color="#999999", linewidth=0.8, alpha=0.3)
+        ax_spray.plot([125.42, 125.42 + 170 * math.cos(math.radians(45))],
+                      [199.27, 199.27 - 170 * math.sin(math.radians(45))],
+                      color="#999999", linewidth=0.8, alpha=0.3)
+
+        # Plot batted balls from PBP data
+        has_spray = False
         if (pbp_df is not None and not pbp_df.empty
-                and "plate_x" in pbp_df.columns and "plate_z" in pbp_df.columns):
-            loc_df = pbp_df.dropna(subset=["plate_x", "plate_z"]).copy()
-            loc_df["plate_x"] = pd.to_numeric(loc_df["plate_x"], errors="coerce")
-            loc_df["plate_z"] = pd.to_numeric(loc_df["plate_z"], errors="coerce")
-            loc_df = loc_df.dropna(subset=["plate_x", "plate_z"])
+                and "hc_x" in pbp_df.columns and "hc_y" in pbp_df.columns):
+            spray_df = pbp_df.dropna(subset=["hc_x", "hc_y"]).copy()
+            spray_df["hc_x"] = pd.to_numeric(spray_df["hc_x"], errors="coerce")
+            spray_df["hc_y"] = pd.to_numeric(spray_df["hc_y"], errors="coerce")
+            spray_df = spray_df.dropna(subset=["hc_x", "hc_y"])
 
-            # Strike zone boundaries
-            sz_top = 3.5
-            sz_bot = 1.5
-            if "sz_top" in loc_df.columns:
-                _st = pd.to_numeric(loc_df["sz_top"], errors="coerce").dropna()
-                if not _st.empty:
-                    sz_top = _st.mean()
-            if "sz_bot" in loc_df.columns:
-                _sb = pd.to_numeric(loc_df["sz_bot"], errors="coerce").dropna()
-                if not _sb.empty:
-                    sz_bot = _sb.mean()
+            # Filter to batted ball events
+            event_col = next((c for c in ["events", "event", "play_result"]
+                             if c in spray_df.columns), None)
+            bb_col = next((c for c in ["bb_type", "hit_type", "batted_ball_type"]
+                          if c in spray_df.columns), None)
 
-            # Draw strike zone rectangle
-            sz_rect = Rectangle((-0.83, sz_bot), 1.66, sz_top - sz_bot,
-                                linewidth=2, edgecolor="black",
-                                facecolor="none", zorder=1)
-            ax_loc.add_patch(sz_rect)
+            if len(spray_df) > 0:
+                has_spray = True
+                for _, srow in spray_df.iterrows():
+                    hx = srow["hc_x"]
+                    hy = srow["hc_y"]
+                    bb = str(srow.get(bb_col, "")) if bb_col else ""
+                    evt = str(srow.get(event_col, "")) if event_col else ""
+                    color = _BIP_COLORS.get(bb, "#888888")
+                    is_hit = evt in _HIT_EVENTS
+                    marker = "o" if is_hit else "x"
+                    size = 80 if is_hit else 50
+                    alpha = 0.9 if is_hit else 0.5
+                    ax_spray.scatter(hx, hy, c=color, marker=marker, s=size,
+                                   alpha=alpha, edgecolors="white" if is_hit else "none",
+                                   linewidths=0.8, zorder=4)
 
-            # Plot each pitch coloured by pitch type
-            pt_col = "pitch_type" if "pitch_type" in loc_df.columns else None
-            plotted_types = set()
-            if pt_col:
-                for pt_code in loc_df[pt_col].unique():
-                    if pt_code in _NOISE_PITCHES:
-                        continue
-                    subset = loc_df[loc_df[pt_col] == pt_code]
-                    color = _TJ_COLOUR.get(pt_code, "#888888")
-                    label = _TJ_NAME.get(pt_code, pt_code)
-                    ax_loc.scatter(subset["plate_x"], subset["plate_z"],
-                                   c=color, s=60, alpha=0.85,
-                                   edgecolors="black", linewidths=0.4,
-                                   label=label, zorder=2)
-                    plotted_types.add(pt_code)
-            else:
-                ax_loc.scatter(loc_df["plate_x"], loc_df["plate_z"],
-                               c="#3a86ff", s=60, alpha=0.85,
-                               edgecolors="black", linewidths=0.4,
-                               zorder=2)
-
-            ax_loc.set_xlim(-2.5, 2.5)
-            ax_loc.set_ylim(0, 5)
-            ax_loc.set_aspect("equal", adjustable="box")
-            ax_loc.set_title("Pitch Locations (Catcher's View)", fontsize=20,
-                             fontweight="bold")
-            ax_loc.set_xlabel("Horizontal Position (ft)", fontsize=14)
-            ax_loc.set_ylabel("Vertical Position (ft)", fontsize=14)
-            ax_loc.grid(True, alpha=0.2)
-            if plotted_types:
-                ax_loc.legend(loc="upper right", fontsize=10, framealpha=0.9)
+        if has_spray:
+            ax_spray.set_xlim(0, 250)
+            ax_spray.set_ylim(220, 20)
+            from matplotlib.lines import Line2D as _SprayLine
+            spray_legend = [
+                _SprayLine([0],[0],marker="o",color="none",markerfacecolor="#2ec4b6",
+                          markeredgecolor="white",markersize=6,label="GB"),
+                _SprayLine([0],[0],marker="o",color="none",markerfacecolor="#3a86ff",
+                          markeredgecolor="white",markersize=6,label="LD"),
+                _SprayLine([0],[0],marker="o",color="none",markerfacecolor="#ff6b6b",
+                          markeredgecolor="white",markersize=6,label="FB"),
+                _SprayLine([0],[0],marker="o",color="none",markerfacecolor="#ffbe0b",
+                          markeredgecolor="white",markersize=6,label="PU"),
+                _SprayLine([0],[0],marker="x",color="#888888",markersize=6,
+                          linestyle="none",label="Out"),
+            ]
+            ax_spray.legend(handles=spray_legend, loc="lower center", ncol=5,
+                          fontsize=8, framealpha=0.9, edgecolor="#dddddd",
+                          bbox_to_anchor=(0.5, -0.06))
         else:
-            ax_loc.axis("off")
-            ax_loc.text(0.5, 0.5, "No pitch location data",
-                        ha="center", va="center", fontsize=16)
+            ax_spray.text(0.5, 0.5, "No batted ball data",
+                         ha="center", va="center", fontsize=16,
+                         transform=ax_spray.transAxes)
+
+        ax_spray.set_aspect("equal")
+        ax_spray.axis("off")
 
         # ── Row 5: Color-coded pitch stats table ─────────────────────
         ax_table = fig.add_subplot(gs[4, 1:8])
