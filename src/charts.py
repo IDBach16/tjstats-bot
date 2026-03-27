@@ -3742,6 +3742,134 @@ def _pctile_color(p: float) -> str:
     return "#2c3e50"       # poor dark
 
 
+def plot_reds_matchup_header(
+    opponent_abbrev: str,
+    game_date: str,
+    starter_name: str,
+    num_pitchers: int,
+    score_line: str = "",
+    is_home: bool = True,
+) -> Path | None:
+    """Generate MLB-style split-screen matchup header with team colors + logos."""
+    try:
+        from io import BytesIO
+        from PIL import Image
+
+        _LOGO_SLUGS = {
+            "ARI": "ari", "ATL": "atl", "BAL": "bal", "BOS": "bos",
+            "CHC": "chc", "CWS": "chw", "CIN": "cin", "CLE": "cle",
+            "COL": "col", "DET": "det", "HOU": "hou", "KC": "kc",
+            "LAA": "laa", "LAD": "lad", "MIA": "mia", "MIL": "mil",
+            "MIN": "min", "NYM": "nym", "NYY": "nyy", "OAK": "oak",
+            "PHI": "phi", "PIT": "pit", "SD": "sd", "SF": "sf",
+            "SEA": "sea", "STL": "stl", "TB": "tb", "TEX": "tex",
+            "TOR": "tor", "WSH": "wsh",
+        }
+        _TEAM_BG_COLORS = {
+            "ARI": "#A71930", "ATL": "#13274F", "BAL": "#DF4601", "BOS": "#0C2340",
+            "CHC": "#0E3386", "CWS": "#27251F", "CIN": "#C6011F", "CLE": "#00385D",
+            "COL": "#333366", "DET": "#0C2340", "HOU": "#002D62", "KC": "#004687",
+            "LAA": "#862633", "LAD": "#005A9C", "MIA": "#00A3E0", "MIL": "#12284B",
+            "MIN": "#002B5C", "NYM": "#002D72", "NYY": "#0C2340", "OAK": "#003831",
+            "PHI": "#E81828", "PIT": "#27251F", "SD": "#2F241D", "SF": "#FD5A1E",
+            "SEA": "#0C2C56", "STL": "#C41E3A", "TB": "#092C5C", "TEX": "#003278",
+            "TOR": "#134A8E", "WSH": "#AB0003",
+        }
+        _TEAM_NAMES = {
+            "ARI": "D-backs", "ATL": "Braves", "BAL": "Orioles", "BOS": "Red Sox",
+            "CHC": "Cubs", "CWS": "White Sox", "CIN": "Reds", "CLE": "Guardians",
+            "COL": "Rockies", "DET": "Tigers", "HOU": "Astros", "KC": "Royals",
+            "LAA": "Angels", "LAD": "Dodgers", "MIA": "Marlins", "MIL": "Brewers",
+            "MIN": "Twins", "NYM": "Mets", "NYY": "Yankees", "OAK": "Athletics",
+            "PHI": "Phillies", "PIT": "Pirates", "SD": "Padres", "SF": "Giants",
+            "SEA": "Mariners", "STL": "Cardinals", "TB": "Rays", "TEX": "Rangers",
+            "TOR": "Blue Jays", "WSH": "Nationals",
+        }
+
+        def _get_logo(abbrev):
+            slug = _LOGO_SLUGS.get(abbrev, abbrev.lower())
+            url = (f"https://a.espncdn.com/combiner/i?img="
+                   f"/i/teamlogos/mlb/500/scoreboard/{slug}.png&h=500&w=500")
+            resp = _requests.get(url, timeout=10, allow_redirects=True)
+            return Image.open(BytesIO(resp.content)).convert("RGBA")
+
+        # Away team on left, home team on right (MLB style)
+        if is_home:
+            left_abbrev, right_abbrev = opponent_abbrev, "CIN"
+        else:
+            left_abbrev, right_abbrev = "CIN", opponent_abbrev
+
+        left_logo = _get_logo(left_abbrev)
+        right_logo = _get_logo(right_abbrev)
+        left_bg = _TEAM_BG_COLORS.get(left_abbrev, "#333333")
+        right_bg = _TEAM_BG_COLORS.get(right_abbrev, "#C6011F")
+        left_name = _TEAM_NAMES.get(left_abbrev, left_abbrev)
+        right_name = _TEAM_NAMES.get(right_abbrev, right_abbrev)
+
+        fig = plt.figure(figsize=(12, 6.3), dpi=150)
+        fig.set_facecolor("#000000")
+
+        # Left half background
+        ax_left_bg = fig.add_axes([0, 0, 0.5, 1])
+        ax_left_bg.set_xlim(0, 1); ax_left_bg.set_ylim(0, 1)
+        ax_left_bg.add_patch(Rectangle((0, 0), 1, 1, color=left_bg))
+        ax_left_bg.axis("off")
+
+        # Right half background
+        ax_right_bg = fig.add_axes([0.5, 0, 0.5, 1])
+        ax_right_bg.set_xlim(0, 1); ax_right_bg.set_ylim(0, 1)
+        ax_right_bg.add_patch(Rectangle((0, 0), 1, 1, color=right_bg))
+        ax_right_bg.axis("off")
+
+        # Logos
+        ax_ll = fig.add_axes([0.07, 0.25, 0.32, 0.55])
+        ax_ll.imshow(left_logo); ax_ll.axis("off")
+        ax_rl = fig.add_axes([0.58, 0.25, 0.32, 0.55])
+        ax_rl.imshow(right_logo); ax_rl.axis("off")
+
+        # Center divider line
+        import matplotlib.lines as mlines
+        divider = mlines.Line2D([0.5, 0.5], [0.08, 0.92],
+                                transform=fig.transFigure,
+                                color="#ffffff", linewidth=2, alpha=0.15)
+        fig.add_artist(divider)
+
+        # Team names
+        fig.text(0.25, 0.18, left_abbrev, fontsize=12, color="#ffffff",
+                 ha="center", va="center", alpha=0.6)
+        fig.text(0.25, 0.12, left_name.upper(), fontsize=18,
+                 fontweight="bold", color="#ffffff", ha="center", va="center")
+
+        fig.text(0.75, 0.18, right_abbrev, fontsize=12, color="#ffffff",
+                 ha="center", va="center", alpha=0.6)
+        fig.text(0.75, 0.12, right_name.upper(), fontsize=18,
+                 fontweight="bold", color="#ffffff", ha="center", va="center")
+
+        # Score line at bottom
+        if score_line:
+            fig.text(0.5, 0.04, score_line, fontsize=11, color="#ffffff",
+                     ha="center", va="center", alpha=0.7)
+
+        # Game date bottom right
+        fig.text(0.96, 0.04, game_date, fontsize=9, color="#ffffff",
+                 ha="right", va="center", alpha=0.5)
+
+        # Starter info bottom left
+        fig.text(0.04, 0.04, f"Starter: {starter_name}",
+                 fontsize=9, color="#ffffff", ha="left", va="center", alpha=0.5)
+
+        out = SCREENSHOTS_DIR / "reds_matchup_header.png"
+        fig.savefig(out, facecolor="#000000", dpi=150,
+                    bbox_inches="tight", pad_inches=0)
+        plt.close(fig)
+        log.info("Saved matchup header: %s", out)
+        return out
+
+    except Exception:
+        log.warning("plot_reds_matchup_header failed", exc_info=True)
+        return None
+
+
 def plot_reds_game_summary(
     name: str,
     game_stats: pd.Series,

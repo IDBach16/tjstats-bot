@@ -14,7 +14,7 @@ import requests
 
 from .base import ContentGenerator, PostContent
 from .. import pitch_profiler
-from ..charts import plot_reds_game_summary
+from ..charts import plot_reds_game_summary, plot_reds_matchup_header
 from ..config import MLB_SEASON, MLB_API_BASE
 from ..video_clips import get_game_strikeout_clip
 
@@ -257,38 +257,49 @@ class RedsSummaryGenerator(ContentGenerator):
                 tags=["reds_summary", "card_error"],
             )
 
-        # ── 6. Build thread ────────────────────────────────────────
-        # Main tweet: starter's card + recap text with all pitcher lines
-        all_summaries = "\n".join(c["summary"] for c in cards)
+        # ── 6. Generate matchup header image ────────────────────────
+        opp_abbrev = _TEAM_NAME_TO_ABBREV.get(game_info.get("opponent_full", ""), "")
+        if not opp_abbrev:
+            # Try to extract from short opponent name
+            for full_name, abbrev in _TEAM_NAME_TO_ABBREV.items():
+                if abbrev in opponent or opponent in full_name:
+                    opp_abbrev = abbrev
+                    break
+        if not opp_abbrev:
+            opp_abbrev = opponent.split()[-1][:3].upper()
+
+        starter_name = cards[0]["name"] if cards else "Unknown"
+        header_image = plot_reds_matchup_header(
+            opponent_abbrev=opp_abbrev,
+            game_date=display_date,
+            starter_name=starter_name,
+            num_pitchers=len(cards),
+            score_line=score_line,
+            is_home=game_info.get("is_home", True),
+        )
+
+        # ── 7. Build thread ────────────────────────────────────────
         main_text = (
-            f"Reds Pitching Recap \u2014 {display_date}\n"
+            f"Reds Pitching Summary Thread\n"
+            f"CIN vs {opponent} \u2014 {display_date}\n"
             f"{score_line}\n\n"
-            f"{all_summaries}\n\n"
+            f"Starter: {starter_name} | {len(cards)} pitchers used\n\n"
             f"@TJStats @PitchProfiler #Reds #MLB"
         )
 
-        # Truncate if over character limit (280 for tweet)
+        # Truncate if over character limit
         if len(main_text) > 275:
-            # Fall back to score + shorter pitcher lines
-            short_summaries = []
-            for c in cards:
-                parts = c["summary"].split(", ")
-                # Keep name + IP + K at minimum
-                short = ", ".join(parts[:3]) if len(parts) >= 3 else c["summary"]
-                short_summaries.append(short)
             main_text = (
-                f"Reds Pitching Recap \u2014 {display_date}\n"
-                f"{score_line}\n\n"
-                + "\n".join(short_summaries)
-                + "\n\n@TJStats @PitchProfiler #Reds #MLB"
+                f"Reds Pitching Summary\n"
+                f"{score_line} \u2014 {display_date}\n\n"
+                f"Starter: {starter_name}\n\n"
+                f"@TJStats @PitchProfiler #Reds #MLB"
             )
 
-        main_card = cards[0]
         replies: list[PostContent] = []
 
-        # Build replies for each subsequent pitcher
-        for card in cards[1:]:
-            # Card reply
+        # Build replies for each pitcher (card + video)
+        for card in cards:
             card_reply = PostContent(
                 text=card["summary"],
                 image_path=card["card_path"],
@@ -297,7 +308,6 @@ class RedsSummaryGenerator(ContentGenerator):
             )
             replies.append(card_reply)
 
-            # Video reply (if available)
             if card["video_path"]:
                 vid_reply = PostContent(
                     text=f"{card['name']} strikeout clip",
@@ -306,20 +316,10 @@ class RedsSummaryGenerator(ContentGenerator):
                 )
                 replies.append(vid_reply)
 
-        # Video for the starter (first pitcher) — added after all card replies
-        if main_card["video_path"]:
-            starter_vid = PostContent(
-                text=f"{main_card['name']} strikeout clip",
-                video_path=main_card["video_path"],
-                tags=["reds_summary", "video", main_card["name"]],
-            )
-            # Insert at position 0 so starter's video comes right after main tweet
-            replies.insert(0, starter_vid)
-
         return PostContent(
             text=main_text,
-            image_path=main_card["card_path"],
-            alt_text=f"Game summary card for {main_card['name']}",
+            image_path=header_image or (cards[0]["card_path"] if cards else None),
+            alt_text="Reds matchup header",
             tags=["reds_summary", date_str],
             replies=replies,
         )
@@ -389,6 +389,7 @@ class RedsSummaryGenerator(ContentGenerator):
         return {
             "game_pk": game_pk,
             "opponent": opponent_short,
+            "opponent_full": opponent,
             "is_home": is_home,
             "score_line": score_line,
             "away_score": away_score,
