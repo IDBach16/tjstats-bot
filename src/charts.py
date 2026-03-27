@@ -3971,9 +3971,9 @@ def plot_reds_game_summary(
 
         gs = gridspec.GridSpec(
             7, 9,
-            height_ratios=[2, 10, 8, 35, 30, 5, 2],
+            height_ratios=[1, 4, 8, 35, 30, 5, 1],
             width_ratios=[1, 7, 7, 5, 5, 5, 7, 7, 1],
-            hspace=0.3, wspace=0.4,
+            hspace=0.25, wspace=0.4,
         )
 
         # Border axes (hidden)
@@ -4245,19 +4245,19 @@ def plot_reds_game_summary(
             from matplotlib.lines import Line2D as _SprayLine
             spray_legend = [
                 _SprayLine([0],[0],marker="o",color="none",markerfacecolor="#2ec4b6",
-                          markeredgecolor="white",markersize=6,label="GB"),
+                          markeredgecolor="white",markersize=10,label="GB"),
                 _SprayLine([0],[0],marker="o",color="none",markerfacecolor="#3a86ff",
-                          markeredgecolor="white",markersize=6,label="LD"),
+                          markeredgecolor="white",markersize=10,label="LD"),
                 _SprayLine([0],[0],marker="o",color="none",markerfacecolor="#ff6b6b",
-                          markeredgecolor="white",markersize=6,label="FB"),
+                          markeredgecolor="white",markersize=10,label="FB"),
                 _SprayLine([0],[0],marker="o",color="none",markerfacecolor="#ffbe0b",
-                          markeredgecolor="white",markersize=6,label="PU"),
-                _SprayLine([0],[0],marker="x",color="#888888",markersize=6,
+                          markeredgecolor="white",markersize=10,label="PU"),
+                _SprayLine([0],[0],marker="x",color="#888888",markersize=10,
                           linestyle="none",label="Out"),
             ]
             ax_spray.legend(handles=spray_legend, loc="lower center", ncol=5,
-                          fontsize=8, framealpha=0.9, edgecolor="#dddddd",
-                          bbox_to_anchor=(0.5, -0.06))
+                          fontsize=12, framealpha=0.9, edgecolor="#dddddd",
+                          bbox_to_anchor=(0.5, -0.08))
         else:
             ax_spray.text(0.5, 0.5, "No batted ball data",
                          ha="center", va="center", fontsize=16,
