@@ -103,14 +103,13 @@ jobs:
               echo "slot=text" >> $GITHUB_OUTPUT
               echo "generator=" >> $GITHUB_OUTPUT
               echo "catchup=" >> $GITHUB_OUTPUT
-            elif [ "$HOUR" -ge 18 ]; then
-              # 1 PM EST (18:00 UTC) — biomechanics
+            elif [ "$HOUR" -ge 17 ]; then
+              # 1 PM EST (18:00 UTC) — biomechanics (widened window 17-19)
               echo "slot=biomechanics" >> $GITHUB_OUTPUT
               echo "generator=biomechanics_101" >> $GITHUB_OUTPUT
               echo "catchup=" >> $GITHUB_OUTPUT
             elif [ "$HOUR" -ge 16 ]; then
               # 11 AM EST (16:00 UTC) — catch-up window
-              # Check if the morning slots ran today by looking at post history
               echo "slot=catchup" >> $GITHUB_OUTPUT
               echo "generator=" >> $GITHUB_OUTPUT
               echo "catchup=true" >> $GITHUB_OUTPUT
