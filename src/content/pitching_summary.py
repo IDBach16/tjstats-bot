@@ -19,28 +19,30 @@ class PitchingSummaryGenerator(ContentGenerator):
     name = "pitching_summary"
 
     async def generate(self) -> PostContent:
-        # Try up to 3 players if card rendering fails (sparse early-season data)
-        for attempt in range(3):
-            player_info = pick_player()
-            name = player_info["name"]
-            team = player_info.get("team")
-            player_id = player_info.get("id")
-
-            season_df = pitch_profiler.get_season_pitchers()
+        # Try current season first, fall back to previous season if cards fail
+        image_path = None
+        for season_try in [MLB_SEASON, MLB_SEASON - 1]:
+            season_df = pitch_profiler.get_season_pitchers(season_try)
             if season_df.empty:
-                log.warning("No season pitcher data available")
-                return PostContent(text="")
+                continue
+            pitches_df = pitch_profiler.get_season_pitches(season_try)
 
-            pitches_df = pitch_profiler.get_season_pitches()
+            for attempt in range(3):
+                player_info = pick_player()
+                name = player_info["name"]
+                team = player_info.get("team")
+                player_id = player_info.get("id")
 
-            image_path = plot_pitching_summary(
-                name, season_df, pitches_df,
-                team=team, player_id=player_id,
-            )
+                image_path = plot_pitching_summary(
+                    name, season_df, pitches_df,
+                    team=team, player_id=player_id,
+                )
+                if image_path:
+                    break
+                log.warning("Pitching summary failed for %s (season=%d, attempt %d)",
+                            name, season_try, attempt + 1)
             if image_path:
                 break
-            log.warning("Pitching summary rendering failed for %s (attempt %d), trying another",
-                        name, attempt + 1)
 
         if not image_path:
             log.warning("All pitching summary attempts failed")
