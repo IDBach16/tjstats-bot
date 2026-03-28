@@ -167,10 +167,12 @@ Rules:
 - Do NOT use the word "elite" — find more creative ways to describe top performance
 - Reference specific stats to back up your take
 - Sound like a knowledgeable baseball person, not a robot
-- Keep it UNDER 260 characters total (strict Twitter limit)
+- Keep it UNDER 260 characters total
 - Do NOT use hashtags, emojis, or @ mentions
 - Do NOT use dashes or hyphens (use commas, periods, or other punctuation instead)
-- Do NOT start with the pitcher's name (the tweet already has it)"""
+- Do NOT start with the pitcher's name (the tweet already has it)
+- Do NOT include character counts or meta commentary about the text length
+- Output ONLY the analysis sentences, nothing else"""
 
     try:
         message = client.messages.create(
@@ -179,6 +181,10 @@ Rules:
             messages=[{"role": "user", "content": prompt}],
         )
         text = message.content[0].text.strip()
+        # Strip any trailing character count like "(259 characters)"
+        import re
+        text = re.sub(r'\s*\(\d+\s*characters?\)\s*$', '', text)
+        text = re.sub(r'\s*\d+\s*characters?\s*$', '', text)
         # Enforce character limit
         if len(text) > 270:
             text = text[:267] + "..."

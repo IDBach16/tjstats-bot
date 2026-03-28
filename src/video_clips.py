@@ -381,12 +381,17 @@ def get_pitcher_clip(pitcher_id: int, pitcher_name: str) -> Path | None:
     """
     _cleanup_old_clips()
 
+    # Try current season first, then previous season
     mp4_url, title = _search_filmroom(pitcher_id, MLB_SEASON)
+    season_used = MLB_SEASON
+    if not mp4_url:
+        mp4_url, title = _search_filmroom(pitcher_id, MLB_SEASON - 1)
+        season_used = MLB_SEASON - 1
     if not mp4_url:
         return None
 
     safe_name = pitcher_name.replace(" ", "_").lower()
-    output_path = CLIPS_DIR / f"{safe_name}_{MLB_SEASON}.mp4"
+    output_path = CLIPS_DIR / f"{safe_name}_{season_used}.mp4"
 
     if output_path.exists():
         log.info("Clip already downloaded: %s", output_path.name)
