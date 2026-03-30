@@ -19,30 +19,28 @@ class PitchingSummaryGenerator(ContentGenerator):
     name = "pitching_summary"
 
     async def generate(self) -> PostContent:
-        # Try current season first, fall back to previous season if cards fail
+        # Use current season only
         image_path = None
-        for season_try in [MLB_SEASON, MLB_SEASON - 1]:
-            season_df = pitch_profiler.get_season_pitchers(season_try)
-            if season_df.empty:
-                continue
-            pitches_df = pitch_profiler.get_season_pitches(season_try)
+        season_df = pitch_profiler.get_season_pitchers(MLB_SEASON)
+        if season_df.empty:
+            log.warning("No season data for %d", MLB_SEASON)
+            return PostContent(text="")
+        pitches_df = pitch_profiler.get_season_pitches(MLB_SEASON)
 
-            for attempt in range(3):
-                player_info = pick_player()
-                name = player_info["name"]
-                team = player_info.get("team")
-                player_id = player_info.get("id")
+        for attempt in range(3):
+            player_info = pick_player()
+            name = player_info["name"]
+            team = player_info.get("team")
+            player_id = player_info.get("id")
 
-                image_path = plot_pitching_summary(
-                    name, season_df, pitches_df,
-                    team=team, player_id=player_id,
-                )
-                if image_path:
-                    break
-                log.warning("Pitching summary failed for %s (season=%d, attempt %d)",
-                            name, season_try, attempt + 1)
+            image_path = plot_pitching_summary(
+                name, season_df, pitches_df,
+                team=team, player_id=player_id,
+            )
             if image_path:
                 break
+            log.warning("Pitching summary failed for %s (season=%d, attempt %d)",
+                        name, MLB_SEASON, attempt + 1)
 
         if not image_path:
             log.warning("All pitching summary attempts failed")
