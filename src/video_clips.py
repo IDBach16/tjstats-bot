@@ -333,28 +333,36 @@ def get_game_strikeout_clip(game_pk: int, pitcher_id: int, pitcher_name: str) ->
 
     # 4. Fetch mp4 URL from Baseball Savant sporty-videos
     sporty_url = f"https://baseballsavant.mlb.com/sporty-videos?playId={target_play_id}"
+    mp4_url = None
     try:
         resp = requests.get(sporty_url, timeout=15)
         resp.raise_for_status()
-        video_data = resp.json()
+        # Try JSON first (legacy format)
+        try:
+            video_data = resp.json()
+            if isinstance(video_data, list) and video_data:
+                for item in video_data:
+                    if isinstance(item, dict):
+                        mp4_url = item.get("video_url") or item.get("url")
+                    elif isinstance(item, str) and item.endswith(".mp4"):
+                        mp4_url = item
+                    if mp4_url:
+                        break
+            elif isinstance(video_data, dict):
+                mp4_url = video_data.get("video_url") or video_data.get("url")
+        except (ValueError, TypeError):
+            pass
+        # Fallback: parse mp4 URL from HTML response
+        if not mp4_url:
+            import re
+            mp4_matches = re.findall(r'(https?://[^\s"\']+\.mp4[^\s"\']*)', resp.text)
+            if mp4_matches:
+                mp4_url = mp4_matches[0]
+                log.info("Extracted mp4 URL from HTML for playId=%s", target_play_id)
     except Exception:
         log.warning("Failed to fetch sporty-videos for playId=%s", target_play_id,
                     exc_info=True)
         return None
-
-    # The response may be a list of video URLs or a dict with a video_url field
-    mp4_url = None
-    if isinstance(video_data, list) and video_data:
-        # Usually returns a list of dicts with "video_url" or just URLs
-        for item in video_data:
-            if isinstance(item, dict):
-                mp4_url = item.get("video_url") or item.get("url")
-            elif isinstance(item, str) and item.endswith(".mp4"):
-                mp4_url = item
-            if mp4_url:
-                break
-    elif isinstance(video_data, dict):
-        mp4_url = video_data.get("video_url") or video_data.get("url")
 
     if not mp4_url:
         log.info("No video URL returned for playId=%s", target_play_id)
