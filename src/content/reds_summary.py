@@ -331,7 +331,7 @@ class RedsSummaryGenerator(ContentGenerator):
 
             if card["video_path"]:
                 vid_reply = PostContent(
-                    text=f"{card['name']} strikeout clip",
+                    text=f"\U0001f3ac {card['name']} highlight",
                     video_path=card["video_path"],
                     tags=["reds_summary", "video", card["name"]],
                 )

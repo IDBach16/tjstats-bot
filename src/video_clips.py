@@ -299,37 +299,60 @@ def get_game_strikeout_clip(game_pk: int, pitcher_id: int, pitcher_name: str) ->
         log.info("No plays found in game %d", game_pk)
         return None
 
-    # 2. Find this pitcher's strikeouts
+    # 2. Find this pitcher's best play (prefer K, fallback to swinging strike, then any play)
     strikeout_play_ids: list[str] = []
+    swinging_strike_play_ids: list[str] = []
+    any_play_ids: list[str] = []
     for play in all_plays:
-        # Check if this play's pitcher matches
         matchup = play.get("matchup", {})
         play_pitcher = matchup.get("pitcher", {})
         if play_pitcher.get("id") != pitcher_id:
             continue
 
-        # Check if the result is a strikeout
         result = play.get("result", {})
         event = (result.get("event") or "").lower()
-        if "strikeout" not in event:
-            continue
-
-        # Get the playId from the last pitch event
         play_events = play.get("playEvents", [])
+
+        # Collect the last pitch's playId
+        last_play_id = None
         for pe in reversed(play_events):
-            play_id = pe.get("playId")
-            if play_id:
-                strikeout_play_ids.append(play_id)
+            pid = pe.get("playId")
+            if pid:
+                last_play_id = pid
                 break
 
-    if not strikeout_play_ids:
-        log.info("No strikeouts found for pitcher %d in game %d", pitcher_id, game_pk)
+        if not last_play_id:
+            continue
+
+        if "strikeout" in event:
+            strikeout_play_ids.append(last_play_id)
+        else:
+            any_play_ids.append(last_play_id)
+
+        # Also check for swinging strikes within the at-bat
+        for pe in play_events:
+            desc = (pe.get("details", {}).get("description") or "").lower()
+            pid = pe.get("playId")
+            if pid and "swinging strike" in desc:
+                swinging_strike_play_ids.append(pid)
+
+    # Pick best available: strikeout > swinging strike > any play with a playId
+    if strikeout_play_ids:
+        target_play_id = strikeout_play_ids[-1]
+        clip_type = "strikeout"
+    elif swinging_strike_play_ids:
+        target_play_id = swinging_strike_play_ids[-1]
+        clip_type = "swinging strike"
+    elif any_play_ids:
+        target_play_id = any_play_ids[-1]
+        clip_type = "pitch"
+    else:
+        log.info("No plays with video found for pitcher %d in game %d", pitcher_id, game_pk)
         return None
 
-    # 3. Pick the last strikeout (most dramatic / late-game)
-    target_play_id = strikeout_play_ids[-1]
-    log.info("Found %d strikeout(s) for %s; using playId=%s",
-             len(strikeout_play_ids), pitcher_name, target_play_id)
+    log.info("Found %s clip for %s (K=%d, SwStr=%d); playId=%s",
+             clip_type, pitcher_name, len(strikeout_play_ids),
+             len(swinging_strike_play_ids), target_play_id)
 
     # 4. Fetch mp4 URL from Baseball Savant sporty-videos
     sporty_url = f"https://baseballsavant.mlb.com/sporty-videos?playId={target_play_id}"
