@@ -106,33 +106,44 @@ class RedsSummaryGenerator(ContentGenerator):
             pbp_df = pitch_profiler.get_pbp_game(game_pk)
         except Exception:
             log.warning("Failed to fetch Pitch Profiler data", exc_info=True)
-            return PostContent(
-                text=f"Reds {score_line} vs {opponent} ({display_date})\n\n"
-                     f"Pitch data unavailable today.\n\n@TJStats @PitchProfiler #Reds #MLB",
-                tags=["reds_summary", "data_error"],
-            )
+            game_pitchers_df = pd.DataFrame()
+            game_pitches_df = pd.DataFrame()
+            pbp_df = pd.DataFrame()
 
         # ── 3. Filter to Reds pitchers for this game ───────────────
+        reds_pitchers = pd.DataFrame()
+        name_col = None
+        id_col = None
+        pitcher_ids: set[int] = set()
+
         gp_col = _find_col(game_pitchers_df, ["game_pk"])
         if gp_col is None:
             for c in game_pitchers_df.columns:
                 if "game" in c.lower() and "pk" in c.lower():
                     gp_col = c
                     break
-        if gp_col is None:
-            log.error("Cannot find game_pk column in game_pitchers. Columns: %s",
-                      list(game_pitchers_df.columns))
-            return PostContent(text="", tags=["reds_summary", "error"])
 
-        game_pitchers_df[gp_col] = pd.to_numeric(game_pitchers_df[gp_col], errors="coerce")
-        reds_pitchers = game_pitchers_df[game_pitchers_df[gp_col] == game_pk].copy()
+        if gp_col is not None and not game_pitchers_df.empty:
+            game_pitchers_df[gp_col] = pd.to_numeric(game_pitchers_df[gp_col], errors="coerce")
+            reds_pitchers = game_pitchers_df[game_pitchers_df[gp_col] == game_pk].copy()
 
-        # Filter by team
-        team_col = _find_col(reds_pitchers, ["team", "team_abbreviation", "team_abbrev"])
-        if team_col:
-            reds_pitchers = reds_pitchers[
-                reds_pitchers[team_col].str.upper() == REDS_TEAM_ABBREV
-            ]
+            team_col = _find_col(reds_pitchers, ["team", "team_abbreviation", "team_abbrev"])
+            if team_col:
+                reds_pitchers = reds_pitchers[
+                    reds_pitchers[team_col].str.upper() == REDS_TEAM_ABBREV
+                ]
+
+            name_col = _find_col(reds_pitchers, ["pitcher_name", "player_name", "name"])
+            id_col = _find_col(reds_pitchers, ["pitcher_id", "player_id", "mlbam_id"])
+
+            if id_col and not reds_pitchers.empty:
+                reds_pitchers[id_col] = pd.to_numeric(reds_pitchers[id_col], errors="coerce")
+                pitcher_ids = set(reds_pitchers[id_col].dropna().astype(int))
+
+        # ── 3b. Fallback: use MLB Stats API boxscore if Pitch Profiler is empty
+        if reds_pitchers.empty:
+            log.info("Pitch Profiler game data empty, falling back to MLB boxscore")
+            reds_pitchers, name_col, id_col, pitcher_ids = self._get_boxscore_pitchers(game_pk)
 
         if reds_pitchers.empty:
             log.warning("No Reds pitchers found for game_pk=%d", game_pk)
@@ -141,19 +152,6 @@ class RedsSummaryGenerator(ContentGenerator):
                      f"Pitcher data not yet available.\n\n@TJStats @PitchProfiler #Reds #MLB",
                 tags=["reds_summary", "no_pitchers"],
             )
-
-        name_col = _find_col(reds_pitchers, ["pitcher_name", "player_name", "name"])
-        id_col = _find_col(reds_pitchers, ["pitcher_id", "player_id", "mlbam_id"])
-
-        if name_col is None:
-            log.error("No name column found. Columns: %s", list(reds_pitchers.columns))
-            return PostContent(text="", tags=["reds_summary", "error"])
-
-        # Get pitcher IDs
-        pitcher_ids: set[int] = set()
-        if id_col:
-            reds_pitchers[id_col] = pd.to_numeric(reds_pitchers[id_col], errors="coerce")
-            pitcher_ids = set(reds_pitchers[id_col].dropna().astype(int))
 
         # ── 4. Filter game pitches to Reds pitchers ────────────────
         reds_pitches = game_pitches_df.copy()
@@ -323,6 +321,63 @@ class RedsSummaryGenerator(ContentGenerator):
             tags=["reds_summary", date_str],
             replies=replies,
         )
+
+    def _get_boxscore_pitchers(self, game_pk: int):
+        """Fetch Reds pitchers from MLB Stats API boxscore as a fallback."""
+        url = f"{MLB_API_BASE}/game/{game_pk}/boxscore"
+        try:
+            resp = requests.get(url, timeout=15)
+            resp.raise_for_status()
+            data = resp.json()
+        except Exception:
+            log.warning("MLB boxscore request failed for %d", game_pk, exc_info=True)
+            return pd.DataFrame(), None, None, set()
+
+        teams = data.get("teams", {})
+        # Find which side is the Reds
+        reds_side = None
+        for side in ("home", "away"):
+            team_data = teams.get(side, {})
+            team_id = team_data.get("team", {}).get("id")
+            if team_id == REDS_TEAM_ID:
+                reds_side = side
+                break
+
+        if not reds_side:
+            return pd.DataFrame(), None, None, set()
+
+        pitchers_ids = teams[reds_side].get("pitchers", [])
+        players = teams[reds_side].get("players", {})
+
+        rows = []
+        for pid in pitchers_ids:
+            player_data = players.get(f"ID{pid}", {})
+            if not player_data:
+                continue
+            person = player_data.get("person", {})
+            stats = player_data.get("stats", {}).get("pitching", {})
+            if not stats:
+                continue
+            rows.append({
+                "pitcher_name": person.get("fullName", "Unknown"),
+                "pitcher_id": pid,
+                "innings_pitched": stats.get("inningsPitched", "0"),
+                "earned_runs": stats.get("earnedRuns", 0),
+                "strike_outs": stats.get("strikeOuts", 0),
+                "walks": stats.get("baseOnBalls", 0),
+                "hits_allowed": stats.get("hits", 0),
+                "pitches_thrown": stats.get("pitchesThrown", 0),
+                "strikes": stats.get("strikes", 0),
+                "home_runs": stats.get("homeRuns", 0),
+            })
+
+        if not rows:
+            return pd.DataFrame(), None, None, set()
+
+        df = pd.DataFrame(rows)
+        pitcher_ids = set(df["pitcher_id"].astype(int))
+        log.info("Boxscore fallback: found %d Reds pitchers", len(df))
+        return df, "pitcher_name", "pitcher_id", pitcher_ids
 
     def _get_game_info(self, date_str: str) -> dict | None:
         """Check MLB Stats API schedule for a Reds game on the given date.
