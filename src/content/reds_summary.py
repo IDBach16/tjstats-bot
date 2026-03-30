@@ -80,9 +80,11 @@ class RedsSummaryGenerator(ContentGenerator):
     name = "reds_summary"
 
     async def generate(self) -> PostContent:
-        yesterday = date.today() - timedelta(days=1)
-        date_str = yesterday.strftime("%Y-%m-%d")
-        display_date = yesterday.strftime("%m/%d/%Y")
+        import os
+        override = os.environ.get("REDS_GAME_DATE")
+        target = date.fromisoformat(override) if override else date.today() - timedelta(days=1)
+        date_str = target.strftime("%Y-%m-%d")
+        display_date = target.strftime("%m/%d/%Y")
         log.info("Checking for Reds game on %s", date_str)
 
         # ── 1. Check MLB schedule for yesterday's game ─────────────

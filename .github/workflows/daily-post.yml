@@ -29,6 +29,11 @@ on:
           - text
           - evening
           - biomechanics
+      game_date:
+        description: 'Override game date for reds_summary (YYYY-MM-DD, leave empty for yesterday)'
+        required: false
+        default: ''
+        type: string
       generator:
         description: 'Override: run a specific generator by name (leave empty for schedule)'
         required: false
@@ -135,6 +140,7 @@ jobs:
           X_BEARER_TOKEN: ${{ secrets.X_BEARER_TOKEN }}
           PITCH_PROFILER_API_KEY: ${{ secrets.PITCH_PROFILER_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          REDS_GAME_DATE: ${{ inputs.game_date }}
         run: |
           if [ "${{ steps.slot.outputs.catchup }}" = "true" ]; then
             # Catch-up: check post history and run any missed morning slots
