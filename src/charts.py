@@ -3697,17 +3697,15 @@ _PITCH_TABLE_COLS = [
 # Game stats row — columns from get_game_pitchers
 _GAME_STATS = [
     ("innings_pitched", "$\\bf{IP}$", ".1f"),
-    ("hits", "$\\bf{H}$", ".0f"),
-    ("runs", "$\\bf{R}$", ".0f"),
-    ("earned_runs", "$\\bf{ER}$", ".0f"),
-    ("walks", "$\\bf{BB}$", ".0f"),
-    ("strike_outs", "$\\bf{K}$", ".0f"),
-    ("pitches_thrown", "$\\bf{NP}$", ".0f"),
-    ("strike_percentage", "$\\bf{Strk\\%}$", ".1%"),
+    ("batters_faced", "$\\bf{PA}$", ".0f"),
+    ("whip", "$\\bf{WHIP}$", ".2f"),
     ("era", "$\\bf{ERA}$", ".2f"),
     ("fip", "$\\bf{FIP}$", ".2f"),
+    ("strike_out_percentage", "$\\bf{K\\%}$", ".1%"),
+    ("walk_percentage", "$\\bf{BB\\%}$", ".1%"),
     ("whiff_rate", "$\\bf{Whiff\\%}$", ".1%"),
     ("stuff_plus", "$\\bf{Stf+}$", ".0f"),
+    ("pitching_plus", "$\\bf{Pit+}$", ".0f"),
 ]
 
 # Logo map for ESPN CDN

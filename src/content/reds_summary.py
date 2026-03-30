@@ -196,6 +196,13 @@ class RedsSummaryGenerator(ContentGenerator):
 
             log.info("Generating card for %s (pid=%s)", pname, pid)
 
+            # Merge season stats into player_row for the card header
+            if pid:
+                season_stats = self._get_season_stats(pid, MLB_SEASON)
+                if season_stats:
+                    for k, v in season_stats.items():
+                        player_row[k] = v
+
             # Get this pitcher's pitch-type data
             if game_pitch_id_col and pid and not reds_pitches.empty:
                 pitcher_pitches = reds_pitches[reds_pitches[game_pitch_id_col] == pid]
@@ -337,6 +344,46 @@ class RedsSummaryGenerator(ContentGenerator):
             tags=["reds_summary", date_str],
             replies=replies,
         )
+
+    def _get_season_stats(self, pitcher_id: int, season: int) -> dict:
+        """Fetch season pitching stats from MLB Stats API for the header row."""
+        url = (f"{MLB_API_BASE}/people/{pitcher_id}/stats"
+               f"?stats=season&season={season}&group=pitching")
+        try:
+            resp = requests.get(url, timeout=10)
+            resp.raise_for_status()
+            data = resp.json()
+        except Exception:
+            log.debug("MLB season stats failed for %d", pitcher_id)
+            return {}
+
+        for split_group in data.get("stats", []):
+            for split in split_group.get("splits", []):
+                s = split.get("stat", {})
+                if not s:
+                    continue
+                ip = float(s.get("inningsPitched", "0") or "0")
+                bf = int(s.get("battersFaced", 0) or 0)
+                k = int(s.get("strikeOuts", 0) or 0)
+                bb = int(s.get("baseOnBalls", 0) or 0)
+                hr = int(s.get("homeRuns", 0) or 0)
+                er = int(s.get("earnedRuns", 0) or 0)
+                # Calculate percentages and FIP
+                k_pct = k / bf if bf > 0 else 0
+                bb_pct = bb / bf if bf > 0 else 0
+                # FIP = ((13*HR + 3*BB - 2*K) / IP) + 3.2
+                fip = ((13 * hr + 3 * bb - 2 * k) / ip + 3.2) if ip > 0 else 0
+                return {
+                    "innings_pitched": ip,
+                    "batters_faced": bf,
+                    "whip": float(s.get("whip", "0") or "0"),
+                    "era": float(s.get("era", "0") or "0"),
+                    "fip": fip,
+                    "strike_out_percentage": k_pct,
+                    "walk_percentage": bb_pct,
+                    "p_throws": s.get("pitchHand", {}).get("code", ""),
+                }
+        return {}
 
     @staticmethod
     def _map_pitch_desc(desc: str) -> str:
