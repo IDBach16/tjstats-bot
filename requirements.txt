@@ -7,3 +7,4 @@ python-dotenv>=1.0
 matplotlib>=3.8
 numpy>=1.26
 anthropic>=0.40
+scikit-learn>=1.3
