@@ -175,12 +175,15 @@ class RedsSummaryGenerator(ContentGenerator):
             reds_pitches = reds_pitches[reds_pitches[game_pitch_id_col].isin(pitcher_ids)]
 
         # ── 4b. Fallback: build pitch data from MLB play-by-play if empty
+        _mlb_raw_pbp = pd.DataFrame()
         if reds_pitches.empty and pitcher_ids:
             log.info("No Pitch Profiler pitch data, falling back to MLB play-by-play")
+            _mlb_raw_pbp = self._fetch_mlb_pbp_raw(game_pk, pitcher_ids)
             reds_pitches = self._get_pbp_pitches(game_pk, pitcher_ids)
             if not reds_pitches.empty:
                 game_pitch_id_col = "pitcher_id"
-                log.info("MLB PBP fallback: %d pitch rows", len(reds_pitches))
+                log.info("MLB PBP fallback: %d pitch rows, %d raw PBP rows",
+                         len(reds_pitches), len(_mlb_raw_pbp))
 
         log.info("Reds pitcher rows: %d, pitch rows: %d", len(reds_pitchers), len(reds_pitches))
 
@@ -218,6 +221,9 @@ class RedsSummaryGenerator(ContentGenerator):
                                 pname.split()[-1], case=False, na=False
                             )
                         ]
+            # Fallback: use raw MLB PBP data with plate coordinates
+            if pitcher_pbp.empty and not _mlb_raw_pbp.empty and pid:
+                pitcher_pbp = _mlb_raw_pbp[_mlb_raw_pbp["pitcher_id"] == pid]
 
             card_path = plot_reds_game_summary(
                 name=pname,
@@ -332,67 +338,35 @@ class RedsSummaryGenerator(ContentGenerator):
             replies=replies,
         )
 
+    @staticmethod
+    def _map_pitch_desc(desc: str) -> str:
+        """Map MLB API pitch description to the format charts.py expects."""
+        _MAP = {
+            "Called Strike": "called_strike",
+            "Swinging Strike": "swinging_strike",
+            "Swinging Strike (Blocked)": "swinging_strike_blocked",
+            "Foul": "foul",
+            "Foul Tip": "foul_tip",
+            "Foul Bunt": "foul",
+            "Ball": "ball",
+            "Ball In Dirt": "ball",
+            "Hit By Pitch": "ball",
+            "In play, out(s)": "hit_into_play",
+            "In play, no out": "hit_into_play_no_out",
+            "In play, run(s)": "hit_into_play_score",
+        }
+        return _MAP.get(desc, desc.lower().replace(" ", "_"))
+
     def _get_pbp_pitches(self, game_pk: int, pitcher_ids: set[int]) -> pd.DataFrame:
         """Build pitch-type summary from MLB Stats API play-by-play."""
-        url = f"{MLB_API_BASE}/game/{game_pk}/playByPlay"
-        try:
-            resp = requests.get(url, timeout=15)
-            resp.raise_for_status()
-            data = resp.json()
-        except Exception:
-            log.warning("MLB PBP request failed for %d", game_pk, exc_info=True)
+        raw = self._fetch_mlb_pbp_raw(game_pk, pitcher_ids)
+        if raw.empty:
             return pd.DataFrame()
 
-        # Pitch type code -> name mapping
-        _PT_NAMES = {
-            "FF": "4-Seam Fastball", "SI": "Sinker", "FC": "Cutter",
-            "SL": "Slider", "CU": "Curveball", "CH": "Changeup",
-            "FS": "Splitter", "KC": "Knuckle Curve", "ST": "Sweeper",
-            "SV": "Slurve", "KN": "Knuckleball", "EP": "Eephus",
-            "SC": "Screwball",
-        }
-
-        rows = []
-        for play in data.get("allPlays", []):
-            pitcher_id = play.get("matchup", {}).get("pitcher", {}).get("id")
-            if pitcher_id not in pitcher_ids:
-                continue
-            for ev in play.get("playEvents", []):
-                if not ev.get("isPitch"):
-                    continue
-                pitch_data = ev.get("pitchData", {})
-                details = ev.get("details", {})
-                pt_code = details.get("type", {}).get("code", "")
-                if not pt_code or pt_code in ("PO", "IN", "AB", "AS", "UN", "XX", "NP"):
-                    continue
-                coords = pitch_data.get("coordinates", {})
-                breaks = pitch_data.get("breaks", {})
-                rows.append({
-                    "pitcher_id": pitcher_id,
-                    "pitch_type": pt_code,
-                    "pitch_type_name": _PT_NAMES.get(pt_code, pt_code),
-                    "velocity": pitch_data.get("startSpeed"),
-                    "ivb": breaks.get("breakVerticalInduced"),
-                    "hb": breaks.get("breakHorizontal"),
-                    "spin_rate": breaks.get("spinRate"),
-                    "px": coords.get("pX"),
-                    "pz": coords.get("pZ"),
-                    "description": details.get("description", ""),
-                    "is_strike": details.get("isStrike", False),
-                    "is_ball": details.get("isBall", False),
-                    "is_in_play": details.get("isInPlay", False),
-                })
-
-        if not rows:
-            return pd.DataFrame()
-
-        df = pd.DataFrame(rows)
         # Build aggregated pitch-type stats per pitcher
-        # The card expects columns: pitch_type, velocity, ivb, hb, spin_rate,
-        # percentage_thrown, whiff_rate, chase_percentage, stuff_plus, woba, run_value_per_100_pitches
         result_rows = []
         for pid in pitcher_ids:
-            pdf = df[df["pitcher_id"] == pid]
+            pdf = raw[raw["pitcher_id"] == pid]
             if pdf.empty:
                 continue
             total = len(pdf)
@@ -421,6 +395,59 @@ class RedsSummaryGenerator(ContentGenerator):
                 })
 
         return pd.DataFrame(result_rows) if result_rows else pd.DataFrame()
+
+    def _fetch_mlb_pbp_raw(self, game_pk: int, pitcher_ids: set[int]) -> pd.DataFrame:
+        """Fetch raw pitch-by-pitch data from MLB Stats API with coordinates."""
+        url = f"{MLB_API_BASE}/game/{game_pk}/playByPlay"
+        try:
+            resp = requests.get(url, timeout=15)
+            resp.raise_for_status()
+            data = resp.json()
+        except Exception:
+            log.warning("MLB PBP request failed for %d", game_pk, exc_info=True)
+            return pd.DataFrame()
+
+        rows = []
+        for play in data.get("allPlays", []):
+            pitcher_id = play.get("matchup", {}).get("pitcher", {}).get("id")
+            if pitcher_id not in pitcher_ids:
+                continue
+            result = play.get("result", {})
+            hit_data = play.get("hitData", {})
+            for ev in play.get("playEvents", []):
+                if not ev.get("isPitch"):
+                    continue
+                pitch_data = ev.get("pitchData", {})
+                details = ev.get("details", {})
+                pt_code = details.get("type", {}).get("code", "")
+                if not pt_code or pt_code in ("PO", "IN", "AB", "AS", "UN", "XX", "NP"):
+                    continue
+                coords = pitch_data.get("coordinates", {})
+                breaks = pitch_data.get("breaks", {})
+                hit_coords = ev.get("hitData", {}) or {}
+                row = {
+                    "pitcher_id": pitcher_id,
+                    "pitch_type": pt_code,
+                    "velocity": pitch_data.get("startSpeed"),
+                    "ivb": breaks.get("breakVerticalInduced"),
+                    "hb": breaks.get("breakHorizontal"),
+                    "spin_rate": breaks.get("spinRate"),
+                    "plate_x": coords.get("pX"),
+                    "plate_z": coords.get("pZ"),
+                    "description": self._map_pitch_desc(details.get("description", "")),
+                    "is_strike": details.get("isStrike", False),
+                    "is_ball": details.get("isBall", False),
+                    "is_in_play": details.get("isInPlay", False),
+                }
+                # Add hit coordinates for spray chart (only on last pitch of BIP)
+                if ev.get("isInPlay") and hit_data:
+                    row["hc_x"] = hit_data.get("coordinates", {}).get("coordX")
+                    row["hc_y"] = hit_data.get("coordinates", {}).get("coordY")
+                    row["bb_type"] = (hit_data.get("trajectory", "") or "").lower().replace(" ", "_")
+                    row["events"] = (result.get("event", "") or "").lower().replace(" ", "_")
+                rows.append(row)
+
+        return pd.DataFrame(rows) if rows else pd.DataFrame()
 
     def _get_boxscore_pitchers(self, game_pk: int):
         """Fetch Reds pitchers from MLB Stats API boxscore as a fallback."""
@@ -458,17 +485,22 @@ class RedsSummaryGenerator(ContentGenerator):
             stats = player_data.get("stats", {}).get("pitching", {})
             if not stats:
                 continue
+            pitches_thrown = stats.get("pitchesThrown", 0)
+            strikes = stats.get("strikes", 0)
+            strk_pct = strikes / pitches_thrown if pitches_thrown > 0 else 0
             rows.append({
                 "pitcher_name": person.get("fullName", "Unknown"),
                 "pitcher_id": pid,
-                "innings_pitched": stats.get("inningsPitched", "0"),
+                "innings_pitched": float(stats.get("inningsPitched", "0")),
+                "hits": stats.get("hits", 0),
+                "runs": stats.get("runs", 0),
                 "earned_runs": stats.get("earnedRuns", 0),
                 "strike_outs": stats.get("strikeOuts", 0),
                 "walks": stats.get("baseOnBalls", 0),
-                "hits_allowed": stats.get("hits", 0),
-                "pitches_thrown": stats.get("pitchesThrown", 0),
-                "strikes": stats.get("strikes", 0),
+                "pitches_thrown": pitches_thrown,
+                "strike_percentage": strk_pct,
                 "home_runs": stats.get("homeRuns", 0),
+                "p_throws": person.get("pitchHand", {}).get("code", "R"),
             })
 
         if not rows:
