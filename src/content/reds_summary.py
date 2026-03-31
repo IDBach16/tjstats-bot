@@ -419,13 +419,23 @@ class RedsSummaryGenerator(ContentGenerator):
             total = len(pdf)
             for pt, grp in pdf.groupby("pitch_type"):
                 n = len(grp)
-                swings = grp["description"].str.contains(
-                    "Swinging|Foul|In play", case=False, na=False
-                ).sum()
-                whiffs = grp["description"].str.contains(
-                    "Swinging Strike|Missed Bunt", case=False, na=False
-                ).sum()
+                swing_descs = ["swinging_strike", "swinging_strike_blocked",
+                               "foul", "foul_tip", "hit_into_play",
+                               "hit_into_play_no_out", "hit_into_play_score"]
+                whiff_descs = ["swinging_strike", "swinging_strike_blocked"]
+                swings = grp["description"].isin(swing_descs).sum()
+                whiffs = grp["description"].isin(whiff_descs).sum()
                 whiff_rate = whiffs / swings if swings > 0 else 0
+
+                # Chase%: swings on pitches outside zone
+                px = pd.to_numeric(grp.get("plate_x", pd.Series()), errors="coerce")
+                pz = pd.to_numeric(grp.get("plate_z", pd.Series()), errors="coerce")
+                in_zone = (px.abs() <= 0.83) & (pz >= 1.5) & (pz <= 3.5)
+                out_zone = (~in_zone) & px.notna() & pz.notna()
+                out_swings = grp.loc[out_zone.values, "description"].isin(swing_descs).sum() if out_zone.any() else 0
+                out_total = out_zone.sum()
+                chase_pct = out_swings / out_total if out_total > 0 else 0
+
                 result_rows.append({
                     "pitcher_id": pid,
                     "pitch_type": pt,
@@ -435,7 +445,7 @@ class RedsSummaryGenerator(ContentGenerator):
                     "spin_rate": grp["spin_rate"].dropna().mean(),
                     "percentage_thrown": n / total,
                     "whiff_rate": whiff_rate,
-                    "chase_percentage": 0,
+                    "chase_percentage": chase_pct,
                     "stuff_plus": None,
                     "woba": None,
                     "run_value_per_100_pitches": None,
@@ -472,6 +482,8 @@ class RedsSummaryGenerator(ContentGenerator):
                 coords = pitch_data.get("coordinates", {})
                 breaks = pitch_data.get("breaks", {})
                 hit_coords = ev.get("hitData", {}) or {}
+                matchup = play.get("matchup", {})
+                bat_side = matchup.get("batSide", {}).get("code", "")
                 row = {
                     "pitcher_id": pitcher_id,
                     "pitch_type": pt_code,
@@ -485,6 +497,7 @@ class RedsSummaryGenerator(ContentGenerator):
                     "is_strike": details.get("isStrike", False),
                     "is_ball": details.get("isBall", False),
                     "is_in_play": details.get("isInPlay", False),
+                    "bat_side": bat_side,
                 }
                 # Add hit coordinates for spray chart
                 is_bip = (ev.get("isInPlay")

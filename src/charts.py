@@ -3963,14 +3963,14 @@ def plot_reds_game_summary(
                 ).reset_index(drop=True)
 
         # ── Figure + GridSpec ────────────────────────────────────────
-        # 7 rows: border, header, stats, movement+locations+pctile, pitch table, footer, border
+        # 7 rows: border, header, stats, movement+RHH+LHH, pitch table, footer, border
         fig = plt.figure(figsize=(20, 22), dpi=150)
         fig.set_facecolor("white")
 
         gs = gridspec.GridSpec(
             7, 9,
             height_ratios=[1, 4, 8, 35, 30, 5, 1],
-            width_ratios=[1, 6, 6, 5, 7, 5, 6, 6, 1],
+            width_ratios=[1, 7, 7, 7, 7, 7, 7, 7, 1],
             hspace=0.25, wspace=0.4,
         )
 
@@ -4058,8 +4058,9 @@ def plot_reds_game_summary(
                     cell.set_facecolor("#f0f0f0")
                     cell.set_text_props(fontweight="bold")
 
-        # ── Row 3: Movement (LEFT) + Locations (CENTER) + Percentiles (RIGHT)
-        ax_break = fig.add_subplot(gs[3, 1:3])
+        # ── Row 3: Movement (LEFT) + vs RHH (CENTER) + vs LHH (RIGHT) — equal sizes
+        _row3 = gridspec.GridSpecFromSubplotSpec(1, 3, subplot_spec=gs[3, 1:8], wspace=0.35)
+        ax_break = fig.add_subplot(_row3[0, 0])
 
         if not pitch_rows.empty and "hb" in pitch_rows.columns and "ivb" in pitch_rows.columns:
             for _, row in pitch_rows.iterrows():
@@ -4120,142 +4121,85 @@ def plot_reds_game_summary(
             ax_break.text(0.5, 0.5, "No movement data",
                           ha="center", va="center", fontsize=16)
 
-        # ── Row 3 (right): Strike Zone from PBP data ──────────────
-        ax_zone = fig.add_subplot(gs[3, 6:8])
-        ax_zone.set_facecolor("#fafafa")
-        ax_zone.set_title("Strike Zone", fontsize=20, fontweight="bold")
+        # ── Row 3 (center + right): vs RHH / vs LHH Pitch Location ──
 
-        _RESULT_COLORS_ZONE = {
+        # Draw RHH / LHH pitch location scatter plots
+        _ZONE_COLORS = {
             "swinging_strike": "#ff6b6b", "swinging_strike_blocked": "#ff6b6b",
             "called_strike": "#3a86ff", "foul": "#ffbe0b", "foul_tip": "#ffbe0b",
             "ball": "#8b949e", "hit_into_play": "#2ec4b6",
             "hit_into_play_no_out": "#2ec4b6", "hit_into_play_score": "#2ec4b6",
         }
 
-        zone_rect = Rectangle((-0.83, 1.5), 1.66, 2.0, linewidth=2.5,
-                               edgecolor="#1a1a2e", facecolor="none", zorder=3)
-        ax_zone.add_patch(zone_rect)
-        for zx in [-0.277, 0.277]:
-            ax_zone.plot([zx, zx], [1.5, 3.5], color="#cccccc", linewidth=0.8, alpha=0.5)
-        for zy in [2.167, 2.833]:
-            ax_zone.plot([-0.83, 0.83], [zy, zy], color="#cccccc", linewidth=0.8, alpha=0.5)
+        def _draw_zone_dots(ax_zd, zd_df, title_zd):
+            ax_zd.set_facecolor("#fafafa")
+            ax_zd.set_title(title_zd, fontsize=18, fontweight="bold", pad=8)
+            # Strike zone
+            zr = Rectangle((-0.83, 1.5), 1.66, 2.0, linewidth=2.5,
+                            edgecolor="#1a1a2e", facecolor="none", zorder=3)
+            ax_zd.add_patch(zr)
+            for zx in [-0.277, 0.277]:
+                ax_zd.plot([zx, zx], [1.5, 3.5], color="#cccccc", linewidth=0.8, alpha=0.5)
+            for zy in [2.167, 2.833]:
+                ax_zd.plot([-0.83, 0.83], [zy, zy], color="#cccccc", linewidth=0.8, alpha=0.5)
 
-        if (pbp_df is not None and not pbp_df.empty
-                and "plate_x" in pbp_df.columns and "plate_z" in pbp_df.columns):
-            zdf = pbp_df.dropna(subset=["plate_x", "plate_z"]).copy()
-            zdf["plate_x"] = pd.to_numeric(zdf["plate_x"], errors="coerce")
-            zdf["plate_z"] = pd.to_numeric(zdf["plate_z"], errors="coerce")
-            zdf = zdf.dropna(subset=["plate_x", "plate_z"])
+            if zd_df is not None and len(zd_df) > 0 and "plate_x" in zd_df.columns:
+                zd_x = pd.to_numeric(zd_df["plate_x"], errors="coerce")
+                zd_z = pd.to_numeric(zd_df["plate_z"], errors="coerce")
+                valid = zd_x.notna() & zd_z.notna()
+                for idx_r in zd_df.index[valid]:
+                    row_z = zd_df.loc[idx_r]
+                    desc_z = str(row_z.get("description", ""))
+                    c_z = _ZONE_COLORS.get(desc_z, "#888888")
+                    ax_zd.scatter(float(zd_x.loc[idx_r]), float(zd_z.loc[idx_r]),
+                                 c=c_z, s=70, alpha=0.8,
+                                 edgecolors="white", linewidths=0.6, zorder=4)
+                ax_zd.text(0, -0.3, f"n={valid.sum()}", ha="center", fontsize=10,
+                          color="#888888")
+            else:
+                ax_zd.text(0, 2.5, "No data", ha="center", va="center", fontsize=14,
+                          color="#888888")
 
-            for _, zrow in zdf.iterrows():
-                desc = str(zrow.get("description", zrow.get("pitch_result", "")))
-                zcolor = _RESULT_COLORS_ZONE.get(desc, "#888888")
-                ax_zone.scatter(zrow["plate_x"], zrow["plate_z"], c=zcolor, s=80,
-                               edgecolors="white", linewidths=0.8, alpha=0.8, zorder=4)
+            ax_zd.set_xlim(-2.5, 2.5)
+            ax_zd.set_ylim(-0.5, 5.0)
+            ax_zd.set_aspect("equal")
+            ax_zd.set_xlabel("Plate Side (ft)", fontsize=10)
+            ax_zd.set_ylabel("Height (ft)", fontsize=10)
+            ax_zd.tick_params(labelsize=8)
+            for sp in ax_zd.spines.values():
+                sp.set_color("#dddddd")
 
-            from matplotlib.lines import Line2D as _ZLine
-            zone_legend = [
-                _ZLine([0],[0],marker="o",color="none",markerfacecolor="#ff6b6b",
-                       markeredgecolor="white",markersize=7,label="Whiff"),
-                _ZLine([0],[0],marker="o",color="none",markerfacecolor="#3a86ff",
-                       markeredgecolor="white",markersize=7,label="Called K"),
-                _ZLine([0],[0],marker="o",color="none",markerfacecolor="#8b949e",
-                       markeredgecolor="white",markersize=7,label="Ball"),
-                _ZLine([0],[0],marker="o",color="none",markerfacecolor="#2ec4b6",
-                       markeredgecolor="white",markersize=7,label="In Play"),
-            ]
-            ax_zone.legend(handles=zone_legend, loc="lower center", ncol=2,
-                          fontsize=8, framealpha=0.9, edgecolor="#dddddd",
-                          bbox_to_anchor=(0.5, -0.08))
+        _rhh_df = pd.DataFrame()
+        _lhh_df = pd.DataFrame()
+        if pbp_df is not None and not pbp_df.empty and "bat_side" in pbp_df.columns:
+            _rhh_df = pbp_df[pbp_df["bat_side"] == "R"]
+            _lhh_df = pbp_df[pbp_df["bat_side"] == "L"]
+        elif pbp_df is not None and not pbp_df.empty:
+            _rhh_df = pbp_df
 
-        ax_zone.set_xlim(-2.5, 2.5)
-        ax_zone.set_ylim(-0.5, 5.0)
-        ax_zone.set_aspect("equal")
-        ax_zone.set_xlabel("Plate Side (ft)", fontsize=12)
-        ax_zone.set_ylabel("Height (ft)", fontsize=12)
-        ax_zone.tick_params(labelsize=10)
-        for spine in ax_zone.spines.values():
-            spine.set_color("#dddddd")
+        ax_rhh = fig.add_subplot(_row3[0, 1])
+        _draw_zone_dots(ax_rhh, _rhh_df if len(_rhh_df) > 0 else pbp_df,
+                       f"vs RHH ({len(_rhh_df)})" if len(_rhh_df) > 0 else "Pitch Locations")
 
-        # ── Row 3 (center): Spray Chart — Batted Balls Allowed (sportypy) ──
-        ax_spray = fig.add_subplot(gs[3, 3:6])
+        ax_lhh = fig.add_subplot(_row3[0, 2])
+        _draw_zone_dots(ax_lhh, _lhh_df if len(_lhh_df) > 0 else None,
+                       f"vs LHH ({len(_lhh_df)})" if len(_lhh_df) > 0 else "vs LHH")
 
-        _BIP_COLORS = {
-            "ground_ball": "#2ec4b6", "line_drive": "#3a86ff",
-            "fly_ball": "#ff6b6b", "popup": "#ffbe0b",
-        }
-        _HIT_EVENTS = {"single", "double", "triple", "home_run"}
-
-        # Draw professional field using sportypy
-        try:
-            from sportypy.surfaces.baseball import MLBField
-            _mlb_field = MLBField()
-            _mlb_field.draw(ax=ax_spray)
-        except Exception:
-            pass
-
-        ax_spray.set_facecolor("#0f0f1e")
-        ax_spray.set_title("Batted Balls Allowed", fontsize=20, fontweight="bold",
-                           color="#1a1a2e", pad=10)
-        ax_spray.set_xlim(-250, 250)
-        ax_spray.set_ylim(-30, 400)
-
-        # Plot batted balls from PBP data
-        has_spray = False
-        if (pbp_df is not None and not pbp_df.empty
-                and "hc_x" in pbp_df.columns and "hc_y" in pbp_df.columns):
-            spray_df = pbp_df.dropna(subset=["hc_x", "hc_y"]).copy()
-            spray_df["hc_x"] = pd.to_numeric(spray_df["hc_x"], errors="coerce")
-            spray_df["hc_y"] = pd.to_numeric(spray_df["hc_y"], errors="coerce")
-            spray_df = spray_df.dropna(subset=["hc_x", "hc_y"])
-
-            event_col = next((c for c in ["events", "event", "play_result"]
-                             if c in spray_df.columns), None)
-            bb_col = next((c for c in ["bb_type", "hit_type", "batted_ball_type"]
-                          if c in spray_df.columns), None)
-
-            if len(spray_df) > 0:
-                has_spray = True
-                for _, srow in spray_df.iterrows():
-                    # Convert Statcast coords to field coords (feet)
-                    hx = (float(srow["hc_x"]) - 125.42) * 2.51
-                    hy = (199.27 - float(srow["hc_y"])) * 2.51
-                    bb = str(srow.get(bb_col, "")) if bb_col else ""
-                    evt = str(srow.get(event_col, "")) if event_col else ""
-                    color = _BIP_COLORS.get(bb, "#888888")
-                    is_hit = evt in _HIT_EVENTS
-                    marker = "o" if is_hit else "x"
-                    size = 120 if is_hit else 60
-                    alpha = 0.95 if is_hit else 0.5
-                    ax_spray.scatter(hx, hy, c=color, marker=marker, s=size,
-                                   alpha=alpha,
-                                   edgecolors="white" if is_hit else color,
-                                   linewidths=1.5 if is_hit else 0.8, zorder=10)
-
-        if has_spray:
-            from matplotlib.lines import Line2D as _SprayLine
-            spray_legend = [
-                _SprayLine([0],[0],marker="o",color="none",markerfacecolor="#2ec4b6",
-                          markeredgecolor="white",markersize=8,label="GB"),
-                _SprayLine([0],[0],marker="o",color="none",markerfacecolor="#3a86ff",
-                          markeredgecolor="white",markersize=8,label="LD"),
-                _SprayLine([0],[0],marker="o",color="none",markerfacecolor="#ff6b6b",
-                          markeredgecolor="white",markersize=8,label="FB"),
-                _SprayLine([0],[0],marker="o",color="none",markerfacecolor="#ffbe0b",
-                          markeredgecolor="white",markersize=8,label="PU"),
-                _SprayLine([0],[0],marker="x",color="#888888",markersize=8,
-                          linestyle="none",label="Out"),
-            ]
-            ax_spray.legend(handles=spray_legend, loc="lower center", ncol=5,
-                          fontsize=9, framealpha=0.9, edgecolor="#dddddd",
-                          bbox_to_anchor=(0.5, -0.06))
-        else:
-            ax_spray.text(0.5, 0.5, "No batted ball data",
-                         ha="center", va="center", fontsize=16,
-                         transform=ax_spray.transAxes)
-
-        ax_spray.set_aspect("equal")
-        ax_spray.axis("off")
+        # Legend (shared)
+        from matplotlib.lines import Line2D as _ZLine2
+        _zl = [
+            _ZLine2([0],[0],marker="o",color="none",markerfacecolor="#ff6b6b",
+                   markeredgecolor="white",markersize=7,label="Whiff"),
+            _ZLine2([0],[0],marker="o",color="none",markerfacecolor="#3a86ff",
+                   markeredgecolor="white",markersize=7,label="Called K"),
+            _ZLine2([0],[0],marker="o",color="none",markerfacecolor="#8b949e",
+                   markeredgecolor="white",markersize=7,label="Ball"),
+            _ZLine2([0],[0],marker="o",color="none",markerfacecolor="#2ec4b6",
+                   markeredgecolor="white",markersize=7,label="In Play"),
+        ]
+        ax_lhh.legend(handles=_zl, loc="lower center", ncol=2,
+                      fontsize=8, framealpha=0.9, edgecolor="#dddddd",
+                      bbox_to_anchor=(0.5, -0.1))
 
         # ── Row 5: Color-coded pitch stats table ─────────────────────
         ax_table = fig.add_subplot(gs[4, 1:8])
