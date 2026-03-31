@@ -76,6 +76,48 @@ def _summary_line(row: pd.Series, name: str) -> str:
     return ", ".join(parts)
 
 
+def _generate_pitcher_take(name: str, stats: pd.Series) -> str:
+    """Generate a one-sentence AI take on a pitcher's outing."""
+    import os
+    try:
+        import anthropic
+    except ImportError:
+        return ""
+    key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if not key:
+        return ""
+
+    ip = stats.get("innings_pitched", 0)
+    er = stats.get("earned_runs", 0)
+    k = stats.get("strike_outs", 0)
+    bb = stats.get("walks", 0)
+    h = stats.get("hits", 0)
+    np_ = stats.get("pitches_thrown", 0)
+
+    prompt = (
+        f"Write ONE sentence (under 200 characters) analyzing this pitcher's outing. "
+        f"Be opinionated like a baseball analyst on Twitter. No hashtags or emojis.\n\n"
+        f"{name}: {ip} IP, {er} ER, {k} K, {bb} BB, {h} H, {np_} pitches\n\n"
+        f"If dominant (low ER, high K): praise the performance.\n"
+        f"If rough (high ER, low K, high BB): be honest but not harsh.\n"
+        f"If short relief (1 IP or less): keep it brief about their role."
+    )
+    try:
+        client = anthropic.Anthropic(api_key=key)
+        msg = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=80,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        text = msg.content[0].text.strip()
+        if len(text) > 220:
+            text = text[:217] + "..."
+        return text
+    except Exception:
+        log.debug("Pitcher take generation failed for %s", name)
+        return ""
+
+
 class RedsSummaryGenerator(ContentGenerator):
     name = "reds_summary"
 
@@ -250,7 +292,9 @@ class RedsSummaryGenerator(ContentGenerator):
                 log.warning("Card generation failed for %s", pname)
                 continue
 
-            summary = _summary_line(player_row, pname)
+            stat_line = _summary_line(player_row, pname)
+            take = _generate_pitcher_take(pname, player_row)
+            summary = f"{take}\n\n{stat_line}" if take else stat_line
 
             # Try to get a game-specific strikeout clip
             video_path = None
