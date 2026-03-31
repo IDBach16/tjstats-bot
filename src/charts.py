@@ -4177,11 +4177,8 @@ def plot_reds_game_summary(
         for spine in ax_zone.spines.values():
             spine.set_color("#dddddd")
 
-        # ── Row 3 (center): Spray Chart — Batted Balls Allowed ──────
-        import math
+        # ── Row 3 (center): Spray Chart — Batted Balls Allowed (sportypy) ──
         ax_spray = fig.add_subplot(gs[3, 3:6])
-        ax_spray.set_facecolor("#fafafa")
-        ax_spray.set_title("Batted Balls Allowed", fontsize=20, fontweight="bold")
 
         _BIP_COLORS = {
             "ground_ball": "#2ec4b6", "line_drive": "#3a86ff",
@@ -4189,22 +4186,19 @@ def plot_reds_game_summary(
         }
         _HIT_EVENTS = {"single", "double", "triple", "home_run"}
 
-        # Draw field outline
-        from matplotlib.patches import Arc as _SprayArc, Wedge as _SprayWedge
-        grass = _SprayWedge((125.42, 199.27), 170, -135, -45,
-                            color="#1a3a1a", alpha=0.15, zorder=0)
-        ax_spray.add_patch(grass)
-        fence = _SprayArc((125.42, 199.27), 340, 340, angle=0,
-                          theta1=-135, theta2=-45,
-                          color="#333333", linewidth=1.5, alpha=0.4)
-        ax_spray.add_patch(fence)
-        # Foul lines
-        ax_spray.plot([125.42, 125.42 - 170 * math.cos(math.radians(45))],
-                      [199.27, 199.27 - 170 * math.sin(math.radians(45))],
-                      color="#999999", linewidth=0.8, alpha=0.3)
-        ax_spray.plot([125.42, 125.42 + 170 * math.cos(math.radians(45))],
-                      [199.27, 199.27 - 170 * math.sin(math.radians(45))],
-                      color="#999999", linewidth=0.8, alpha=0.3)
+        # Draw professional field using sportypy
+        try:
+            from sportypy.surfaces.baseball import MLBField
+            _mlb_field = MLBField()
+            _mlb_field.draw(ax=ax_spray)
+        except Exception:
+            pass
+
+        ax_spray.set_facecolor("#0f0f1e")
+        ax_spray.set_title("Batted Balls Allowed", fontsize=20, fontweight="bold",
+                           color="#1a1a2e", pad=10)
+        ax_spray.set_xlim(-250, 250)
+        ax_spray.set_ylim(-30, 400)
 
         # Plot batted balls from PBP data
         has_spray = False
@@ -4215,7 +4209,6 @@ def plot_reds_game_summary(
             spray_df["hc_y"] = pd.to_numeric(spray_df["hc_y"], errors="coerce")
             spray_df = spray_df.dropna(subset=["hc_x", "hc_y"])
 
-            # Filter to batted ball events
             event_col = next((c for c in ["events", "event", "play_result"]
                              if c in spray_df.columns), None)
             bb_col = next((c for c in ["bb_type", "hit_type", "batted_ball_type"]
@@ -4224,38 +4217,38 @@ def plot_reds_game_summary(
             if len(spray_df) > 0:
                 has_spray = True
                 for _, srow in spray_df.iterrows():
-                    hx = srow["hc_x"]
-                    hy = srow["hc_y"]
+                    # Convert Statcast coords to field coords (feet)
+                    hx = (float(srow["hc_x"]) - 125.42) * 2.51
+                    hy = (199.27 - float(srow["hc_y"])) * 2.51
                     bb = str(srow.get(bb_col, "")) if bb_col else ""
                     evt = str(srow.get(event_col, "")) if event_col else ""
                     color = _BIP_COLORS.get(bb, "#888888")
                     is_hit = evt in _HIT_EVENTS
                     marker = "o" if is_hit else "x"
-                    size = 80 if is_hit else 50
-                    alpha = 0.9 if is_hit else 0.5
+                    size = 120 if is_hit else 60
+                    alpha = 0.95 if is_hit else 0.5
                     ax_spray.scatter(hx, hy, c=color, marker=marker, s=size,
-                                   alpha=alpha, edgecolors="white" if is_hit else "none",
-                                   linewidths=0.8, zorder=4)
+                                   alpha=alpha,
+                                   edgecolors="white" if is_hit else color,
+                                   linewidths=1.5 if is_hit else 0.8, zorder=10)
 
         if has_spray:
-            ax_spray.set_xlim(0, 250)
-            ax_spray.set_ylim(220, 20)
             from matplotlib.lines import Line2D as _SprayLine
             spray_legend = [
                 _SprayLine([0],[0],marker="o",color="none",markerfacecolor="#2ec4b6",
-                          markeredgecolor="white",markersize=10,label="GB"),
+                          markeredgecolor="white",markersize=8,label="GB"),
                 _SprayLine([0],[0],marker="o",color="none",markerfacecolor="#3a86ff",
-                          markeredgecolor="white",markersize=10,label="LD"),
+                          markeredgecolor="white",markersize=8,label="LD"),
                 _SprayLine([0],[0],marker="o",color="none",markerfacecolor="#ff6b6b",
-                          markeredgecolor="white",markersize=10,label="FB"),
+                          markeredgecolor="white",markersize=8,label="FB"),
                 _SprayLine([0],[0],marker="o",color="none",markerfacecolor="#ffbe0b",
-                          markeredgecolor="white",markersize=10,label="PU"),
-                _SprayLine([0],[0],marker="x",color="#888888",markersize=10,
+                          markeredgecolor="white",markersize=8,label="PU"),
+                _SprayLine([0],[0],marker="x",color="#888888",markersize=8,
                           linestyle="none",label="Out"),
             ]
             ax_spray.legend(handles=spray_legend, loc="lower center", ncol=5,
-                          fontsize=12, framealpha=0.9, edgecolor="#dddddd",
-                          bbox_to_anchor=(0.5, -0.08))
+                          fontsize=9, framealpha=0.9, edgecolor="#dddddd",
+                          bbox_to_anchor=(0.5, -0.06))
         else:
             ax_spray.text(0.5, 0.5, "No batted ball data",
                          ha="center", va="center", fontsize=16,
