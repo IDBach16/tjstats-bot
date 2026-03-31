@@ -4121,85 +4121,109 @@ def plot_reds_game_summary(
             ax_break.text(0.5, 0.5, "No movement data",
                           ha="center", va="center", fontsize=16)
 
-        # ── Row 3 (center + right): vs RHH / vs LHH Pitch Location ──
+        # ── Row 3 (center): Pitch Type by Location ──────────────
+        ax_loc = fig.add_subplot(_row3[0, 1])
+        ax_loc.set_facecolor("#fafafa")
+        ax_loc.set_title("Pitch Location by Type", fontsize=18, fontweight="bold", pad=8)
 
-        # Draw RHH / LHH pitch location scatter plots
-        _ZONE_COLORS = {
+        # Strike zone
+        _zr1 = Rectangle((-0.83, 1.5), 1.66, 2.0, linewidth=2.5,
+                          edgecolor="#1a1a2e", facecolor="none", zorder=3)
+        ax_loc.add_patch(_zr1)
+        for _zx in [-0.277, 0.277]:
+            ax_loc.plot([_zx, _zx], [1.5, 3.5], color="#cccccc", linewidth=0.8, alpha=0.5)
+        for _zy in [2.167, 2.833]:
+            ax_loc.plot([-0.83, 0.83], [_zy, _zy], color="#cccccc", linewidth=0.8, alpha=0.5)
+
+        if pbp_df is not None and not pbp_df.empty and "plate_x" in pbp_df.columns:
+            _loc_df = pbp_df.copy()
+            _loc_df["plate_x"] = pd.to_numeric(_loc_df["plate_x"], errors="coerce")
+            _loc_df["plate_z"] = pd.to_numeric(_loc_df["plate_z"], errors="coerce")
+            _loc_df = _loc_df.dropna(subset=["plate_x", "plate_z"])
+            for _, _lr in _loc_df.iterrows():
+                pt = str(_lr.get("pitch_type", ""))
+                c = _TJ_COLOUR.get(pt, "#888888")
+                ax_loc.scatter(float(_lr["plate_x"]), float(_lr["plate_z"]),
+                              c=c, s=60, alpha=0.8, edgecolors="white",
+                              linewidths=0.5, zorder=4)
+            # Legend
+            from matplotlib.lines import Line2D as _LocLine
+            _loc_types = _loc_df["pitch_type"].unique()
+            _loc_legend = [_LocLine([0],[0], marker="o", color="none",
+                           markerfacecolor=_TJ_COLOUR.get(pt, "#888"),
+                           markeredgecolor="white", markersize=7,
+                           label=_TJ_NAME.get(pt, pt)) for pt in _loc_types]
+            if _loc_legend:
+                ax_loc.legend(handles=_loc_legend, loc="lower center",
+                             ncol=min(len(_loc_legend), 3), fontsize=10,
+                             framealpha=0.9, edgecolor="#ddd",
+                             markerscale=1.3,
+                             bbox_to_anchor=(0.5, -0.1))
+        ax_loc.set_xlim(-2.5, 2.5)
+        ax_loc.set_ylim(-0.5, 5.0)
+        ax_loc.set_aspect("equal")
+        ax_loc.set_xlabel("Plate Side (ft)", fontsize=10)
+        ax_loc.set_ylabel("Height (ft)", fontsize=10)
+        ax_loc.tick_params(labelsize=8)
+        for _sp in ax_loc.spines.values():
+            _sp.set_color("#dddddd")
+
+        # ── Row 3 (right): Pitch Type by Result ──────────────
+        ax_res = fig.add_subplot(_row3[0, 2])
+        ax_res.set_facecolor("#fafafa")
+        ax_res.set_title("Pitch Result by Type", fontsize=18, fontweight="bold", pad=8)
+
+        _RESULT_COLORS = {
             "swinging_strike": "#ff6b6b", "swinging_strike_blocked": "#ff6b6b",
             "called_strike": "#3a86ff", "foul": "#ffbe0b", "foul_tip": "#ffbe0b",
             "ball": "#8b949e", "hit_into_play": "#2ec4b6",
             "hit_into_play_no_out": "#2ec4b6", "hit_into_play_score": "#2ec4b6",
         }
 
-        def _draw_zone_dots(ax_zd, zd_df, title_zd):
-            ax_zd.set_facecolor("#fafafa")
-            ax_zd.set_title(title_zd, fontsize=18, fontweight="bold", pad=8)
-            # Strike zone
-            zr = Rectangle((-0.83, 1.5), 1.66, 2.0, linewidth=2.5,
-                            edgecolor="#1a1a2e", facecolor="none", zorder=3)
-            ax_zd.add_patch(zr)
-            for zx in [-0.277, 0.277]:
-                ax_zd.plot([zx, zx], [1.5, 3.5], color="#cccccc", linewidth=0.8, alpha=0.5)
-            for zy in [2.167, 2.833]:
-                ax_zd.plot([-0.83, 0.83], [zy, zy], color="#cccccc", linewidth=0.8, alpha=0.5)
+        _zr2 = Rectangle((-0.83, 1.5), 1.66, 2.0, linewidth=2.5,
+                          edgecolor="#1a1a2e", facecolor="none", zorder=3)
+        ax_res.add_patch(_zr2)
+        for _zx in [-0.277, 0.277]:
+            ax_res.plot([_zx, _zx], [1.5, 3.5], color="#cccccc", linewidth=0.8, alpha=0.5)
+        for _zy in [2.167, 2.833]:
+            ax_res.plot([-0.83, 0.83], [_zy, _zy], color="#cccccc", linewidth=0.8, alpha=0.5)
 
-            if zd_df is not None and len(zd_df) > 0 and "plate_x" in zd_df.columns:
-                zd_x = pd.to_numeric(zd_df["plate_x"], errors="coerce")
-                zd_z = pd.to_numeric(zd_df["plate_z"], errors="coerce")
-                valid = zd_x.notna() & zd_z.notna()
-                for idx_r in zd_df.index[valid]:
-                    row_z = zd_df.loc[idx_r]
-                    desc_z = str(row_z.get("description", ""))
-                    c_z = _ZONE_COLORS.get(desc_z, "#888888")
-                    ax_zd.scatter(float(zd_x.loc[idx_r]), float(zd_z.loc[idx_r]),
-                                 c=c_z, s=70, alpha=0.8,
-                                 edgecolors="white", linewidths=0.6, zorder=4)
-                ax_zd.text(0, -0.3, f"n={valid.sum()}", ha="center", fontsize=10,
-                          color="#888888")
-            else:
-                ax_zd.text(0, 2.5, "No data", ha="center", va="center", fontsize=14,
-                          color="#888888")
-
-            ax_zd.set_xlim(-2.5, 2.5)
-            ax_zd.set_ylim(-0.5, 5.0)
-            ax_zd.set_aspect("equal")
-            ax_zd.set_xlabel("Plate Side (ft)", fontsize=10)
-            ax_zd.set_ylabel("Height (ft)", fontsize=10)
-            ax_zd.tick_params(labelsize=8)
-            for sp in ax_zd.spines.values():
-                sp.set_color("#dddddd")
-
-        _rhh_df = pd.DataFrame()
-        _lhh_df = pd.DataFrame()
-        if pbp_df is not None and not pbp_df.empty and "bat_side" in pbp_df.columns:
-            _rhh_df = pbp_df[pbp_df["bat_side"] == "R"]
-            _lhh_df = pbp_df[pbp_df["bat_side"] == "L"]
-        elif pbp_df is not None and not pbp_df.empty:
-            _rhh_df = pbp_df
-
-        ax_rhh = fig.add_subplot(_row3[0, 1])
-        _draw_zone_dots(ax_rhh, _rhh_df if len(_rhh_df) > 0 else pbp_df,
-                       f"vs RHH ({len(_rhh_df)})" if len(_rhh_df) > 0 else "Pitch Locations")
-
-        ax_lhh = fig.add_subplot(_row3[0, 2])
-        _draw_zone_dots(ax_lhh, _lhh_df if len(_lhh_df) > 0 else None,
-                       f"vs LHH ({len(_lhh_df)})" if len(_lhh_df) > 0 else "vs LHH")
-
-        # Legend (shared)
-        from matplotlib.lines import Line2D as _ZLine2
-        _zl = [
-            _ZLine2([0],[0],marker="o",color="none",markerfacecolor="#ff6b6b",
-                   markeredgecolor="white",markersize=7,label="Whiff"),
-            _ZLine2([0],[0],marker="o",color="none",markerfacecolor="#3a86ff",
-                   markeredgecolor="white",markersize=7,label="Called K"),
-            _ZLine2([0],[0],marker="o",color="none",markerfacecolor="#8b949e",
-                   markeredgecolor="white",markersize=7,label="Ball"),
-            _ZLine2([0],[0],marker="o",color="none",markerfacecolor="#2ec4b6",
-                   markeredgecolor="white",markersize=7,label="In Play"),
-        ]
-        ax_lhh.legend(handles=_zl, loc="lower center", ncol=2,
-                      fontsize=8, framealpha=0.9, edgecolor="#dddddd",
-                      bbox_to_anchor=(0.5, -0.1))
+        if pbp_df is not None and not pbp_df.empty and "plate_x" in pbp_df.columns:
+            _res_df = pbp_df.copy()
+            _res_df["plate_x"] = pd.to_numeric(_res_df["plate_x"], errors="coerce")
+            _res_df["plate_z"] = pd.to_numeric(_res_df["plate_z"], errors="coerce")
+            _res_df = _res_df.dropna(subset=["plate_x", "plate_z"])
+            for _, _rr in _res_df.iterrows():
+                desc = str(_rr.get("description", ""))
+                c = _RESULT_COLORS.get(desc, "#888888")
+                ax_res.scatter(float(_rr["plate_x"]), float(_rr["plate_z"]),
+                              c=c, s=60, alpha=0.8, edgecolors="white",
+                              linewidths=0.5, zorder=4)
+            from matplotlib.lines import Line2D as _ResLine
+            _res_legend = [
+                _ResLine([0],[0],marker="o",color="none",markerfacecolor="#ff6b6b",
+                        markeredgecolor="white",markersize=7,label="Whiff"),
+                _ResLine([0],[0],marker="o",color="none",markerfacecolor="#3a86ff",
+                        markeredgecolor="white",markersize=7,label="Called K"),
+                _ResLine([0],[0],marker="o",color="none",markerfacecolor="#ffbe0b",
+                        markeredgecolor="white",markersize=7,label="Foul"),
+                _ResLine([0],[0],marker="o",color="none",markerfacecolor="#8b949e",
+                        markeredgecolor="white",markersize=7,label="Ball"),
+                _ResLine([0],[0],marker="o",color="none",markerfacecolor="#2ec4b6",
+                        markeredgecolor="white",markersize=7,label="In Play"),
+            ]
+            ax_res.legend(handles=_res_legend, loc="lower center",
+                         ncol=3, fontsize=10, framealpha=0.9,
+                         edgecolor="#ddd", markerscale=1.3,
+                         bbox_to_anchor=(0.5, -0.1))
+        ax_res.set_xlim(-2.5, 2.5)
+        ax_res.set_ylim(-0.5, 5.0)
+        ax_res.set_aspect("equal")
+        ax_res.set_xlabel("Plate Side (ft)", fontsize=10)
+        ax_res.set_ylabel("Height (ft)", fontsize=10)
+        ax_res.tick_params(labelsize=8)
+        for _sp in ax_res.spines.values():
+            _sp.set_color("#dddddd")
 
         # ── Row 5: Color-coded pitch stats table ─────────────────────
         ax_table = fig.add_subplot(gs[4, 1:8])
