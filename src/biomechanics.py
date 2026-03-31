@@ -75,7 +75,7 @@ TOPICS = [
         "y_col": "elbow_varus_moment",
         "x_label": "Pitch Speed (mph)",
         "y_label": "Elbow Varus Moment (Nm)",
-        "chart_type": "scatter",
+        "chart_type": "heatmap",
         "prompt_context": "elbow varus moment (UCL stress indicator)",
         "education": "Elbow varus moment is the torque on the inner elbow "
                      "during a pitch — it's the primary stress on the UCL "
@@ -224,7 +224,7 @@ TOPICS = [
         "y_col": "lead_grf_mag_max",
         "x_label": "Rear Leg Peak GRF (N)",
         "y_label": "Lead Leg Peak GRF (N)",
-        "chart_type": "scatter",
+        "chart_type": "heatmap",
         "prompt_context": "rear leg vs lead leg peak ground reaction force magnitude",
         "education": "Ground reaction forces are how hard the pitcher pushes "
                      "into the ground. The rear leg drives forward (push-off), "
@@ -238,7 +238,7 @@ TOPICS = [
         "y_col": "pitch_speed_mph",
         "x_label": "Peak Hip-Shoulder Separation (deg)",
         "y_label": "Pitch Speed (mph)",
-        "chart_type": "scatter",
+        "chart_type": "heatmap",
         "prompt_context": "hip-shoulder separation vs pitch velocity",
         "education": "Hip-shoulder separation is one of the most talked-about "
                      "metrics in pitching development. The idea: rotate the "
@@ -258,6 +258,64 @@ TOPICS = [
                      "pitcher's body moves towards home plate during the "
                      "delivery. More linear momentum = more energy available "
                      "to transfer into the ball.",
+    },
+    {
+        "id": "velo_by_level",
+        "title": "Pitch Velocity by Playing Level",
+        "x_col": "pitch_speed_mph",
+        "y_col": None,
+        "group_col": "playing_level",
+        "x_label": "Pitch Speed (mph)",
+        "y_label": "",
+        "chart_type": "comparison",
+        "prompt_context": "pitch velocity compared across playing levels "
+                          "(high school, college, independent, MiLB)",
+        "education": "Velocity is the most universal metric across levels. "
+                     "Seeing how the distribution shifts from high school to "
+                     "MiLB shows the physical development required at each jump.",
+    },
+    {
+        "id": "elbow_stress_by_level",
+        "title": "Elbow Varus Moment by Playing Level",
+        "x_col": "elbow_varus_moment",
+        "y_col": None,
+        "group_col": "playing_level",
+        "x_label": "Elbow Varus Moment (Nm)",
+        "y_label": "",
+        "chart_type": "comparison",
+        "prompt_context": "elbow varus moment (UCL stress) compared across "
+                          "playing levels",
+        "education": "As pitchers throw harder at higher levels, elbow stress "
+                     "increases. This is why arm care and workload management "
+                     "become more critical as players advance.",
+    },
+    {
+        "id": "hip_shoulder_sep_by_level",
+        "title": "Hip-Shoulder Separation by Playing Level",
+        "x_col": "max_rotation_hip_shoulder_separation",
+        "y_col": None,
+        "group_col": "playing_level",
+        "x_label": "Peak Hip-Shoulder Separation (deg)",
+        "y_label": "",
+        "chart_type": "comparison",
+        "prompt_context": "hip-shoulder separation compared across playing levels",
+        "education": "Hip-shoulder separation is a key differentiator between "
+                     "levels. Higher-level pitchers tend to create more "
+                     "separation, reflecting better kinetic chain efficiency.",
+    },
+    {
+        "id": "torso_tilt_vs_arm_slot",
+        "title": "Torso Lateral Tilt vs Arm Slot",
+        "x_col": "torso_lateral_tilt_br",
+        "y_col": "arm_slot",
+        "x_label": "Torso Lateral Tilt at Release (deg)",
+        "y_label": "Arm Slot Angle (deg)",
+        "chart_type": "heatmap",
+        "prompt_context": "torso lateral tilt at ball release vs arm slot angle",
+        "education": "A pitcher's arm slot is largely determined by how much "
+                     "they tilt their torso sideways. More lateral tilt = "
+                     "higher arm slot. Understanding this connection helps "
+                     "coaches work on slot without cueing the arm directly.",
     },
 ]
 
@@ -302,5 +360,22 @@ def compute_topic_stats(topic: dict, df: pd.DataFrame) -> dict:
 
     stats["n_pitchers"] = int(df["session"].nunique())
     stats["n_pitches"] = len(df)
+
+    # Group stats for comparison charts
+    group_col = topic.get("group_col")
+    if group_col and group_col in df.columns:
+        group_stats = {}
+        for level, grp in df.groupby(group_col):
+            vals = grp[x_col].dropna()
+            if len(vals) >= 3:
+                group_stats[level] = {
+                    "n": len(vals),
+                    "mean": float(vals.mean()),
+                    "median": float(vals.median()),
+                    "std": float(vals.std()),
+                    "p25": float(vals.quantile(0.25)),
+                    "p75": float(vals.quantile(0.75)),
+                }
+        stats["group_stats"] = group_stats
 
     return stats

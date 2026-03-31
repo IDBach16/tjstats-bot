@@ -43,7 +43,7 @@ def _generate_explanation(topic: dict, stats: dict) -> str | None:
                        f"from {stats.get('n_pitchers', '?')} pitchers "
                        f"(mostly college level)")
 
-    if topic["chart_type"] == "scatter":
+    if topic["chart_type"] in ("scatter", "heatmap"):
         stats_lines.append(
             f"X-axis ({topic['x_label']}): "
             f"mean={stats.get('x_mean', '?'):.1f}, "
@@ -56,6 +56,12 @@ def _generate_explanation(topic: dict, stats: dict) -> str | None:
             )
         if "correlation" in stats:
             stats_lines.append(f"Correlation (r): {stats['correlation']:.2f}")
+    elif topic["chart_type"] == "comparison":
+        group_stats = stats.get("group_stats", {})
+        for level, gs in group_stats.items():
+            stats_lines.append(
+                f"{level}: mean={gs['mean']:.1f}, n={gs['n']}"
+            )
     else:
         stats_lines.append(
             f"{topic['x_label']}: "
@@ -117,7 +123,7 @@ def _generate_deep_dive(topic: dict, stats: dict) -> str | None:
                        f"from {stats.get('n_pitchers', '?')} pitchers "
                        f"(mostly college level)")
 
-    if topic["chart_type"] == "scatter":
+    if topic["chart_type"] in ("scatter", "heatmap"):
         stats_lines.append(
             f"X ({topic['x_label']}): mean={stats.get('x_mean', '?'):.1f}, "
             f"range=[{stats.get('x_min', '?'):.1f}, {stats.get('x_max', '?'):.1f}]"
@@ -126,6 +132,12 @@ def _generate_deep_dive(topic: dict, stats: dict) -> str | None:
             stats_lines.append(f"Y ({topic['y_label']}): mean={stats['y_mean']:.1f}")
         if "correlation" in stats:
             stats_lines.append(f"Correlation (r): {stats['correlation']:.2f}")
+    elif topic["chart_type"] == "comparison":
+        group_stats = stats.get("group_stats", {})
+        for level, gs in group_stats.items():
+            stats_lines.append(
+                f"{level}: mean={gs['mean']:.1f}, n={gs['n']}"
+            )
     else:
         stats_lines.append(
             f"{topic['x_label']}: mean={stats.get('x_mean', '?'):.1f}, "

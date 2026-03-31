@@ -3593,6 +3593,80 @@ def plot_biomechanics(
             ax.set_ylabel(topic["y_label"], fontsize=12, color=CARD_TEXT,
                           fontweight="bold")
 
+        elif chart_type == "heatmap" and y_col:
+            valid = df[[x_col, y_col]].dropna()
+            x = valid[x_col].values
+            y = valid[y_col].values
+
+            # 2D density hexbin
+            hb = ax.hexbin(x, y, gridsize=20, cmap="YlOrRd",
+                           mincnt=1, edgecolors="none", zorder=3)
+            cb = fig.colorbar(hb, ax=ax, pad=0.02, shrink=0.8)
+            cb.set_label("Pitch Count", fontsize=10, color=CARD_TEXT_MUTED)
+            cb.ax.tick_params(colors=CARD_TEXT_MUTED, labelsize=8)
+
+            # Correlation annotation
+            if len(x) > 10:
+                corr = stats.get("correlation", float(np.corrcoef(x, y)[0, 1]))
+                ax.text(0.97, 0.95,
+                        f"r = {corr:.2f}",
+                        transform=ax.transAxes, fontsize=11,
+                        fontweight="bold", color=_BIO_HIGHLIGHT,
+                        ha="right", va="top",
+                        bbox=dict(facecolor=CARD_BG, edgecolor=CARD_BORDER,
+                                  boxstyle="round,pad=0.4", alpha=0.9))
+
+            # Mean crosshairs
+            ax.axvline(np.mean(x), color=_BIO_PRIMARY, linewidth=1,
+                       linestyle=":", alpha=0.6, zorder=4)
+            ax.axhline(np.mean(y), color=_BIO_PRIMARY, linewidth=1,
+                       linestyle=":", alpha=0.6, zorder=4)
+
+            ax.set_xlabel(topic["x_label"], fontsize=12, color=CARD_TEXT,
+                          fontweight="bold")
+            ax.set_ylabel(topic["y_label"], fontsize=12, color=CARD_TEXT,
+                          fontweight="bold")
+
+        elif chart_type == "comparison":
+            group_col = topic.get("group_col", "playing_level")
+            level_order = ["high_school", "college", "independent", "milb"]
+            level_labels = {
+                "high_school": "HS", "college": "College",
+                "independent": "Indy", "milb": "MiLB",
+            }
+            group_stats = stats.get("group_stats", {})
+            levels = [lv for lv in level_order if lv in group_stats]
+            if not levels:
+                levels = sorted(group_stats.keys())
+
+            positions = np.arange(len(levels))
+            colors = ["#3a86ff", "#ff6b6b", "#ffbe0b", "#8338ec"]
+            means = [group_stats[lv]["mean"] for lv in levels]
+            p25s = [group_stats[lv]["p25"] for lv in levels]
+            p75s = [group_stats[lv]["p75"] for lv in levels]
+            labels = [level_labels.get(lv, lv) for lv in levels]
+            ns = [group_stats[lv]["n"] for lv in levels]
+
+            # Horizontal box-style bars showing IQR with mean marker
+            for i, (lv, m, lo, hi, c, n) in enumerate(
+                zip(levels, means, p25s, p75s, colors, ns)
+            ):
+                ax.barh(i, hi - lo, left=lo, height=0.5, color=c, alpha=0.7,
+                        edgecolor="white", linewidth=0.5, zorder=3)
+                ax.plot(m, i, marker="D", color="white", markersize=10,
+                        zorder=5, markeredgecolor=c, markeredgewidth=2)
+                ax.text(hi + (stats["x_max"] - stats["x_min"]) * 0.02, i,
+                        f"avg {m:.1f}  (n={n})",
+                        fontsize=10, color=CARD_TEXT, va="center",
+                        fontweight="bold")
+
+            ax.set_yticks(positions)
+            ax.set_yticklabels(labels, fontsize=13, fontweight="bold",
+                               color=CARD_TEXT)
+            ax.set_xlabel(topic["x_label"], fontsize=12, color=CARD_TEXT,
+                          fontweight="bold")
+            ax.invert_yaxis()
+
         elif chart_type == "distribution":
             vals = df[x_col].dropna().values
 
