@@ -486,10 +486,18 @@ class RedsSummaryGenerator(ContentGenerator):
                     "is_ball": details.get("isBall", False),
                     "is_in_play": details.get("isInPlay", False),
                 }
-                # Add hit coordinates for spray chart (only on last pitch of BIP)
-                if ev.get("isInPlay") and hit_data:
-                    row["hc_x"] = hit_data.get("coordinates", {}).get("coordX")
-                    row["hc_y"] = hit_data.get("coordinates", {}).get("coordY")
+                # Add hit coordinates for spray chart
+                is_bip = (ev.get("isInPlay")
+                          or "in play" in details.get("description", "").lower())
+                ev_hit = ev.get("hitData") or {}
+                if is_bip and ev_hit.get("coordinates"):
+                    row["hc_x"] = ev_hit["coordinates"].get("coordX")
+                    row["hc_y"] = ev_hit["coordinates"].get("coordY")
+                    row["bb_type"] = (ev_hit.get("trajectory", "") or "").lower().replace(" ", "_")
+                    row["events"] = (result.get("event", "") or "").lower().replace(" ", "_")
+                elif is_bip and hit_data and hit_data.get("coordinates"):
+                    row["hc_x"] = hit_data["coordinates"].get("coordX")
+                    row["hc_y"] = hit_data["coordinates"].get("coordY")
                     row["bb_type"] = (hit_data.get("trajectory", "") or "").lower().replace(" ", "_")
                     row["events"] = (result.get("event", "") or "").lower().replace(" ", "_")
                 rows.append(row)
