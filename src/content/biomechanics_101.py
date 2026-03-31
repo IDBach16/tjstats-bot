@@ -78,12 +78,11 @@ Data Summary:
 {stats_text}
 
 Rules:
-- Write EXACTLY 2 sentences. No more, no less.
-- First sentence: hook or key takeaway. Second sentence: why it matters.
+- Write EXACTLY 1 sentence that explains what the chart is showing
 - Make it accessible — explain the biomechanics concept for someone who may not know what it is
 - Reference specific numbers from the data to make it concrete
 - Sound like a knowledgeable coach/trainer, not a textbook
-- Keep it UNDER 260 characters total (strict Twitter limit)
+- Keep it UNDER 200 characters total (strict Twitter limit)
 - Do NOT use hashtags, emojis, or @ mentions
 - Do NOT use dashes or hyphens (use commas, periods, or other punctuation instead)
 - Do NOT start with "This chart shows..."
