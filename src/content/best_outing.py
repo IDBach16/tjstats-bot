@@ -150,49 +150,62 @@ class BestOutingGenerator(ContentGenerator):
         log.info("Best outing: %s (pk=%d, stuff+=%.0f, whiff=%.1f%%)",
                  name, game_pk, best["avg_stuff_plus"], best["whiff_rate"] * 100)
 
-        # Get season-level data for the card
+        # Get game-level pitch data for the card (not season)
+        game_pitcher_pitches = yesterday_pitches[
+            (yesterday_pitches["game_pk"] == game_pk) &
+            (yesterday_pitches["pitcher_name"] == name)
+        ].copy()
+
+        # Build a game-level pitcher row for the card header
+        game_row = pd.Series({
+            "pitcher_name": name,
+            "pitcher_id": pid,
+            "total_pitches": int(best["total_pitches"]),
+            "whiff_rate": best["whiff_rate"],
+            "stuff_plus": best["avg_stuff_plus"],
+            "pitching_plus": best["avg_pitching_plus"],
+            "n_pitch_types": int(best["n_pitch_types"]),
+        })
+
+        # Get team + season data for context (subtitle only)
+        team = None
+        season_df = pd.DataFrame()
         try:
             season_df = pitch_profiler.get_season_pitchers(MLB_SEASON)
-            pitches_df = pitch_profiler.get_season_pitches(MLB_SEASON)
+            if "season_teams" in season_df.columns:
+                match = season_df[season_df["pitcher_name"] == name]
+                if not match.empty:
+                    team = str(match.iloc[0].get("season_teams", "")).split(",")[0].strip()
         except Exception:
-            log.warning("Failed to fetch season data", exc_info=True)
-            return PostContent(text="")
+            log.warning("Failed to fetch season data for team lookup", exc_info=True)
 
-        # Get team
-        team = None
-        if "season_teams" in season_df.columns:
-            match = season_df[season_df["pitcher_name"] == name]
-            if not match.empty:
-                team = str(match.iloc[0].get("season_teams", "")).split(",")[0].strip()
+        # Fetch season-level pitch data for league comparison in the card
+        try:
+            all_pitches_df = pitch_profiler.get_season_pitches(MLB_SEASON)
+        except Exception:
+            all_pitches_df = None
 
-        # Generate card
+        # Generate card using game-level data
+        game_pitcher_df = pd.DataFrame([game_row])
         image_path = plot_pitching_summary(
-            name, season_df, pitches_df,
+            name, game_pitcher_df, game_pitcher_pitches,
+            all_pitches_df=all_pitches_df,
             team=team, player_id=pid, level="MLB",
         )
         if not image_path:
             log.warning("Card generation failed for %s", name)
             return PostContent(text="")
 
-        # Build stats string for analysis
+        # Build game-specific stats string for the AI prompt
         stats_str = (
             f"{int(best['total_pitches'])} pitches, "
             f"Stuff+ {best['avg_stuff_plus']:.0f}, "
+            f"Pitching+ {best['avg_pitching_plus']:.0f}, "
             f"{best['whiff_rate']*100:.1f}% whiff rate, "
             f"{int(best['n_pitch_types'])} pitch types"
         )
 
-        # Get season stats for context
-        season_match = season_df[season_df["pitcher_name"] == name]
-        if not season_match.empty:
-            sm = season_match.iloc[0]
-            era = sm.get("era", "")
-            ip = sm.get("innings_pitched", "")
-            ks = sm.get("strike_outs", "")
-            if era and ip:
-                stats_str += f", {era} ERA, {ip} IP, {int(ks) if ks else '?'} K on the season"
-
-        # Generate analysis
+        # Generate analysis (game stats only, no season)
         analysis = _generate_analysis(name, stats_str)
 
         # Get strikeout video clip
@@ -206,14 +219,12 @@ class BestOutingGenerator(ContentGenerator):
         if analysis:
             text = (
                 f"{analysis}\n\n"
-                f"{name}'s {MLB_SEASON} Pitching Summary\n"
-                f"Best Outing — {display_date}\n\n"
+                f"{name} — Best Outing {display_date}\n\n"
                 f"@TJStats @PitchProfiler {DEFAULT_HASHTAGS}"
             )
         else:
             text = (
-                f"{name}'s {MLB_SEASON} Pitching Summary\n"
-                f"Best Outing — {display_date}\n"
+                f"{name} — Best Outing {display_date}\n"
                 f"{stats_str}\n\n"
                 f"@TJStats @PitchProfiler {DEFAULT_HASHTAGS}"
             )
