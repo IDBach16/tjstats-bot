@@ -52,6 +52,10 @@ class StatOfDayGenerator(ContentGenerator):
         ascending = not stat["top"]
         leaders = df.nlargest(5, col) if stat["top"] else df.nsmallest(5, col)
 
+        if leaders.empty:
+            log.info("No qualifying leaders for %s", stat["label"])
+            return PostContent(text="")
+
         name_col = None
         for c in ("pitcher_name", "player_name", "name"):
             if c in leaders.columns:
