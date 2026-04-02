@@ -50,6 +50,9 @@ from .content.milb_trad_pitching_summary import MiLBTradPitchingSummaryGenerator
 # Biomechanics educational content
 from .content.biomechanics_101 import BiomechanicsGenerator
 
+# Season summary
+from .content.season_summary import SeasonSummaryGenerator
+
 # Daily generators (run every day regardless of rotation)
 from .content.reds_summary import RedsSummaryGenerator
 
@@ -86,6 +89,7 @@ GENERATORS: dict[str, type[ContentGenerator]] = {
     "best_outing": BestOutingGenerator,
     "swing_plus_top10": SwingPlusTop10Generator,
     "best_pitch_week": BestPitchWeekGenerator,
+    "season_summary": SeasonSummaryGenerator,
 }
 
 # Daily generators — these run every day in addition to the rotation schedule
@@ -97,14 +101,14 @@ DAILY_GENERATORS: list[type[ContentGenerator]] = [
 # Monday=0 … Sunday=6
 # Alternates: MLB (Mon/Wed/Fri/Sun), MiLB AAA Statcast (Tue/Sat),
 #             MiLB Traditional AA/A+ (Thu)
-# Biomechanics 101 posts Mon/Wed/Fri/Sun (4x per week)
+# Biomechanics 101: Mon/Wed/Fri/Sun (4x), Season Summary: Tue/Thu/Sat (3x)
 SCHEDULE: dict[int, tuple[type[ContentGenerator], ...]] = {
     0: (SwingPlusTop10Generator, UndervaluedRelieverGenerator, BestOutingGenerator, BiomechanicsGenerator),     # Mon — Swing+ Top 10 + Best Outing + Biomech
-    1: (BestOutingGenerator, MiLBPitcherCardGenerator, MiLBPitchingSummaryGenerator),                           # Tue — Best Outing + MiLB AAA
+    1: (BestOutingGenerator, MiLBPitcherCardGenerator, MiLBPitchingSummaryGenerator, SeasonSummaryGenerator),   # Tue — Best Outing + MiLB AAA + Season Summary
     2: (VeloDistributionGenerator, ExplainerGenerator, PitchingSummaryGenerator, BiomechanicsGenerator),         # Wed — MLB + Biomech
-    3: (BestOutingGenerator, StatOfDayGenerator, MiLBTradPitchingSummaryGenerator),                              # Thu — Best Outing + MiLB AA/A+
+    3: (BestOutingGenerator, StatOfDayGenerator, MiLBTradPitchingSummaryGenerator, SeasonSummaryGenerator),      # Thu — Best Outing + MiLB AA/A+ + Season Summary
     4: (ReleasePointGenerator, BestPitchWeekGenerator, PitchingSummaryGenerator, BiomechanicsGenerator),         # Fri — Best Pitch of Week + Biomech
-    5: (BestOutingGenerator, MiLBPitcherCardGenerator, MiLBPitchingSummaryGenerator),                           # Sat — Best Outing + MiLB AAA
+    5: (BestOutingGenerator, MiLBPitcherCardGenerator, MiLBPitchingSummaryGenerator, SeasonSummaryGenerator),   # Sat — Best Outing + MiLB AAA + Season Summary
     6: (MovementProfileGenerator, BestOutingGenerator, PitchingSummaryGenerator, BiomechanicsGenerator),         # Sun — Best Outing + Biomech
 }
 
