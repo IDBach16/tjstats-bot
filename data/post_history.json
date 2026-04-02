@@ -1146,12 +1146,21 @@
       ]
     },
     {
-      "date": "2026-04-02T15:47:18.714225",
-      "generator": "best_outing",
-      "tweet_id": "2039731380981252287",
+      "date": "2026-04-02T15:26:30.862785",
+      "generator": "reds_summary",
+      "tweet_id": "2039726172221661492",
       "tags": [
-        "best_outing",
-        "Kevin Gausman"
+        "reds_summary",
+        "2026-04-01"
+      ]
+    },
+    {
+      "date": "2026-04-02T17:29:06.522308",
+      "generator": "reds_summary",
+      "tweet_id": "2039757022732673229",
+      "tags": [
+        "reds_summary",
+        "2026-04-01"
       ]
     }
   ]
