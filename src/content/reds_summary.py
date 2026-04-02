@@ -238,12 +238,13 @@ class RedsSummaryGenerator(ContentGenerator):
 
             log.info("Generating card for %s (pid=%s)", pname, pid)
 
-            # Merge season stats into player_row for the card header
+            # Fetch season stats separately (don't merge into game row)
+            season_stats = {}
             if pid:
                 season_stats = self._get_season_stats(pid, MLB_SEASON)
-                if season_stats:
-                    for k, v in season_stats.items():
-                        player_row[k] = v
+                # Only copy p_throws to game row (needed for chart orientation)
+                if season_stats.get("p_throws"):
+                    player_row["p_throws"] = season_stats["p_throws"]
 
             # Get this pitcher's pitch-type data
             if game_pitch_id_col and pid and not reds_pitches.empty:
@@ -286,6 +287,7 @@ class RedsSummaryGenerator(ContentGenerator):
                 game_date=display_date,
                 opponent=opponent,
                 season=MLB_SEASON,
+                season_stats=season_stats,
             )
 
             if not card_path:

@@ -3768,15 +3768,16 @@ _PITCH_TABLE_COLS = [
     ("woba", "$\\bf{wOBA}$", ".3f", False),
 ]
 
-# Game stats row — columns from get_game_pitchers
+# Game stats row — game-specific stats (not season totals)
 _GAME_STATS = [
     ("innings_pitched", "$\\bf{IP}$", ".1f"),
-    ("batters_faced", "$\\bf{PA}$", ".0f"),
-    ("whip", "$\\bf{WHIP}$", ".2f"),
-    ("era", "$\\bf{ERA}$", ".2f"),
-    ("fip", "$\\bf{FIP}$", ".2f"),
-    ("strike_out_percentage", "$\\bf{K\\%}$", ".1%"),
-    ("walk_percentage", "$\\bf{BB\\%}$", ".1%"),
+    ("hits", "$\\bf{H}$", ".0f"),
+    ("runs", "$\\bf{R}$", ".0f"),
+    ("earned_runs", "$\\bf{ER}$", ".0f"),
+    ("strike_outs", "$\\bf{K}$", ".0f"),
+    ("walks", "$\\bf{BB}$", ".0f"),
+    ("home_runs", "$\\bf{HR}$", ".0f"),
+    ("pitches_thrown", "$\\bf{NP}$", ".0f"),
     ("whiff_rate", "$\\bf{Whiff\\%}$", ".1%"),
     ("stuff_plus", "$\\bf{Stf+}$", ".0f"),
     ("pitching_plus", "$\\bf{Pit+}$", ".0f"),
@@ -3966,6 +3967,7 @@ def plot_reds_game_summary(
     game_date: str = "",
     opponent: str = "",
     season: int | None = None,
+    season_stats: dict | None = None,
 ) -> Path | None:
     """Render a game-day pitching summary card for a Reds pitcher.
 
@@ -4131,6 +4133,29 @@ def plot_reds_game_summary(
                 if key[0] == 0:
                     cell.set_facecolor("#f0f0f0")
                     cell.set_text_props(fontweight="bold")
+
+        # Season stats subtitle (below game stats table)
+        if season_stats:
+            parts = []
+            ssn = season_stats
+            if ssn.get("innings_pitched"):
+                parts.append(f"Season: {ssn['innings_pitched']:.1f} IP")
+            if ssn.get("era") is not None:
+                parts.append(f"{ssn['era']:.2f} ERA")
+            if ssn.get("whip") is not None:
+                parts.append(f"{ssn['whip']:.2f} WHIP")
+            if ssn.get("fip") is not None:
+                parts.append(f"{ssn['fip']:.2f} FIP")
+            if ssn.get("strike_out_percentage") is not None:
+                parts.append(f"{ssn['strike_out_percentage']:.1%} K%")
+            if ssn.get("walk_percentage") is not None:
+                parts.append(f"{ssn['walk_percentage']:.1%} BB%")
+            if parts:
+                season_line = "  |  ".join(parts)
+                ax_season.text(0.5, -0.15, season_line,
+                               transform=ax_season.transAxes,
+                               fontsize=11, color="#888888",
+                               ha="center", va="top", style="italic")
 
         # ── Row 3: Movement (LEFT) + vs RHH (CENTER) + vs LHH (RIGHT) — equal sizes
         _row3 = gridspec.GridSpecFromSubplotSpec(1, 3, subplot_spec=gs[3, 1:8], wspace=0.35)
