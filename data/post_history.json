@@ -1217,6 +1217,33 @@
         "best_outing",
         "Grant Holmes"
       ]
+    },
+    {
+      "date": "2026-04-04T15:53:52.404609",
+      "generator": "best_outing",
+      "tweet_id": "2040457797997867218",
+      "tags": [
+        "best_outing",
+        "Valente Bellozo"
+      ]
+    },
+    {
+      "date": "2026-04-04T15:54:03.102305",
+      "generator": "season_summary",
+      "tweet_id": "2040457878041931918",
+      "tags": [
+        "season_summary",
+        "AJ Blubaugh"
+      ]
+    },
+    {
+      "date": "2026-04-04T15:54:30.748248",
+      "generator": "reds_summary",
+      "tweet_id": "2040457994861740248",
+      "tags": [
+        "reds_summary",
+        "2026-04-03"
+      ]
     }
   ]
 }
