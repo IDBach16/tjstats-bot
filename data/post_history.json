@@ -1262,6 +1262,15 @@
         "reds_summary",
         "2026-04-04"
       ]
+    },
+    {
+      "date": "2026-04-05T15:20:58.030025",
+      "generator": "movement_profile",
+      "tweet_id": "2040811916172411315",
+      "tags": [
+        "movement_profile",
+        "Chris Sale"
+      ]
     }
   ]
 }
