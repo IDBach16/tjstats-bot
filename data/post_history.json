@@ -1307,6 +1307,14 @@
         "reds_summary",
         "2026-04-05"
       ]
+    },
+    {
+      "date": "2026-04-06T15:36:01.825575",
+      "generator": "swing_plus_top10",
+      "tweet_id": "2041178119160189368",
+      "tags": [
+        "swing_plus_top10"
+      ]
     }
   ]
 }
