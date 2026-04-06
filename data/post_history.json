@@ -1180,12 +1180,35 @@
       ]
     },
     {
-      "date": "2026-04-06T19:05:59.661131",
-      "generator": "undervalued_relievers",
-      "tweet_id": "2041230958284726398",
+      "date": "2026-04-06T17:09:55.247383",
+      "generator": "swing_plus_top10",
+      "tweet_id": "2041201746442100994",
       "tags": [
-        "undervalued_relievers",
-        "Max Fried"
+        "swing_plus_top10"
+      ]
+    },
+    {
+      "date": "2026-04-06T17:18:30.320019",
+      "generator": "swing_plus_top10",
+      "tweet_id": "dry-run-0",
+      "tags": [
+        "swing_plus_top10"
+      ]
+    },
+    {
+      "date": "2026-04-06T17:23:28.859730",
+      "generator": "swing_plus_top10",
+      "tweet_id": "2041205158651044299",
+      "tags": [
+        "swing_plus_top10"
+      ]
+    },
+    {
+      "date": "2026-04-06T17:29:07.606634",
+      "generator": "swing_plus_top10",
+      "tweet_id": "2041206578926190988",
+      "tags": [
+        "swing_plus_top10"
       ]
     }
   ]
