@@ -290,49 +290,65 @@ def _get_savant_video(player_id, player_name):
     from pybaseball import statcast_batter
     from datetime import date, timedelta
 
-    end = date.today() - timedelta(days=1)
-    start = end - timedelta(days=14)
+    pid = int(player_id)
 
-    try:
-        df = statcast_batter(start.strftime("%Y-%m-%d"), end.strftime("%Y-%m-%d"), int(player_id))
-        if df is None or df.empty:
-            return None
+    # Try progressively wider windows: 14 days, then 30 days
+    for lookback in [14, 30]:
+        end = date.today() - timedelta(days=1)
+        start = end - timedelta(days=lookback)
 
-        # Prefer home runs, then doubles/triples, then hardest hit
-        hrs = df[df["events"] == "home_run"]
-        xbh = df[df["events"].isin(["double", "triple", "home_run"])]
-        target = hrs if not hrs.empty else xbh if not xbh.empty else df.dropna(subset=["launch_speed"]).nlargest(1, "launch_speed")
-
-        if target.empty:
-            return None
-
-        row = target.iloc[0]
-        game_pk = int(row["game_pk"])
-
-        # Get playId from play-by-play
-        pbp = requests.get(f"https://statsapi.mlb.com/api/v1/game/{game_pk}/playByPlay", timeout=15).json()
-        for play in pbp.get("allPlays", []):
-            if play.get("matchup", {}).get("batter", {}).get("id") != int(player_id):
+        try:
+            df = statcast_batter(start.strftime("%Y-%m-%d"), end.strftime("%Y-%m-%d"), pid)
+            if df is None or df.empty:
                 continue
-            event = (play.get("result", {}).get("event") or "").lower()
-            if "home_run" in event or "double" in event or "triple" in event or "single" in event:
-                for pe in reversed(play.get("playEvents", [])):
-                    play_id = pe.get("playId")
-                    if play_id:
+
+            # Prefer home runs, then XBH, then any hit, then hardest batted ball
+            hrs = df[df["events"] == "home_run"]
+            xbh = df[df["events"].isin(["double", "triple", "home_run"])]
+            hits = df[df["events"].isin(["single", "double", "triple", "home_run"])]
+            hard = df.dropna(subset=["launch_speed"]).nlargest(3, "launch_speed")
+            target = hrs if not hrs.empty else xbh if not xbh.empty else hits if not hits.empty else hard
+
+            if target.empty:
+                continue
+
+            # Try multiple candidate plays (not just the first)
+            for _, row in target.head(3).iterrows():
+                game_pk = int(row["game_pk"])
+                pbp = requests.get(
+                    f"https://statsapi.mlb.com/api/v1/game/{game_pk}/playByPlay",
+                    timeout=15,
+                ).json()
+
+                for play in pbp.get("allPlays", []):
+                    if play.get("matchup", {}).get("batter", {}).get("id") != pid:
+                        continue
+                    for pe in reversed(play.get("playEvents", [])):
+                        play_id = pe.get("playId")
+                        if not play_id:
+                            continue
                         surl = f"https://baseballsavant.mlb.com/sporty-videos?playId={play_id}"
                         sr = requests.get(surl, timeout=10)
-                        mp4s = re.findall(r'https?://sporty-clips\.mlb\.com/[^\s"<>]+\.mp4', sr.text)
+                        mp4s = re.findall(
+                            r'https?://sporty-clips\.mlb\.com/[^\s"<>]+\.mp4', sr.text
+                        )
                         if mp4s:
+                            # Use player_id in filename to avoid collisions
                             safe = player_name.replace(" ", "_").lower()
-                            clip_path = SCREENSHOTS_DIR.parent / "data" / "clips" / f"swing_{safe}.mp4"
+                            clip_path = (
+                                SCREENSHOTS_DIR.parent / "data" / "clips"
+                                / f"swing_{safe}_{pid}.mp4"
+                            )
                             clip_path.parent.mkdir(parents=True, exist_ok=True)
                             if _download_mp4(mp4s[0], clip_path):
                                 return clip_path
-                        break
-                break
-    except Exception:
-        log.debug("Savant video failed for %s", player_name, exc_info=True)
+                        break  # only try the last playEvent per at-bat
+                    break  # found this batter's play, move on
 
+        except Exception:
+            log.warning("Savant video failed for %s (lookback=%d)", player_name, lookback, exc_info=True)
+
+    log.warning("No video found for %s (id=%s)", player_name, player_id)
     return None
 
 
