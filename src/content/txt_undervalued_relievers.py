@@ -89,14 +89,18 @@ class UndervaluedRelieverGenerator(ContentGenerator):
         if df.empty:
             return PostContent(text="")
 
-        # Filter to relievers: 20-70 IP
+        # Filter to relievers: 20-70 IP, no starts (GS == 0)
         if "innings_pitched" not in df.columns:
             log.warning("No innings_pitched column in data")
             return PostContent(text="")
 
-        relievers = df[
-            (df["innings_pitched"] >= 20) & (df["innings_pitched"] <= 70)
-        ].copy()
+        ip_mask = (df["innings_pitched"] >= 20) & (df["innings_pitched"] <= 70)
+        # Exclude starters: if games_started column exists, require GS == 0
+        if "games_started" in df.columns:
+            gs_col = pd.to_numeric(df["games_started"], errors="coerce").fillna(0)
+            ip_mask = ip_mask & (gs_col == 0)
+
+        relievers = df[ip_mask].copy()
 
         if relievers.empty:
             log.warning("No relievers found in 20-70 IP range")
