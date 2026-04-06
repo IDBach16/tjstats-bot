@@ -311,9 +311,11 @@ def _get_savant_video(player_id, player_name):
             if target.empty:
                 continue
 
-            # Try multiple candidate plays (not just the first)
-            for _, row in target.head(3).iterrows():
+            # Try multiple candidate plays
+            hit_events = {"single", "double", "triple", "home_run"}
+            for _, row in target.head(5).iterrows():
                 game_pk = int(row["game_pk"])
+                event_type = str(row.get("events", "")).lower()
                 pbp = requests.get(
                     f"https://statsapi.mlb.com/api/v1/game/{game_pk}/playByPlay",
                     timeout=15,
@@ -321,6 +323,10 @@ def _get_savant_video(player_id, player_name):
 
                 for play in pbp.get("allPlays", []):
                     if play.get("matchup", {}).get("batter", {}).get("id") != pid:
+                        continue
+                    # Only match PBP plays that are actual hits
+                    pbp_event = (play.get("result", {}).get("event") or "").lower().replace(" ", "_")
+                    if pbp_event not in hit_events:
                         continue
                     for pe in reversed(play.get("playEvents", [])):
                         play_id = pe.get("playId")
@@ -332,7 +338,6 @@ def _get_savant_video(player_id, player_name):
                             r'https?://sporty-clips\.mlb\.com/[^\s"<>]+\.mp4', sr.text
                         )
                         if mp4s:
-                            # Use player_id in filename to avoid collisions
                             safe = player_name.replace(" ", "_").lower()
                             clip_path = (
                                 SCREENSHOTS_DIR.parent / "data" / "clips"
@@ -340,9 +345,9 @@ def _get_savant_video(player_id, player_name):
                             )
                             clip_path.parent.mkdir(parents=True, exist_ok=True)
                             if _download_mp4(mp4s[0], clip_path):
+                                log.info("Got %s video: %s from game %s", player_name, pbp_event, game_pk)
                                 return clip_path
-                        break  # only try the last playEvent per at-bat
-                    break  # found this batter's play, move on
+                        break  # only try last playEvent per at-bat
 
         except Exception:
             log.warning("Savant video failed for %s (lookback=%d)", player_name, lookback, exc_info=True)
