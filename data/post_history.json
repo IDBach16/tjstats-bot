@@ -1164,154 +1164,17 @@
       ]
     },
     {
-      "date": "2026-04-03T14:37:52.905383",
-      "generator": "reds_summary",
-      "tweet_id": "2040076322802729129",
-      "tags": [
-        "reds_summary",
-        "no_game"
-      ]
-    },
-    {
-      "date": "2026-04-03T15:31:43.191438",
-      "generator": "release_points",
-      "tweet_id": "2040089838611746910",
-      "tags": [
-        "release_points",
-        "Framber Valdez"
-      ]
-    },
-    {
-      "date": "2026-04-03T18:53:22.999757",
-      "generator": "biomechanics_101",
-      "tweet_id": "2040140621147430961",
-      "tags": [
-        "biomechanics_101",
-        "biomech_pelvis_vs_torso_timing"
-      ]
-    },
-    {
-      "date": "2026-04-03T19:32:00.210423",
-      "generator": "best_pitch_week",
-      "tweet_id": "2040150316012679520",
-      "tags": [
-        "best_pitch_week",
-        "Bryan Abreu",
-        "SL"
-      ]
-    },
-    {
-      "date": "2026-04-03T22:24:36.861594",
-      "generator": "pitching_summary",
-      "tweet_id": "2040193756272496842",
-      "tags": [
-        "pitching_summary",
-        "Yoshinobu Yamamoto"
-      ]
-    },
-    {
-      "date": "2026-04-04T15:20:12.404646",
-      "generator": "best_outing",
-      "tweet_id": "2040449358521577769",
-      "tags": [
-        "best_outing",
-        "Grant Holmes"
-      ]
-    },
-    {
-      "date": "2026-04-04T15:53:52.404609",
-      "generator": "best_outing",
-      "tweet_id": "2040457797997867218",
-      "tags": [
-        "best_outing",
-        "Valente Bellozo"
-      ]
-    },
-    {
-      "date": "2026-04-04T15:54:03.102305",
-      "generator": "season_summary",
-      "tweet_id": "2040457878041931918",
-      "tags": [
-        "season_summary",
-        "AJ Blubaugh"
-      ]
-    },
-    {
-      "date": "2026-04-04T15:54:30.748248",
-      "generator": "reds_summary",
-      "tweet_id": "2040457994861740248",
-      "tags": [
-        "reds_summary",
-        "2026-04-03"
-      ]
-    },
-    {
-      "date": "2026-04-04T18:48:30.882215",
-      "generator": "biomechanics_101",
-      "tweet_id": "2040501783835914470",
-      "tags": [
-        "biomechanics_101",
-        "biomech_hip_shoulder_separation"
-      ]
-    },
-    {
-      "date": "2026-04-05T14:30:23.603049",
-      "generator": "reds_summary",
-      "tweet_id": "2040799213584605350",
-      "tags": [
-        "reds_summary",
-        "2026-04-04"
-      ]
-    },
-    {
-      "date": "2026-04-05T15:20:58.030025",
-      "generator": "movement_profile",
-      "tweet_id": "2040811916172411315",
-      "tags": [
-        "movement_profile",
-        "Chris Sale"
-      ]
-    },
-    {
-      "date": "2026-04-05T18:50:51.586509",
-      "generator": "biomechanics_101",
-      "tweet_id": "2040864761936568414",
-      "tags": [
-        "biomechanics_101",
-        "biomech_arm_slot_distribution"
-      ]
-    },
-    {
-      "date": "2026-04-05T19:27:21.375569",
-      "generator": "best_outing",
-      "tweet_id": "2040873921789198830",
-      "tags": [
-        "best_outing",
-        "Luis Medina"
-      ]
-    },
-    {
-      "date": "2026-04-05T22:22:41.396062",
-      "generator": "pitching_summary",
-      "tweet_id": "2040918042641842574",
-      "tags": [
-        "pitching_summary",
-        "Paul Skenes"
-      ]
-    },
-    {
-      "date": "2026-04-06T14:41:55.525140",
-      "generator": "reds_summary",
-      "tweet_id": "2041164503686299656",
-      "tags": [
-        "reds_summary",
-        "2026-04-05"
-      ]
-    },
-    {
-      "date": "2026-04-06T15:36:01.825575",
+      "date": "2026-04-06T16:59:25.454007",
       "generator": "swing_plus_top10",
-      "tweet_id": "2041178119160189368",
+      "tweet_id": "dry-run-0",
+      "tags": [
+        "swing_plus_top10"
+      ]
+    },
+    {
+      "date": "2026-04-06T17:01:16.517756",
+      "generator": "swing_plus_top10",
+      "tweet_id": "dry-run-0",
       "tags": [
         "swing_plus_top10"
       ]
