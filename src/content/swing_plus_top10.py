@@ -302,12 +302,11 @@ def _get_savant_video(player_id, player_name):
             if df is None or df.empty:
                 continue
 
-            # Prefer home runs, then XBH, then any hit, then hardest batted ball
+            # Only use hits — prefer HR, then XBH, then singles
             hrs = df[df["events"] == "home_run"]
             xbh = df[df["events"].isin(["double", "triple", "home_run"])]
             hits = df[df["events"].isin(["single", "double", "triple", "home_run"])]
-            hard = df.dropna(subset=["launch_speed"]).nlargest(3, "launch_speed")
-            target = hrs if not hrs.empty else xbh if not xbh.empty else hits if not hits.empty else hard
+            target = hrs if not hrs.empty else xbh if not xbh.empty else hits
 
             if target.empty:
                 continue
@@ -374,30 +373,47 @@ class SwingPlusTop10Generator(ContentGenerator):
             f"Updated Swing+ Top 10 — {MLB_SEASON}\n\n"
             f"Pure mechanics model trained on bat tracking data. "
             f"{names[0]}, {names[1]}, and {names[2]} lead the way.\n\n"
-            f"Full thread with video for each hitter below\n\n"
+            f"Thread with video highlights below\n\n"
             f"@TJStats {DEFAULT_HASHTAGS} #BatTracking"
         )
 
-        # Build replies for each hitter 1-10
+        # Build replies — video for top 5 only
         replies = []
         for i, (_, row) in enumerate(top10.iterrows()):
             hitter_name = row["name_fg"]
             sp = row["swing_plus"]
-            xwoba = row.get("xwOBA", 0)
             bat_spd = row.get("bat_speed", 0)
-            pid = row.get("player_id")
+            sq_up = row.get("squared_up_rate", 0)
+            sw_len = row.get("swing_length", 0)
+            xwoba = row.get("xwOBA", 0)
+            hard_sw = row.get("sweetspot_speed_high", 0)
 
             line = f"#{i+1} {hitter_name} — Swing+ {sp:.1f}"
-            details = f"Bat Speed: {bat_spd:.1f} mph"
-            if xwoba and xwoba > 0:
-                details += f" | xwOBA: {xwoba:.3f}"
 
+            # Build stat description (~150 chars)
+            stats = []
+            if bat_spd:
+                stats.append(f"Bat Speed {bat_spd:.1f}mph")
+            if sq_up:
+                sq_pct = sq_up * 100 if sq_up <= 1 else sq_up
+                stats.append(f"Squared Up {sq_pct:.0f}%")
+            if sw_len:
+                stats.append(f"Swing Length {sw_len:.1f}ft")
+            if hard_sw:
+                hs_pct = hard_sw * 100 if hard_sw <= 1 else hard_sw
+                stats.append(f"Hard Swing {hs_pct:.0f}%")
+            if xwoba and xwoba > 0:
+                stats.append(f"xwOBA {xwoba:.3f}")
+
+            details = " | ".join(stats)
             reply_text = f"{line}\n{details}"
 
-            # Get video
+            # Video for top 5 only
             video_path = None
-            if pid and not np.isnan(pid):
-                video_path = _get_savant_video(int(pid), hitter_name)
+            if i < 5:
+                pid = row.get("player_id")
+                if pid and not np.isnan(pid):
+                    video_path = _get_savant_video(int(pid), hitter_name)
 
             replies.append(PostContent(
                 text=reply_text,
