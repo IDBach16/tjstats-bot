@@ -68,6 +68,7 @@ on:
           - best_outing
           - swing_plus_top10
           - best_pitch_week
+          - hitter_analysis
 
 permissions:
   contents: write
@@ -160,7 +161,7 @@ jobs:
               missed.append('screenshot')
           print(f'Missed slots: {missed}')
           with open('missed_slots.txt', 'w') as f:
-              f.write('\n'.join(missed))
+              f.write('\n'.join(missed) + '\n' if missed else '')
           "
             if [ -s missed_slots.txt ]; then
               while IFS= read -r slot; do
