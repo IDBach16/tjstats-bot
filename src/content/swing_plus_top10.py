@@ -36,7 +36,7 @@ WATERMARK_PATH = Path(__file__).resolve().parent.parent.parent / "assets" / "Bac
 FEATURES = [
     "bat_speed", "squared_up_rate", "squared_up_speed_rate",
     "swing_length", "sweetspot_speed_high", "hit_into_play_rate", "swords",
-    "brl_percent",
+    "brl_percent", "anglesweetspotpercent", "ev95percent",
 ]
 
 # Column mapping: Savant CSV name -> model feature name
@@ -116,21 +116,36 @@ def _compute_swing_plus():
     )
 
     # Merge barrel data from Statcast leaderboard
-    try:
-        brl_url = (
-            f"https://baseballsavant.mlb.com/leaderboard/statcast?"
-            f"type=batter&year={MLB_SEASON}&position=&team=&min=20&csv=true"
-        )
-        brl_df = pd.read_csv(io.StringIO(requests.get(brl_url, timeout=30).text))
-        if "brl_percent" in brl_df.columns and id_col:
-            brl_df["_merge_pid"] = pd.to_numeric(brl_df["player_id"], errors="coerce")
-            bt_clean["_merge_pid"] = pd.to_numeric(bt_clean[id_col], errors="coerce")
-            bt_clean = bt_clean.merge(
-                brl_df[["_merge_pid", "brl_percent"]], on="_merge_pid", how="left"
+    if id_col:
+        bt_clean["_merge_pid"] = pd.to_numeric(bt_clean[id_col], errors="coerce")
+        try:
+            brl_url = (
+                f"https://baseballsavant.mlb.com/leaderboard/statcast?"
+                f"type=batter&year={MLB_SEASON}&position=&team=&min=20&csv=true"
             )
-            bt_clean.drop(columns=["_merge_pid"], inplace=True)
-    except Exception:
-        log.warning("Barrel data fetch failed", exc_info=True)
+            brl_df = pd.read_csv(io.StringIO(requests.get(brl_url, timeout=30).text))
+            if "brl_percent" in brl_df.columns:
+                brl_df["_merge_pid"] = pd.to_numeric(brl_df["player_id"], errors="coerce")
+                bt_clean = bt_clean.merge(
+                    brl_df[["_merge_pid", "brl_percent"]], on="_merge_pid", how="left"
+                )
+        except Exception:
+            log.warning("Barrel data fetch failed", exc_info=True)
+
+        # Merge launch quality (sweet spot LA% + hard hit %) from pybaseball
+        try:
+            from pybaseball import statcast_batter_exitvelo_barrels
+            ev_df = statcast_batter_exitvelo_barrels(MLB_SEASON, minBBE=10)
+            ev_df["_merge_pid"] = pd.to_numeric(ev_df["player_id"], errors="coerce")
+            keep = ["_merge_pid"]
+            for c in ("anglesweetspotpercent", "ev95percent"):
+                if c in ev_df.columns:
+                    keep.append(c)
+            bt_clean = bt_clean.merge(ev_df[keep], on="_merge_pid", how="left")
+        except Exception:
+            log.warning("Launch quality data fetch failed", exc_info=True)
+
+        bt_clean.drop(columns=["_merge_pid"], inplace=True)
 
     # Convert features to numeric
     for f in FEATURES:
