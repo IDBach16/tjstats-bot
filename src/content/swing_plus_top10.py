@@ -1,7 +1,7 @@
 """Content generator: Weekly Top 10 Swing+ leaderboard (Mondays).
 
-Pure mechanics model — trained on bat tracking features only.
-Uses Baseball Savant bat tracking data. Thread format: header image
+Mechanics + barrel model — trained on bat tracking features plus barrel rate.
+Uses Baseball Savant bat tracking and statcast data. Thread format: header image
 + individual replies with Savant video for each hitter.
 """
 
@@ -36,6 +36,7 @@ WATERMARK_PATH = Path(__file__).resolve().parent.parent.parent / "assets" / "Bac
 FEATURES = [
     "bat_speed", "squared_up_rate", "squared_up_speed_rate",
     "swing_length", "sweetspot_speed_high", "hit_into_play_rate", "swords",
+    "brl_percent",
 ]
 
 # Column mapping: Savant CSV name -> model feature name
@@ -113,6 +114,23 @@ def _compute_swing_plus():
     bt_clean["name_fg"] = bt_clean[name_col].apply(
         lambda x: " ".join(str(x).split(", ")[::-1]).strip() if ", " in str(x) else str(x).strip()
     )
+
+    # Merge barrel data from Statcast leaderboard
+    try:
+        brl_url = (
+            f"https://baseballsavant.mlb.com/leaderboard/statcast?"
+            f"type=batter&year={MLB_SEASON}&position=&team=&min=20&csv=true"
+        )
+        brl_df = pd.read_csv(io.StringIO(requests.get(brl_url, timeout=30).text))
+        if "brl_percent" in brl_df.columns and id_col:
+            brl_df["_merge_pid"] = pd.to_numeric(brl_df["player_id"], errors="coerce")
+            bt_clean["_merge_pid"] = pd.to_numeric(bt_clean[id_col], errors="coerce")
+            bt_clean = bt_clean.merge(
+                brl_df[["_merge_pid", "brl_percent"]], on="_merge_pid", how="left"
+            )
+            bt_clean.drop(columns=["_merge_pid"], inplace=True)
+    except Exception:
+        log.warning("Barrel data fetch failed", exc_info=True)
 
     # Convert features to numeric
     for f in FEATURES:

@@ -1212,111 +1212,28 @@
       ]
     },
     {
-      "date": "2026-04-06T22:27:28.688602",
-      "generator": "best_outing",
-      "tweet_id": "2041281637594665396",
+      "date": "2026-04-08T13:47:16.605258",
+      "generator": "swing_plus_young",
+      "tweet_id": "dry-run-0",
       "tags": [
-        "best_outing",
-        "Chase Burns"
+        "swing_plus_young"
       ]
     },
     {
-      "date": "2026-04-07T15:01:26.972150",
-      "generator": "best_outing",
-      "tweet_id": "2041531781938135455",
+      "date": "2026-04-08T13:49:13.562277",
+      "generator": "swing_plus_young",
+      "tweet_id": "2041876025777299886",
       "tags": [
-        "best_outing",
-        "Brayan Bello"
+        "swing_plus_young"
       ]
     },
     {
-      "date": "2026-04-07T16:03:19.224699",
-      "generator": "reds_summary",
-      "tweet_id": "2041547375228137478",
+      "date": "2026-04-08T15:13:04.962608",
+      "generator": "hitter_analysis",
+      "tweet_id": "dry-run-0",
       "tags": [
-        "reds_summary",
-        "2026-04-06"
-      ]
-    },
-    {
-      "date": "2026-04-07T17:04:23.852214",
-      "generator": "biomechanics_101",
-      "tweet_id": "2041562745636553162",
-      "tags": [
-        "biomechanics_101",
-        "biomech_hip_shoulder_separation"
-      ]
-    },
-    {
-      "date": "2026-04-08T15:03:41.217167",
-      "generator": "velo_distribution",
-      "tweet_id": "2041894723296633064",
-      "tags": [
-        "velo_distribution",
-        "Paul Skenes"
-      ]
-    },
-    {
-      "date": "2026-04-08T17:12:19.495936",
-      "generator": "biomechanics_101",
-      "tweet_id": "2041927128430641456",
-      "tags": [
-        "biomechanics_101",
-        "biomech_shoulder_energy_transfer"
-      ]
-    },
-    {
-      "date": "2026-04-08T19:21:48.315347",
-      "generator": "explainer",
-      "tweet_id": "2041959713844424959",
-      "tags": [
-        "explainer",
-        "explainer_vaa"
-      ]
-    },
-    {
-      "date": "2026-04-08T19:53:52.573772",
-      "generator": "explainer",
-      "tweet_id": "2041967784738144697",
-      "tags": [
-        "explainer",
-        "explainer_ivb"
-      ]
-    },
-    {
-      "date": "2026-04-08T22:31:24.534870",
-      "generator": "pitching_summary",
-      "tweet_id": "2042007400035577960",
-      "tags": [
-        "pitching_summary",
-        "Framber Valdez"
-      ]
-    },
-    {
-      "date": "2026-04-09T15:15:42.008885",
-      "generator": "best_outing",
-      "tweet_id": "2042260143413363144",
-      "tags": [
-        "best_outing",
-        "Eury P\u00e9rez"
-      ]
-    },
-    {
-      "date": "2026-04-09T16:09:50.095288",
-      "generator": "reds_summary",
-      "tweet_id": "2042273790160179446",
-      "tags": [
-        "reds_summary",
-        "2026-04-08"
-      ]
-    },
-    {
-      "date": "2026-04-09T16:13:04.106987",
-      "generator": "reds_summary",
-      "tweet_id": "2042274603888746976",
-      "tags": [
-        "reds_summary",
-        "2026-04-08"
+        "hitter_analysis",
+        "hitter_analysis_jordan_walker"
       ]
     },
     {

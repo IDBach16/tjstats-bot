@@ -156,18 +156,7 @@ class BestOutingGenerator(ContentGenerator):
             (yesterday_pitches["pitcher_name"] == name)
         ].copy()
 
-        # Build a game-level pitcher row for the card header
-        game_row = pd.Series({
-            "pitcher_name": name,
-            "pitcher_id": pid,
-            "total_pitches": int(best["total_pitches"]),
-            "whiff_rate": best["whiff_rate"],
-            "stuff_plus": best["avg_stuff_plus"],
-            "pitching_plus": best["avg_pitching_plus"],
-            "n_pitch_types": int(best["n_pitch_types"]),
-        })
-
-        # Get team + season data for context (subtitle only)
+        # Get team + season data — needed for percentile rankings vs league
         team = None
         season_df = pd.DataFrame()
         try:
@@ -177,7 +166,11 @@ class BestOutingGenerator(ContentGenerator):
                 if not match.empty:
                     team = str(match.iloc[0].get("season_teams", "")).split(",")[0].strip()
         except Exception:
-            log.warning("Failed to fetch season data for team lookup", exc_info=True)
+            log.warning("Failed to fetch season data", exc_info=True)
+
+        if season_df.empty:
+            log.warning("No season data available — cannot build card")
+            return PostContent(text="")
 
         # Fetch season-level pitch data for league comparison in the card
         try:
@@ -185,10 +178,9 @@ class BestOutingGenerator(ContentGenerator):
         except Exception:
             all_pitches_df = None
 
-        # Generate card using game-level data
-        game_pitcher_df = pd.DataFrame([game_row])
+        # Generate card using full season data so percentile rankings work
         image_path = plot_pitching_summary(
-            name, game_pitcher_df, game_pitcher_pitches,
+            name, season_df, game_pitcher_pitches,
             all_pitches_df=all_pitches_df,
             team=team, player_id=pid, level="MLB",
         )
