@@ -1253,6 +1253,15 @@
         "reds_summary",
         "2026-04-09"
       ]
+    },
+    {
+      "date": "2026-04-10T15:39:56.296806",
+      "generator": "hitter_analysis",
+      "tweet_id": "2042628654937555090",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_tristan_peters"
+      ]
     }
   ]
 }
