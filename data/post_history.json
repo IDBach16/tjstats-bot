@@ -1271,6 +1271,15 @@
         "hitter_analysis",
         "hitter_analysis_luis_arraez"
       ]
+    },
+    {
+      "date": "2026-04-10T18:58:43.891674",
+      "generator": "biomechanics_101",
+      "tweet_id": "2042678682406285535",
+      "tags": [
+        "biomechanics_101",
+        "biomech_torso_tilt_vs_arm_slot"
+      ]
     }
   ]
 }
