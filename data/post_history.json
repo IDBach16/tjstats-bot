@@ -1434,6 +1434,24 @@
         "hitter_analysis",
         "hitter_analysis_nathan_lukes"
       ]
+    },
+    {
+      "date": "2026-04-14T16:14:13.783407",
+      "generator": "reds_summary",
+      "tweet_id": "2044086836205584771",
+      "tags": [
+        "reds_summary",
+        "no_game"
+      ]
+    },
+    {
+      "date": "2026-04-14T16:15:05.835819",
+      "generator": "hitter_analysis",
+      "tweet_id": "2044087054506582198",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_oneil_cruz"
+      ]
     }
   ]
 }
