@@ -3874,9 +3874,17 @@ def plot_reds_matchup_header(
         def _get_logo(abbrev):
             slug = _LOGO_SLUGS.get(abbrev, abbrev.lower())
             url = (f"https://a.espncdn.com/combiner/i?img="
-                   f"/i/teamlogos/mlb/500/scoreboard/{slug}.png&h=500&w=500")
+                   f"/i/teamlogos/mlb/500/{slug}.png&h=500&w=500")
             resp = _requests.get(url, timeout=10, allow_redirects=True)
-            return Image.open(BytesIO(resp.content)).convert("RGBA")
+            img = Image.open(BytesIO(resp.content)).convert("RGBA")
+            # Convert logo to white (keep alpha) so it pops on team-color bg
+            import numpy as _np
+            arr = _np.array(img)
+            mask = arr[:, :, 3] > 50  # visible pixels
+            arr[mask, 0] = 255
+            arr[mask, 1] = 255
+            arr[mask, 2] = 255
+            return Image.fromarray(arr)
 
         # Away team on left, home team on right (MLB style)
         if is_home:
@@ -3906,7 +3914,7 @@ def plot_reds_matchup_header(
         ax_right_bg.add_patch(Rectangle((0, 0), 1, 1, color=right_bg))
         ax_right_bg.axis("off")
 
-        # Logos
+        # Logos (white on team-color background)
         ax_ll = fig.add_axes([0.07, 0.25, 0.32, 0.55])
         ax_ll.imshow(left_logo); ax_ll.axis("off")
         ax_rl = fig.add_axes([0.58, 0.25, 0.32, 0.55])
