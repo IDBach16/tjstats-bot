@@ -1289,6 +1289,24 @@
         "best_outing",
         "Shohei Ohtani"
       ]
+    },
+    {
+      "date": "2026-04-16T16:14:06.438691",
+      "generator": "reds_summary",
+      "tweet_id": "2044811580647555137",
+      "tags": [
+        "reds_summary",
+        "2026-04-15"
+      ]
+    },
+    {
+      "date": "2026-04-16T16:15:07.366875",
+      "generator": "best_outing",
+      "tweet_id": "2044811816338100377",
+      "tags": [
+        "best_outing",
+        "Shota Imanaga"
+      ]
     }
   ]
 }
