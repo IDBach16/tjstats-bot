@@ -1535,6 +1535,24 @@
         "hitter_analysis",
         "hitter_analysis_james_wood"
       ]
+    },
+    {
+      "date": "2026-04-21T16:07:09.463652",
+      "generator": "reds_summary",
+      "tweet_id": "2046621770896097679",
+      "tags": [
+        "reds_summary",
+        "2026-04-20"
+      ]
+    },
+    {
+      "date": "2026-04-21T16:08:38.583514",
+      "generator": "hitter_analysis",
+      "tweet_id": "2046622145288032385",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_jordan_walker"
+      ]
     }
   ]
 }
