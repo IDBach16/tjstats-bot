@@ -1553,6 +1553,15 @@
         "hitter_analysis",
         "hitter_analysis_jordan_walker"
       ]
+    },
+    {
+      "date": "2026-04-21T17:07:23.525982",
+      "generator": "biomechanics_101",
+      "tweet_id": "2046636929270022293",
+      "tags": [
+        "biomechanics_101",
+        "biomech_velo_vs_elbow_varus"
+      ]
     }
   ]
 }
