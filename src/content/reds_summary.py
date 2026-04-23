@@ -335,7 +335,8 @@ class RedsSummaryGenerator(ContentGenerator):
         if not opp_abbrev:
             opp_abbrev = opponent.split()[-1][:3].upper()
 
-        starter_name = cards[0]["name"] if cards else "Unknown"
+        # Get the actual starter from the MLB boxscore (first in pitchers list)
+        starter_name = self._get_starter_name(game_pk) or (cards[0]["name"] if cards else "Unknown")
         header_image = plot_reds_matchup_header(
             opponent_abbrev=opp_abbrev,
             game_date=display_date,
@@ -562,6 +563,27 @@ class RedsSummaryGenerator(ContentGenerator):
                 rows.append(row)
 
         return pd.DataFrame(rows) if rows else pd.DataFrame()
+
+    def _get_starter_name(self, game_pk: int) -> str | None:
+        """Get the Reds starting pitcher name from the MLB boxscore."""
+        try:
+            url = f"{MLB_API_BASE}/game/{game_pk}/boxscore"
+            data = requests.get(url, timeout=15).json()
+            for side in ("home", "away"):
+                team_data = data.get("teams", {}).get(side, {})
+                if team_data.get("team", {}).get("id") != REDS_TEAM_ID:
+                    continue
+                pitchers = team_data.get("pitchers", [])
+                if pitchers:
+                    first_pid = pitchers[0]
+                    player = team_data.get("players", {}).get(f"ID{first_pid}", {})
+                    name = player.get("person", {}).get("fullName")
+                    if name:
+                        log.info("Starter from boxscore: %s", name)
+                        return name
+        except Exception:
+            log.warning("Failed to get starter from boxscore", exc_info=True)
+        return None
 
     def _get_boxscore_pitchers(self, game_pk: int):
         """Fetch Reds pitchers from MLB Stats API boxscore as a fallback."""
