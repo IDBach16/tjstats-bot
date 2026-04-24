@@ -1326,6 +1326,15 @@
         "hitter_analysis",
         "hitter_analysis_oneil_cruz"
       ]
+    },
+    {
+      "date": "2026-04-24T17:01:33.609367",
+      "generator": "biomechanics_101",
+      "tweet_id": "2047722625359855874",
+      "tags": [
+        "biomechanics_101",
+        "biomech_ground_reaction_forces"
+      ]
     }
   ]
 }
