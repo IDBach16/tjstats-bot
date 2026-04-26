@@ -1419,6 +1419,15 @@
         "reds_summary",
         "2026-04-25"
       ]
+    },
+    {
+      "date": "2026-04-26T18:59:49.679386",
+      "generator": "biomechanics_101",
+      "tweet_id": "2048477163934900229",
+      "tags": [
+        "biomechanics_101",
+        "biomech_stride_length_vs_velo"
+      ]
     }
   ]
 }
