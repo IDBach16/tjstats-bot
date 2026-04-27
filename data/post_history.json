@@ -1454,6 +1454,23 @@
       "tags": [
         "swing_plus_top10"
       ]
+    },
+    {
+      "date": "2026-04-27T16:17:00.200702",
+      "generator": "reds_summary",
+      "tweet_id": "2048798575673389073",
+      "tags": [
+        "reds_summary",
+        "2026-04-26"
+      ]
+    },
+    {
+      "date": "2026-04-27T16:18:27.494321",
+      "generator": "swing_plus_top10",
+      "tweet_id": "2048798941819310384",
+      "tags": [
+        "swing_plus_top10"
+      ]
     }
   ]
 }
