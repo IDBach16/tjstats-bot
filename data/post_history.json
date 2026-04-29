@@ -1582,6 +1582,15 @@
         "biomechanics_101",
         "biomech_stride_length_vs_velo"
       ]
+    },
+    {
+      "date": "2026-04-29T20:06:44.084880",
+      "generator": "explainer",
+      "tweet_id": "2049581165091188840",
+      "tags": [
+        "explainer",
+        "explainer_extension"
+      ]
     }
   ]
 }
