@@ -1627,6 +1627,15 @@
         "best_outing",
         "DL Hall"
       ]
+    },
+    {
+      "date": "2026-04-30T17:25:13.174094",
+      "generator": "biomechanics_101",
+      "tweet_id": "2049902906732917021",
+      "tags": [
+        "biomechanics_101",
+        "biomech_torso_rotation_velo"
+      ]
     }
   ]
 }
