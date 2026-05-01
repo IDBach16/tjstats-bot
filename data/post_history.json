@@ -1664,6 +1664,15 @@
         "hitter_analysis",
         "hitter_analysis_james_wood"
       ]
+    },
+    {
+      "date": "2026-05-01T17:00:33.654353",
+      "generator": "biomechanics_101",
+      "tweet_id": "2050259088542511471",
+      "tags": [
+        "biomechanics_101",
+        "biomech_velo_vs_elbow_varus"
+      ]
     }
   ]
 }
