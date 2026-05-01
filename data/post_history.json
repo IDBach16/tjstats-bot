@@ -1655,6 +1655,15 @@
         "reds_summary",
         "2026-04-30"
       ]
+    },
+    {
+      "date": "2026-05-01T15:44:24.382790",
+      "generator": "hitter_analysis",
+      "tweet_id": "2050239924608106929",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_james_wood"
+      ]
     }
   ]
 }
