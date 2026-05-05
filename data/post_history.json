@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-03-02T14:59:27.712070",
-      "generator": "stat_of_day",
-      "tweet_id": "dry-run-0",
-      "tags": [
-        "stat_of_day",
-        "whiff_rate"
-      ]
-    },
-    {
       "date": "2026-03-02T15:01:24.220668",
       "generator": "pitcher_spotlight",
       "tweet_id": "dry-run-0",
@@ -1817,6 +1808,16 @@
       "tags": [
         "milb_pitcher_card",
         "Trenton Denholm",
+        "AAA"
+      ]
+    },
+    {
+      "date": "2026-05-05T22:48:45.523822",
+      "generator": "milb_pitching_summary",
+      "tweet_id": "2051796200844603735",
+      "tags": [
+        "milb_pitching_summary",
+        "Logan Allen",
         "AAA"
       ]
     }
