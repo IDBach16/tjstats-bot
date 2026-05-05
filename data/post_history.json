@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-03-02T14:58:39.210424",
-      "generator": "pitcher_spotlight",
-      "tweet_id": "dry-run-0",
-      "tags": [
-        "pitcher_spotlight",
-        "Emmanuel Clase"
-      ]
-    },
-    {
       "date": "2026-03-02T14:59:27.712070",
       "generator": "stat_of_day",
       "tweet_id": "dry-run-0",
@@ -1817,6 +1808,16 @@
       "tags": [
         "biomechanics_101",
         "biomech_torso_tilt_vs_arm_slot"
+      ]
+    },
+    {
+      "date": "2026-05-05T20:04:26.568219",
+      "generator": "milb_pitcher_card",
+      "tweet_id": "2051754915941466292",
+      "tags": [
+        "milb_pitcher_card",
+        "Trenton Denholm",
+        "AAA"
       ]
     }
   ]
