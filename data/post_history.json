@@ -1782,6 +1782,15 @@
         "biomechanics_101",
         "biomech_shoulder_energy_transfer"
       ]
+    },
+    {
+      "date": "2026-05-05T15:31:20.501507",
+      "generator": "hitter_analysis",
+      "tweet_id": "2051686187530698896",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_jordan_walker"
+      ]
     }
   ]
 }
