@@ -1791,6 +1791,24 @@
         "hitter_analysis",
         "hitter_analysis_jordan_walker"
       ]
+    },
+    {
+      "date": "2026-05-05T16:20:37.778320",
+      "generator": "reds_summary",
+      "tweet_id": "2051698591392030916",
+      "tags": [
+        "reds_summary",
+        "2026-05-04"
+      ]
+    },
+    {
+      "date": "2026-05-05T16:21:39.545289",
+      "generator": "hitter_analysis",
+      "tweet_id": "2051698849819787707",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_tyler_heineman"
+      ]
     }
   ]
 }
