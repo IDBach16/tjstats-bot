@@ -1809,6 +1809,15 @@
         "hitter_analysis",
         "hitter_analysis_tyler_heineman"
       ]
+    },
+    {
+      "date": "2026-05-05T17:32:49.102563",
+      "generator": "biomechanics_101",
+      "tweet_id": "2051716758407659520",
+      "tags": [
+        "biomechanics_101",
+        "biomech_torso_tilt_vs_arm_slot"
+      ]
     }
   ]
 }
