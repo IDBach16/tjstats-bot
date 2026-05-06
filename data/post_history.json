@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-03-02T15:06:54.494714",
-      "generator": "pitcher_spotlight",
-      "tweet_id": "2028487227198628288",
-      "tags": [
-        "pitcher_spotlight",
-        "Blake Snell"
-      ]
-    },
-    {
       "date": "2026-03-02T15:41:25.927343",
       "generator": "pitcher_spotlight",
       "tweet_id": "dry-run-0",
@@ -1819,6 +1810,15 @@
       "tags": [
         "biomechanics_101",
         "biomech_velo_vs_elbow_varus"
+      ]
+    },
+    {
+      "date": "2026-05-06T20:16:55.849381",
+      "generator": "explainer",
+      "tweet_id": "2052120446372401533",
+      "tags": [
+        "explainer",
+        "explainer_whiff_vs_chase"
       ]
     }
   ]
