@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-03-02T15:01:24.220668",
-      "generator": "pitcher_spotlight",
-      "tweet_id": "dry-run-0",
-      "tags": [
-        "pitcher_spotlight",
-        "Zack Wheeler"
-      ]
-    },
-    {
       "date": "2026-03-02T15:01:51.552409",
       "generator": "stat_of_day",
       "tweet_id": "dry-run-0",
@@ -1819,6 +1810,15 @@
         "milb_pitching_summary",
         "Logan Allen",
         "AAA"
+      ]
+    },
+    {
+      "date": "2026-05-06T16:23:13.435717",
+      "generator": "reds_summary",
+      "tweet_id": "2052061631937425897",
+      "tags": [
+        "reds_summary",
+        "2026-05-05"
       ]
     }
   ]
