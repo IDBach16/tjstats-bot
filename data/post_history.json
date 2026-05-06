@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-03-02T15:41:25.927343",
-      "generator": "pitcher_spotlight",
-      "tweet_id": "dry-run-0",
-      "tags": [
-        "pitcher_spotlight",
-        "Tarik Skubal"
-      ]
-    },
-    {
       "date": "2026-03-02T15:43:59.614928",
       "generator": "pitcher_spotlight",
       "tweet_id": "dry-run-0",
@@ -1819,6 +1810,15 @@
       "tags": [
         "explainer",
         "explainer_whiff_vs_chase"
+      ]
+    },
+    {
+      "date": "2026-05-06T22:41:16.648590",
+      "generator": "pitching_summary",
+      "tweet_id": "2052156750933979278",
+      "tags": [
+        "pitching_summary",
+        "Garrett Crochet"
       ]
     }
   ]
