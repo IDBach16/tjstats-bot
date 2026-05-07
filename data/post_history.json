@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-03-02T15:56:26.509233",
-      "generator": "pitcher_spotlight",
-      "tweet_id": "2028499692003246282",
-      "tags": [
-        "pitcher_spotlight",
-        "Logan Webb"
-      ]
-    },
-    {
       "date": "2026-03-02T15:57:59.745145",
       "generator": "pitcher_spotlight",
       "tweet_id": "dry-run-0",
@@ -1819,6 +1810,16 @@
       "tags": [
         "biomechanics_101",
         "biomech_elbow_stress_by_level"
+      ]
+    },
+    {
+      "date": "2026-05-07T22:54:25.031240",
+      "generator": "milb_trad_pitching_summary",
+      "tweet_id": "2052522435140837437",
+      "tags": [
+        "milb_trad_pitching_summary",
+        "Kyle Luckham",
+        "AA"
       ]
     }
   ]
