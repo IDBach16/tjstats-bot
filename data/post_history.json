@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-03-02T15:55:30.911075",
-      "generator": "pitcher_spotlight",
-      "tweet_id": "dry-run-0",
-      "tags": [
-        "pitcher_spotlight",
-        "Dylan Cease"
-      ]
-    },
-    {
       "date": "2026-03-02T15:56:26.509233",
       "generator": "pitcher_spotlight",
       "tweet_id": "2028499692003246282",
@@ -1819,6 +1810,15 @@
       "tags": [
         "reds_summary",
         "2026-05-06"
+      ]
+    },
+    {
+      "date": "2026-05-07T17:51:11.842451",
+      "generator": "biomechanics_101",
+      "tweet_id": "2052446159277318263",
+      "tags": [
+        "biomechanics_101",
+        "biomech_elbow_stress_by_level"
       ]
     }
   ]
