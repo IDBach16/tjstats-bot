@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-03-02T15:57:59.745145",
-      "generator": "pitcher_spotlight",
-      "tweet_id": "dry-run-0",
-      "tags": [
-        "pitcher_spotlight",
-        "Chris Sale"
-      ]
-    },
-    {
       "date": "2026-03-02T15:59:33.240553",
       "generator": "pitcher_spotlight",
       "tweet_id": "2028500474714849583",
@@ -1820,6 +1811,15 @@
         "milb_trad_pitching_summary",
         "Kyle Luckham",
         "AA"
+      ]
+    },
+    {
+      "date": "2026-05-08T15:15:59.638758",
+      "generator": "hitter_analysis",
+      "tweet_id": "2052769488328650841",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_jj_bleday"
       ]
     }
   ]
