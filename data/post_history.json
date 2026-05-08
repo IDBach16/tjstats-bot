@@ -1,24 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-03-02T15:59:33.240553",
-      "generator": "pitcher_spotlight",
-      "tweet_id": "2028500474714849583",
-      "tags": [
-        "pitcher_spotlight",
-        "Framber Valdez"
-      ]
-    },
-    {
-      "date": "2026-03-02T16:01:41.956629",
-      "generator": "pitcher_spotlight",
-      "tweet_id": "dry-run-0",
-      "tags": [
-        "pitcher_spotlight",
-        "Seth Lugo"
-      ]
-    },
-    {
       "date": "2026-03-02T19:05:01.141639",
       "generator": "guess_pitcher",
       "tweet_id": "2028547137428996358",
@@ -1820,6 +1802,24 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_jj_bleday"
+      ]
+    },
+    {
+      "date": "2026-05-08T16:07:18.158570",
+      "generator": "reds_summary",
+      "tweet_id": "2052782401189794009",
+      "tags": [
+        "reds_summary",
+        "2026-05-07"
+      ]
+    },
+    {
+      "date": "2026-05-08T16:08:26.188931",
+      "generator": "hitter_analysis",
+      "tweet_id": "2052782686062735429",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_adam_frazier"
       ]
     }
   ]
