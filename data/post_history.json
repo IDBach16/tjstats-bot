@@ -1,16 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-03-02T19:22:10.157096",
-      "generator": "arsenal_vs",
-      "tweet_id": "2028551453128765920",
-      "tags": [
-        "arsenal_vs",
-        "Sonny Gray",
-        "Mason Montgomery"
-      ]
-    },
-    {
       "date": "2026-03-02T20:12:39.910315",
       "generator": "pitcher_spotlight",
       "tweet_id": "dry-run-0",
@@ -1820,6 +1810,15 @@
       "tags": [
         "biomechanics_101",
         "biomech_shoulder_energy_transfer"
+      ]
+    },
+    {
+      "date": "2026-05-08T22:46:49.476432",
+      "generator": "pitching_summary",
+      "tweet_id": "2052882925465792798",
+      "tags": [
+        "pitching_summary",
+        "Tarik Skubal"
       ]
     }
   ]
