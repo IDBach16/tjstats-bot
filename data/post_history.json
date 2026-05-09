@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-03-02T20:12:39.910315",
-      "generator": "pitcher_spotlight",
-      "tweet_id": "dry-run-0",
-      "tags": [
-        "pitcher_spotlight",
-        "Tanner Houck"
-      ]
-    },
-    {
       "date": "2026-03-02T20:17:41.511372",
       "generator": "pitcher_spotlight",
       "tweet_id": "dry-run-0",
@@ -1819,6 +1810,15 @@
       "tags": [
         "pitching_summary",
         "Tarik Skubal"
+      ]
+    },
+    {
+      "date": "2026-05-09T14:44:00.978291",
+      "generator": "reds_summary",
+      "tweet_id": "2053123829317202144",
+      "tags": [
+        "reds_summary",
+        "2026-05-08"
       ]
     }
   ]
