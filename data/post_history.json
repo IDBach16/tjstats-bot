@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-03-02T20:17:59.904612",
-      "generator": "stat_of_day",
-      "tweet_id": "dry-run-0",
-      "tags": [
-        "stat_of_day",
-        "era"
-      ]
-    },
-    {
       "date": "2026-03-02T20:19:03.548214",
       "generator": "guess_pitcher",
       "tweet_id": "dry-run-0",
@@ -1819,6 +1810,16 @@
       "tags": [
         "milb_pitcher_card",
         "Darren McCaughan",
+        "AAA"
+      ]
+    },
+    {
+      "date": "2026-05-09T22:35:24.531689",
+      "generator": "milb_pitching_summary",
+      "tweet_id": "2053242427411169644",
+      "tags": [
+        "milb_pitching_summary",
+        "Logan Allen",
         "AAA"
       ]
     }
