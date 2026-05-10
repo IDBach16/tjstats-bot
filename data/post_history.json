@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-03-02T20:30:57.620171",
-      "generator": "pitcher_spotlight",
-      "tweet_id": "dry-run-0",
-      "tags": [
-        "pitcher_spotlight",
-        "Hunter Brown"
-      ]
-    },
-    {
       "date": "2026-03-02T20:31:11.820551",
       "generator": "guess_pitcher",
       "tweet_id": "dry-run-0",
@@ -1821,6 +1812,15 @@
       "tags": [
         "movement_profile",
         "Hunter Brown"
+      ]
+    },
+    {
+      "date": "2026-05-10T22:37:53.569425",
+      "generator": "pitching_summary",
+      "tweet_id": "2053605443335815434",
+      "tags": [
+        "pitching_summary",
+        "Cole Ragans"
       ]
     }
   ]
