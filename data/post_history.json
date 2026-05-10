@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-03-02T20:19:03.548214",
-      "generator": "guess_pitcher",
-      "tweet_id": "dry-run-0",
-      "tags": [
-        "guess_pitcher",
-        "Paul Skenes"
-      ]
-    },
-    {
       "date": "2026-03-02T20:21:12.358361",
       "generator": "pitcher_spotlight",
       "tweet_id": "2028566309261180999",
@@ -1821,6 +1812,15 @@
         "milb_pitching_summary",
         "Logan Allen",
         "AAA"
+      ]
+    },
+    {
+      "date": "2026-05-10T14:45:25.881526",
+      "generator": "reds_summary",
+      "tweet_id": "2053486573375963590",
+      "tags": [
+        "reds_summary",
+        "2026-05-09"
       ]
     }
   ]
