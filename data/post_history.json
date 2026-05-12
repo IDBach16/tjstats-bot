@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-03-09T18:55:41.735716",
-      "generator": "pitching_summary",
-      "tweet_id": "dry-run-0",
-      "tags": [
-        "pitching_summary",
-        "Cole Ragans"
-      ]
-    },
-    {
       "date": "2026-03-09T19:01:54.598133",
       "generator": "pitching_summary",
       "tweet_id": "dry-run-0",
@@ -1820,6 +1811,16 @@
       "tags": [
         "biomechanics_101",
         "biomech_pelvis_vs_torso_timing"
+      ]
+    },
+    {
+      "date": "2026-05-12T20:25:18.835539",
+      "generator": "milb_pitcher_card",
+      "tweet_id": "2054296883384787313",
+      "tags": [
+        "milb_pitcher_card",
+        "Josh Stephan",
+        "AAA"
       ]
     }
   ]
