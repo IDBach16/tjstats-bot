@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-03-04T16:34:56.453442",
-      "generator": "explainer",
-      "tweet_id": "dry-run-0",
-      "tags": [
-        "explainer",
-        "explainer_whiff_vs_chase"
-      ]
-    },
-    {
       "date": "2026-03-09T18:26:27.623748",
       "generator": "pitcher_card",
       "tweet_id": "2031089199076565155",
@@ -1820,6 +1811,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_james_wood"
+      ]
+    },
+    {
+      "date": "2026-05-12T17:03:06.813029",
+      "generator": "biomechanics_101",
+      "tweet_id": "2054245997673373830",
+      "tags": [
+        "biomechanics_101",
+        "biomech_lead_leg_block"
       ]
     }
   ]
