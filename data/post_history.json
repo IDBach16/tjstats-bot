@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-03-09T19:01:54.598133",
-      "generator": "pitching_summary",
-      "tweet_id": "dry-run-0",
-      "tags": [
-        "pitching_summary",
-        "Tanner Houck"
-      ]
-    },
-    {
       "date": "2026-03-09T19:02:20.102870",
       "generator": "pitching_summary",
       "tweet_id": "2031098267006591167",
@@ -1820,6 +1811,16 @@
       "tags": [
         "milb_pitcher_card",
         "Josh Stephan",
+        "AAA"
+      ]
+    },
+    {
+      "date": "2026-05-12T22:54:03.745002",
+      "generator": "milb_pitching_summary",
+      "tweet_id": "2054334286749417499",
+      "tags": [
+        "milb_pitching_summary",
+        "Brody Hopkins",
         "AAA"
       ]
     }
