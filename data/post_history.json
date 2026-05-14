@@ -1,16 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-03-12T22:16:11.749708",
-      "generator": "milb_pitching_summary",
-      "tweet_id": "2032219120695971873",
-      "tags": [
-        "milb_pitching_summary",
-        "Daniel Palencia",
-        "AAA"
-      ]
-    },
-    {
       "date": "2026-03-13T00:32:50.888226",
       "generator": "pitching_summary",
       "tweet_id": "2032253434313802154",
@@ -1822,6 +1812,16 @@
       "tags": [
         "biomechanics_101",
         "biomech_torso_tilt_vs_arm_slot"
+      ]
+    },
+    {
+      "date": "2026-05-14T22:50:12.661423",
+      "generator": "milb_trad_pitching_summary",
+      "tweet_id": "2055058089032757358",
+      "tags": [
+        "milb_trad_pitching_summary",
+        "Khal Stephen",
+        "AA"
       ]
     }
   ]
