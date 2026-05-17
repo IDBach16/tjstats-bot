@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-03-15T19:21:14.063855",
-      "generator": "pitcher_spotlight",
-      "tweet_id": "2033262242930774140",
-      "tags": [
-        "pitcher_spotlight",
-        "Dylan Cease"
-      ]
-    },
-    {
       "date": "2026-03-15T22:19:45.490682",
       "generator": "pitching_summary",
       "tweet_id": "2033307165868314775",
@@ -1818,6 +1809,15 @@
       "tags": [
         "biomechanics_101",
         "biomech_elbow_varus_distribution"
+      ]
+    },
+    {
+      "date": "2026-05-17T22:44:31.855636",
+      "generator": "pitching_summary",
+      "tweet_id": "2056143838096572844",
+      "tags": [
+        "pitching_summary",
+        "Sonny Gray"
       ]
     }
   ]
