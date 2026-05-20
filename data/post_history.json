@@ -1,16 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-03-20T19:31:23.617419",
-      "generator": "arsenal_vs",
-      "tweet_id": "2035076718558683404",
-      "tags": [
-        "arsenal_vs",
-        "Framber Valdez",
-        "Mason Miller"
-      ]
-    },
-    {
       "date": "2026-03-20T22:19:56.649376",
       "generator": "pitching_summary",
       "tweet_id": "2035119152050917724",
@@ -1815,6 +1805,15 @@
       "tags": [
         "explainer",
         "explainer_stuff_plus"
+      ]
+    },
+    {
+      "date": "2026-05-20T23:05:50.905234",
+      "generator": "pitching_summary",
+      "tweet_id": "2057236362554687685",
+      "tags": [
+        "pitching_summary",
+        "Logan Webb"
       ]
     }
   ]
