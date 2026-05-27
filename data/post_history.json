@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-03-27T15:39:46.039400",
-      "generator": "release_points",
-      "tweet_id": "2037555171379609852",
-      "tags": [
-        "release_points",
-        "Hunter Brown"
-      ]
-    },
-    {
       "date": "2026-03-27T19:00:52.492768",
       "generator": "best_pitch_week",
       "tweet_id": "2037605768040436008",
@@ -1812,6 +1803,15 @@
       "tags": [
         "biomechanics_101",
         "biomech_arm_slot_distribution"
+      ]
+    },
+    {
+      "date": "2026-05-27T20:57:49.902888",
+      "generator": "explainer",
+      "tweet_id": "2059740884535521518",
+      "tags": [
+        "explainer",
+        "explainer_vaa"
       ]
     }
   ]
