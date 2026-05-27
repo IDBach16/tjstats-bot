@@ -1,16 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-03-27T19:00:52.492768",
-      "generator": "best_pitch_week",
-      "tweet_id": "2037605768040436008",
-      "tags": [
-        "best_pitch_week",
-        "Tarik Skubal",
-        "CH"
-      ]
-    },
-    {
       "date": "2026-03-27T19:35:14.726448",
       "generator": "best_pitch_week",
       "tweet_id": "2037614415227343197",
@@ -1812,6 +1802,15 @@
       "tags": [
         "explainer",
         "explainer_vaa"
+      ]
+    },
+    {
+      "date": "2026-05-27T23:11:12.692841",
+      "generator": "pitching_summary",
+      "tweet_id": "2059774394432405754",
+      "tags": [
+        "pitching_summary",
+        "Chris Sale"
       ]
     }
   ]
