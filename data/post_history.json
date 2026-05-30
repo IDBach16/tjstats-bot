@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-03-30T12:26:45.621321",
-      "generator": "reds_summary",
-      "tweet_id": "2038593772896792802",
-      "tags": [
-        "reds_summary",
-        "2026-03-28"
-      ]
-    },
-    {
       "date": "2026-03-30T12:43:30.184816",
       "generator": "reds_summary",
       "tweet_id": "2038597986498781574",
@@ -1812,6 +1803,16 @@
       "tags": [
         "milb_pitcher_card",
         "Adisyn Coffey",
+        "AAA"
+      ]
+    },
+    {
+      "date": "2026-05-30T22:49:49.992461",
+      "generator": "milb_pitching_summary",
+      "tweet_id": "2060856209888952516",
+      "tags": [
+        "milb_pitching_summary",
+        "Mitch Bratt",
         "AAA"
       ]
     }
