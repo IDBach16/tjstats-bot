@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-03-31T15:08:29.706549",
-      "generator": "reds_summary",
-      "tweet_id": "2038996862712365457",
-      "tags": [
-        "reds_summary",
-        "2026-03-30"
-      ]
-    },
-    {
       "date": "2026-03-31T15:16:03.869128",
       "generator": "reds_summary",
       "tweet_id": "2038998767618216305",
@@ -1815,6 +1806,16 @@
       "tags": [
         "milb_pitching_summary",
         "Chuck King",
+        "AAA"
+      ]
+    },
+    {
+      "date": "2026-06-02T23:29:35.445073",
+      "generator": "milb_pitching_summary",
+      "tweet_id": "2061953342394302930",
+      "tags": [
+        "milb_pitching_summary",
+        "Misael Tamarez",
         "AAA"
       ]
     }
