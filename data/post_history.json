@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-03-31T14:56:45.338869",
-      "generator": "reds_summary",
-      "tweet_id": "2038993908546367844",
-      "tags": [
-        "reds_summary",
-        "2026-03-30"
-      ]
-    },
-    {
       "date": "2026-03-31T15:08:29.706549",
       "generator": "reds_summary",
       "tweet_id": "2038996862712365457",
@@ -1814,6 +1805,16 @@
       "tags": [
         "milb_pitcher_card",
         "Yilber D\u00edaz",
+        "AAA"
+      ]
+    },
+    {
+      "date": "2026-06-02T21:41:14.906187",
+      "generator": "milb_pitching_summary",
+      "tweet_id": "2061926097848008709",
+      "tags": [
+        "milb_pitching_summary",
+        "Chuck King",
         "AAA"
       ]
     }
