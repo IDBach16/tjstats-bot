@@ -241,12 +241,12 @@ def _fetch_headshot(player_id):
 
 
 def _build_top10_image(df):
-    """Build horizontal bar chart with headshots — dark theme."""
+    """Build horizontal bar chart with headshots — clean white theme."""
     top10 = df.nlargest(10, "swing_plus").reset_index(drop=True)
     n = len(top10)
 
     fig, ax = plt.subplots(figsize=(10, 6.5))
-    bg_color = "#141414"
+    bg_color = "#ffffff"
     fig.patch.set_facecolor(bg_color)
     ax.set_facecolor(bg_color)
 
@@ -285,7 +285,7 @@ def _build_top10_image(df):
                 pass
 
         ax.text(bar_left + 0.2, y + 0.16, name, ha="left", va="center",
-                fontsize=10.5, fontweight="bold", color="white", zorder=5)
+                fontsize=10.5, fontweight="bold", color="#222222", zorder=5)
 
         xw_str = f".{str(xwoba)[2:5]}" if xwoba and xwoba > 0 else ""
         subtitle = f"{bat_spd:.1f} mph"
@@ -295,7 +295,7 @@ def _build_top10_image(df):
                 fontsize=7, color="#cc3333", zorder=5)
 
         ax.text(sp_val + 0.4, y, f"{sp_val:.1f}", ha="left", va="center",
-                fontsize=11.5, fontweight="bold", color="white")
+                fontsize=11.5, fontweight="bold", color="#222222")
 
     ax.axvline(x=100, color="#666666", linestyle="--", linewidth=0.7, zorder=1, alpha=0.5)
     ax.text(100, n - 0.55, "100 = Avg", ha="center", va="bottom", fontsize=7.5, color="#777777")
@@ -307,10 +307,10 @@ def _build_top10_image(df):
     ax.tick_params(axis="x", colors="#666666", labelsize=8.5)
     for spine in ["top", "right", "left"]:
         ax.spines[spine].set_visible(False)
-    ax.spines["bottom"].set_color("#333333")
+    ax.spines["bottom"].set_color("#cccccc")
 
     fig.suptitle(f"Top 10 Hitters by Swing+ ({MLB_SEASON})",
-                 fontsize=19, fontweight="bold", color="white", y=0.97)
+                 fontsize=19, fontweight="bold", color="#222222", y=0.97)
     ax.set_title(f"{MLB_SEASON} Season  ·  Pure Mechanics Model  ·  Min 50 Swings",
                  fontsize=8.5, color="#777777", pad=10)
 
@@ -322,9 +322,8 @@ def _build_top10_image(df):
             img = PILImage.open(WATERMARK_PATH).convert("RGBA")
             arr = np.array(img, dtype=np.float32)
             arr[(arr[:, :, 0] > 240) & (arr[:, :, 1] > 240) & (arr[:, :, 2] > 240), 3] = 0
-            nt = arr[:, :, 3] > 0; arr[nt, 0] = 255; arr[nt, 1] = 255; arr[nt, 2] = 255
             ax_wm = fig.add_axes([0.375, 0.3, 0.25, 0.25], zorder=10)
-            ax_wm.imshow(arr.astype(np.uint8), alpha=0.12)
+            ax_wm.imshow(arr.astype(np.uint8), alpha=0.07)
             ax_wm.set_facecolor("none"); ax_wm.axis("off")
         except Exception:
             pass

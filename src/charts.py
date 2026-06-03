@@ -36,11 +36,15 @@ GRID_COLOR = "#2a2a4a"
 FIG_W, FIG_H = 12, 6.75  # 1200×675 at 100 dpi — Twitter-optimal 16:9
 
 # ── Premium Card Theme ────────────────────────────────────────────────
-CARD_BG = "#0d1117"
-CARD_SURFACE = "#161b22"
-CARD_BORDER = "#30363d"
-CARD_TEXT = "#f0f6fc"
-CARD_TEXT_MUTED = "#8b949e"
+# Converted to a clean WHITE palette (2026-06-03) so every card matches the
+# hitter/pitching cards. The role names are unchanged, so the cards that use
+# them (pitcher_card, milb_pitcher_card, traditional_pitcher_card,
+# biomechanics) all flip from dark to white at once.
+CARD_BG = "#ffffff"        # card background (was #0d1117)
+CARD_SURFACE = "#f4f6f8"   # raised surfaces / pills (was #161b22)
+CARD_BORDER = "#d0d7de"    # borders / track bars (was #30363d)
+CARD_TEXT = "#1f2328"      # primary text (was #f0f6fc)
+CARD_TEXT_MUTED = "#6e7781" # secondary text (was #8b949e)
 
 # Noise pitch types to filter
 _NOISE_PITCHES = {"PO", "IN", "EP", "AB", "AS", "UN", "XX", "NP", "SC"}
@@ -74,6 +78,36 @@ TEAM_COLORS: dict[str, str] = {
     "PHI": "#E81828", "PIT": "#FDB827", "SD":  "#2F241D", "SF":  "#FD5A1E",
     "SEA": "#0C2C56", "STL": "#C41E3A", "TB":  "#092C5C", "TEX": "#003278",
     "TOR": "#134A8E", "WSH": "#AB0003",
+    "ATH": "#003831", "AZ": "#A71930",  # 2026 MLB-API abbrevs (Athletics, D-backs)
+}
+
+# Canonical ESPN logo slugs for 2026 MLB team abbreviations — verified against the
+# MLB Stats API + ESPN CDN. The Athletics are ATH (was OAK); AZ->ari, CWS->chw.
+# Single source of truth: every card resolves its logo through _logo_slug().
+_ESPN_LOGO_SLUG: dict[str, str] = {
+    "ATH": "ath", "ATL": "atl", "AZ": "ari", "ARI": "ari", "BAL": "bal",
+    "BOS": "bos", "CHC": "chc", "CIN": "cin", "CLE": "cle", "COL": "col",
+    "CWS": "chw", "CHW": "chw", "DET": "det", "HOU": "hou", "KC": "kc",
+    "LAA": "laa", "LAD": "lad", "MIA": "mia", "MIL": "mil", "MIN": "min",
+    "NYM": "nym", "NYY": "nyy", "OAK": "ath", "PHI": "phi", "PIT": "pit",
+    "SD": "sd", "SEA": "sea", "SF": "sf", "STL": "stl", "TB": "tb",
+    "TEX": "tex", "TOR": "tor", "WSH": "wsh", "WSN": "wsh",
+}
+
+
+def _logo_slug(team: "str | None") -> "str | None":
+    """ESPN logo slug for a team abbreviation (2026-correct), or None."""
+    return _ESPN_LOGO_SLUG.get((team or "").upper().strip())
+
+
+# MLB Stats API team-id -> abbreviation (2026). The `currentTeam` hydrate only
+# returns id/name/link (NO abbreviation), so we resolve the id here.
+_TEAM_ID_ABBREV: dict[int, str] = {
+    108: "LAA", 109: "AZ", 110: "BAL", 111: "BOS", 112: "CHC", 113: "CIN",
+    114: "CLE", 115: "COL", 116: "DET", 117: "HOU", 118: "KC", 119: "LAD",
+    120: "WSH", 121: "NYM", 133: "ATH", 134: "PIT", 135: "SD", 136: "SEA",
+    137: "SF", 138: "STL", 139: "TB", 140: "TEX", 141: "TOR", 142: "MIN",
+    143: "PHI", 144: "ATL", 145: "CWS", 146: "MIA", 147: "NYY", 158: "MIL",
 }
 
 # Pitch-type display names
@@ -123,7 +157,7 @@ _watermark_cache: "np.ndarray | None" = None
 
 _watermark_cache_dark = None  # dark logo pixels on transparent bg (for light cards)
 
-def _draw_watermark(fig, alpha=0.15, scale=0.45, dark_bg=True):
+def _draw_watermark(fig, alpha=0.15, scale=0.45, dark_bg=False):
     """Overlay BachTalk logo as a watermark in the center of the figure."""
     global _watermark_cache, _watermark_cache_dark
 
@@ -976,6 +1010,7 @@ def plot_pitcher_card(
                 if tc in player.index and player[tc]:
                     team = str(player[tc]).upper()
                     break
+        team = _current_team(team, player_id)   # current 2026 team for logo + accent
         accent = TEAM_COLORS.get(team or "", "#3a86ff")
 
         # ── Compute percentiles ───────────────────────────────────────
@@ -1080,12 +1115,7 @@ def plot_pitcher_card(
         fig = plt.figure(figsize=(FIG_W, FIG_H), dpi=100)
         fig.set_facecolor(CARD_BG)
 
-        # ── Subtle background noise texture ───────────────────────────
-        noise = np.random.default_rng(42).uniform(0.04, 0.07, (68, 120))
-        bg_ax = fig.add_axes([0, 0, 1, 1])
-        bg_ax.imshow(noise, aspect="auto", cmap="gray", alpha=0.03,
-                     extent=[0, 1, 0, 1])
-        bg_ax.axis("off")
+        # (white theme — no dark background noise texture)
 
         # ── Header gradient (team colour fade) ────────────────────────
         _draw_gradient_rect(fig, [0, 0.78, 1, 0.22], accent, CARD_BG, alpha=0.25)
@@ -1210,7 +1240,8 @@ def plot_pitcher_card(
             # Value label inside bar (or just right of it if narrow)
             val_x = bar_x0 + fill_w - 0.01 if pct > 25 else bar_x0 + fill_w + 0.01
             val_ha = "right" if pct > 25 else "left"
-            val_color = "white" if pct > 25 else CARD_TEXT
+            # dark text outside the bar, or inside the light-yellow (40-70) fill
+            val_color = CARD_TEXT if (pct <= 25 or 40 <= pct < 70) else "white"
             left_ax.text(val_x, y, val, fontsize=9, fontweight="bold",
                          color=val_color, va="center", ha=val_ha)
 
@@ -1383,6 +1414,7 @@ def plot_milb_pitcher_card(
                 if tc in player.index and player[tc]:
                     team = str(player[tc]).upper()
                     break
+        team = _current_team(team, player_id)   # current 2026 team for logo + accent
         accent = TEAM_COLORS.get(team or "", "#3a86ff")
 
         from .milb_statcast import LEVEL_NAMES
@@ -1647,7 +1679,8 @@ def plot_milb_pitcher_card(
 
             val_x = bar_x0 + fill_w - 0.01 if pct > 25 else bar_x0 + fill_w + 0.01
             val_ha = "right" if pct > 25 else "left"
-            val_color = "white" if pct > 25 else CARD_TEXT
+            # dark text outside the bar, or inside the light-yellow (40-70) fill
+            val_color = CARD_TEXT if (pct <= 25 or 40 <= pct < 70) else "white"
             left_ax.text(val_x, y, val, fontsize=9, fontweight="bold",
                          color=val_color, va="center", ha=val_ha)
 
@@ -1915,6 +1948,7 @@ def plot_pitching_summary(
                 if tc in player.index and player[tc]:
                     team = str(player[tc]).upper()
                     break
+        team = _current_team(team, player_id)   # current 2026 team for logo + accent
         accent = TEAM_COLORS.get(team or "", "#3a86ff")
 
         # ── Pitcher hand ──────────────────────────────────────────────
@@ -2032,17 +2066,7 @@ def plot_pitching_summary(
         # Team logo (MLB only — MiLB uses parent org logos which can be misleading)
         ax_logo.axis("off")
         if team and level == "MLB":
-            _LOGO_MAP = {
-                "AZ": "ari", "ARI": "ari", "ATL": "atl", "BAL": "bal",
-                "BOS": "bos", "CHC": "chc", "CWS": "chw", "CIN": "cin",
-                "CLE": "cle", "COL": "col", "DET": "det", "HOU": "hou",
-                "KC": "kc", "LAA": "laa", "LAD": "lad", "MIA": "mia",
-                "MIL": "mil", "MIN": "min", "NYM": "nym", "NYY": "nyy",
-                "OAK": "oak", "PHI": "phi", "PIT": "pit", "SD": "sd",
-                "SF": "sf", "SEA": "sea", "STL": "stl", "TB": "tb",
-                "TEX": "tex", "TOR": "tor", "WSH": "wsh",
-            }
-            slug = _LOGO_MAP.get(team)
+            slug = _logo_slug(team)
             if slug:
                 try:
                     logo_url = (
@@ -2948,7 +2972,8 @@ def plot_traditional_pitcher_card(
 
             val_x = bar_x0 + fill_w - 0.01 if pct > 25 else bar_x0 + fill_w + 0.01
             val_ha = "right" if pct > 25 else "left"
-            val_color = "white" if pct > 25 else CARD_TEXT
+            # dark text outside the bar, or inside the light-yellow (40-70) fill
+            val_color = CARD_TEXT if (pct <= 25 or 40 <= pct < 70) else "white"
             left_ax.text(val_x, y, val, fontsize=9, fontweight="bold",
                          color=val_color, va="center", ha=val_ha)
 
@@ -3784,17 +3809,7 @@ _GAME_STATS = [
     ("pitching_plus", "$\\bf{Pit+}$", ".0f"),
 ]
 
-# Logo map for ESPN CDN
-_LOGO_MAP = {
-    "AZ": "ari", "ARI": "ari", "ATL": "atl", "BAL": "bal",
-    "BOS": "bos", "CHC": "chc", "CWS": "chw", "CIN": "cin",
-    "CLE": "cle", "COL": "col", "DET": "det", "HOU": "hou",
-    "KC": "kc", "LAA": "laa", "LAD": "lad", "MIA": "mia",
-    "MIL": "mil", "MIN": "min", "NYM": "nym", "NYY": "nyy",
-    "OAK": "oak", "PHI": "phi", "PIT": "pit", "SD": "sd",
-    "SF": "sf", "SEA": "sea", "STL": "stl", "TB": "tb",
-    "TEX": "tex", "TOR": "tor", "WSH": "wsh",
-}
+# (team logos resolved via the canonical _logo_slug() helper near the top)
 
 import matplotlib.gridspec as gridspec  # noqa: E402
 import matplotlib.colors as mcolors     # noqa: E402
@@ -4079,7 +4094,7 @@ def plot_reds_game_summary(
                 ax_hs.axis("off")
 
         # Team logo (right side, fixed position)
-        slug = _LOGO_MAP.get(team)
+        slug = _logo_slug(team)
         if slug:
             try:
                 logo_url = (
@@ -4473,16 +4488,7 @@ _BEST_PITCH_NAMES = {
     "SV": "Sweeper", "ST": "Sweeper", "CU": "Curveball", "KC": "Knuckle Curve",
     "CH": "Changeup", "FS": "Splitter", "KN": "Knuckleball", "CT": "Cutter",
 }
-_LOGO_SLUG_MAP = {
-    "ARI": "ari", "ATL": "atl", "BAL": "bal", "BOS": "bos",
-    "CHC": "chc", "CWS": "chw", "CIN": "cin", "CLE": "cle",
-    "COL": "col", "DET": "det", "HOU": "hou", "KC": "kc",
-    "LAA": "laa", "LAD": "lad", "MIA": "mia", "MIL": "mil",
-    "MIN": "min", "NYM": "nym", "NYY": "nyy", "OAK": "oak",
-    "PHI": "phi", "PIT": "pit", "SD": "sd", "SF": "sf",
-    "SEA": "sea", "STL": "stl", "TB": "tb", "TEX": "tex",
-    "TOR": "tor", "WSH": "wsh",
-}
+# (team logos resolved via the canonical _logo_slug() helper near the top)
 
 
 def plot_best_pitch_card(
@@ -4508,9 +4514,10 @@ def plot_best_pitch_card(
         if player_id:
             headshot = _fetch_headshot(player_id, accent=accent)
 
-        # Fetch team logo
+        # Fetch team logo (resolve current 2026 team by id)
+        team = _current_team(team, player_id)
         team_logo = None
-        slug = _LOGO_SLUG_MAP.get(team)
+        slug = _logo_slug(team)
         if slug:
             try:
                 logo_url = (f"https://a.espncdn.com/combiner/i?img="
@@ -4699,17 +4706,6 @@ def plot_best_pitch_card(
 
 # ── Hitter Analysis Card (coded — replaces the old tjstats.ca screenshot) ──
 
-_HITTER_LOGO_MAP = {
-    "AZ": "ari", "ARI": "ari", "ATL": "atl", "BAL": "bal", "BOS": "bos",
-    "CHC": "chc", "CWS": "chw", "CHW": "chw", "CIN": "cin", "CLE": "cle",
-    "COL": "col", "DET": "det", "HOU": "hou", "KC": "kc", "KCR": "kc",
-    "LAA": "laa", "LAD": "lad", "MIA": "mia", "MIL": "mil", "MIN": "min",
-    "NYM": "nym", "NYY": "nyy", "OAK": "oak", "ATH": "oak", "PHI": "phi",
-    "PIT": "pit", "SD": "sd", "SDP": "sd", "SF": "sf", "SFG": "sf",
-    "SEA": "sea", "STL": "stl", "TB": "tb", "TBR": "tb", "TEX": "tex",
-    "TOR": "tor", "WSH": "wsh", "WSN": "wsh",
-}
-
 # Metrics shown on the hitter card: (display label, df column, value formatter)
 _HITTER_METRICS = [
     ("Bat Speed",       "bat_speed",            lambda v: f"{v:.1f} mph"),
@@ -4729,11 +4725,27 @@ def _team_abbrev_for_player(player_id: int) -> "str | None":
                f"?hydrate=currentTeam")
         people = _requests.get(url, timeout=10).json().get("people", [])
         if people:
-            ab = people[0].get("currentTeam", {}).get("abbreviation")
-            return ab.upper() if ab else None
+            ct = people[0].get("currentTeam", {}) or {}
+            ab = ct.get("abbreviation")
+            if ab:
+                return ab.upper()
+            tid = ct.get("id")
+            if tid is not None:
+                return _TEAM_ID_ABBREV.get(int(tid))
     except Exception:
         log.debug("Team lookup failed for %s", player_id)
     return None
+
+
+def _current_team(team: "str | None", player_id=None) -> "str | None":
+    """Current (2026) team abbrev for a player. Prefers the live MLB-roster
+    lookup by id (handles trades / missing or stale team data), and falls back
+    to the passed-in team."""
+    if player_id:
+        ab = _team_abbrev_for_player(player_id)
+        if ab:
+            return ab.upper()
+    return (team or "").upper().strip() or None
 
 
 def plot_hitter_card(name, row, league_df, swing_path=None, player_id=None,
@@ -4766,8 +4778,7 @@ def plot_hitter_card(name, row, league_df, swing_path=None, player_id=None,
         sp = _num(row.get("swing_plus"))
         xwoba = _num(row.get("xwOBA"))
 
-        if not team and player_id is not None:
-            team = _team_abbrev_for_player(int(player_id))
+        team = _current_team(team, player_id)
         accent = TEAM_COLORS.get((team or "").upper(), "#3a86ff")
 
         # Build percentile rows (rank raw-vs-raw, display normalized).
@@ -4824,7 +4835,7 @@ def plot_hitter_card(name, row, league_df, swing_path=None, player_id=None,
                  ha="left", va="top")
 
         # Team logo (best-effort)
-        slug = _HITTER_LOGO_MAP.get((team or "").upper())
+        slug = _logo_slug(team)
         if slug:
             try:
                 logo_url = (f"https://a.espncdn.com/combiner/i?img="
