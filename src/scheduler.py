@@ -103,24 +103,29 @@ DAILY_GENERATORS: list[type[ContentGenerator]] = [
     RedsSummaryGenerator,
 ]
 
-# Weekly rotation: day-of-week → (morning, afternoon, evening, *optional_biomech)
-# Monday=0 … Sunday=6
-# Alternates: MLB (Mon/Wed/Fri/Sun), MiLB AAA Statcast (Tue/Sat),
-#             MiLB Traditional AA/A+ (Thu)
-# Biomechanics 101: Mon/Wed/Fri/Sun (4x), Season Summary: Tue/Thu/Sat (3x)
+# Daily lineup — trimmed 2026-06-03 to 3 posts/day:
+#   1. Reds Summary  — every morning (DAILY_GENERATORS, runs in the 'daily' slot)
+#   2. Pitching card — 'screenshot' slot (gens[0]); alternates the season Pitching
+#                      Summary (Mon/Wed/Fri/Sun) and the game Pitcher Card (Tue/Thu/Sat)
+#   3. Hitter Analysis — 'text' slot (gens[1])
+# Every other generator stays in GENERATORS for manual --generator runs but is
+# no longer scheduled. Monday=0 … Sunday=6.
 SCHEDULE: dict[int, tuple[type[ContentGenerator], ...]] = {
-    0: (SwingPlusTop10Generator, UndervaluedRelieverGenerator, BestOutingGenerator, BiomechanicsGenerator),     # Mon — Swing+ Top 10 + Best Outing + Biomech
-    1: (HitterAnalysisGenerator, MiLBPitcherCardGenerator, MiLBPitchingSummaryGenerator, SeasonSummaryGenerator),   # Tue — Hitter Analysis + MiLB AAA + Season Summary
-    2: (VeloDistributionGenerator, ExplainerGenerator, PitchingSummaryGenerator, BiomechanicsGenerator),         # Wed — MLB + Biomech
-    3: (BestOutingGenerator, StatOfDayGenerator, MiLBTradPitchingSummaryGenerator, SeasonSummaryGenerator),      # Thu — Best Outing + MiLB AA/A+ + Season Summary
-    4: (HitterAnalysisGenerator, BestPitchWeekGenerator, PitchingSummaryGenerator, BiomechanicsGenerator),         # Fri — Hitter Analysis + Best Pitch of Week + Biomech
-    5: (BestOutingGenerator, MiLBPitcherCardGenerator, MiLBPitchingSummaryGenerator, SeasonSummaryGenerator),   # Sat — Best Outing + MiLB AAA + Season Summary
-    6: (MovementProfileGenerator, BestOutingGenerator, PitchingSummaryGenerator, BiomechanicsGenerator),         # Sun — Best Outing + Biomech
+    0: (PitchingSummaryGenerator, HitterAnalysisGenerator),  # Mon — Pitching Summary + Hitter Analysis
+    1: (PitcherCardGenerator,     HitterAnalysisGenerator),  # Tue — Pitcher Card + Hitter Analysis
+    2: (PitchingSummaryGenerator, HitterAnalysisGenerator),  # Wed — Pitching Summary + Hitter Analysis
+    3: (PitcherCardGenerator,     HitterAnalysisGenerator),  # Thu — Pitcher Card + Hitter Analysis
+    4: (PitchingSummaryGenerator, HitterAnalysisGenerator),  # Fri — Pitching Summary + Hitter Analysis
+    5: (PitcherCardGenerator,     HitterAnalysisGenerator),  # Sat — Pitcher Card + Hitter Analysis
+    6: (PitchingSummaryGenerator, HitterAnalysisGenerator),  # Sun — Pitching Summary + Hitter Analysis
 }
 
 
 def get_generators_for_today() -> list[ContentGenerator]:
-    """Return generators for today's schedule (3 or 4 depending on day)."""
+    """Return today's rotation generators (2: pitching card + hitter analysis).
+
+    The daily Reds summary runs separately via DAILY_GENERATORS, for 3 posts/day.
+    """
     dow = date.today().weekday()
     return [cls() for cls in SCHEDULE[dow]]
 

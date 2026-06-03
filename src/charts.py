@@ -910,15 +910,16 @@ def _draw_gradient_rect(fig, rect, color_top, color_bottom, alpha=1.0):
     return ax
 
 
-def _rounded_bar(ax, x, y, width, height, color, alpha=0.85):
+def _rounded_bar(ax, x, y, width, height, color, alpha=0.85, zorder=None):
     """Draw a rounded-corner bar on axes using FancyBboxPatch."""
     if width <= 0:
         return
     rounding = min(height * 0.4, width * 0.3, 0.015)
+    kw = {} if zorder is None else {"zorder": zorder}
     patch = FancyBboxPatch(
         (x, y - height / 2), width, height,
         boxstyle=f"round,pad=0,rounding_size={rounding}",
-        facecolor=color, edgecolor="none", alpha=alpha,
+        facecolor=color, edgecolor="none", alpha=alpha, **kw,
     )
     ax.add_patch(patch)
 
@@ -4693,4 +4694,214 @@ def plot_best_pitch_card(
     except Exception:
         log.warning("plot_best_pitch_card failed for %s", pitcher_name,
                     exc_info=True)
+        return None
+
+
+# ── Hitter Analysis Card (coded — replaces the old tjstats.ca screenshot) ──
+
+_HITTER_LOGO_MAP = {
+    "AZ": "ari", "ARI": "ari", "ATL": "atl", "BAL": "bal", "BOS": "bos",
+    "CHC": "chc", "CWS": "chw", "CHW": "chw", "CIN": "cin", "CLE": "cle",
+    "COL": "col", "DET": "det", "HOU": "hou", "KC": "kc", "KCR": "kc",
+    "LAA": "laa", "LAD": "lad", "MIA": "mia", "MIL": "mil", "MIN": "min",
+    "NYM": "nym", "NYY": "nyy", "OAK": "oak", "ATH": "oak", "PHI": "phi",
+    "PIT": "pit", "SD": "sd", "SDP": "sd", "SF": "sf", "SFG": "sf",
+    "SEA": "sea", "STL": "stl", "TB": "tb", "TBR": "tb", "TEX": "tex",
+    "TOR": "tor", "WSH": "wsh", "WSN": "wsh",
+}
+
+# Metrics shown on the hitter card: (display label, df column, value formatter)
+_HITTER_METRICS = [
+    ("Bat Speed",       "bat_speed",            lambda v: f"{v:.1f} mph"),
+    ("Squared-Up%",     "squared_up_rate",      lambda v: f"{(v * 100 if v <= 1 else v):.0f}%"),
+    ("Barrel%",         "brl_percent",          lambda v: f"{v:.1f}%"),
+    ("Hard-Swing%",     "sweetspot_speed_high", lambda v: f"{(v * 100 if v <= 1 else v):.0f}%"),
+    ("Hit Into Play%",  "hit_into_play_rate",   lambda v: f"{(v * 100 if v <= 1 else v):.0f}%"),
+    ("Hard-Hit% (95+)", "ev95percent",          lambda v: f"{(v * 100 if v <= 1 else v):.0f}%"),
+    ("Swing Length",    "swing_length",         lambda v: f"{v:.1f} ft"),
+]
+
+
+def _team_abbrev_for_player(player_id: int) -> "str | None":
+    """Best-effort current team abbreviation from the MLB Stats API."""
+    try:
+        url = (f"https://statsapi.mlb.com/api/v1/people/{int(player_id)}"
+               f"?hydrate=currentTeam")
+        people = _requests.get(url, timeout=10).json().get("people", [])
+        if people:
+            ab = people[0].get("currentTeam", {}).get("abbreviation")
+            return ab.upper() if ab else None
+    except Exception:
+        log.debug("Team lookup failed for %s", player_id)
+    return None
+
+
+def plot_hitter_card(name, row, league_df, swing_path=None, player_id=None,
+                     season: int = MLB_SEASON,
+                     team: "str | None" = None) -> "Path | None":
+    """Render a clean, coded hitter-analysis card (replaces the web screenshot).
+
+    House white-theme style: circular headshot with team accent ring, the
+    player name + a Swing+ badge, and a Savant-style percentile-ranking panel.
+    Percentiles are leaguewide (ranked against every qualified hitter in
+    ``league_df``). Returns Path | None.
+    """
+    try:
+        import pandas as pd
+
+        def _num(v):
+            try:
+                return float(v)
+            except (TypeError, ValueError):
+                return float("nan")
+
+        def _pct_rank(series, value):
+            if series is None or np.isnan(value):
+                return None
+            s = pd.to_numeric(series, errors="coerce").dropna()
+            if s.empty:
+                return None
+            return int(round((s < value).mean() * 100))
+
+        sp = _num(row.get("swing_plus"))
+        xwoba = _num(row.get("xwOBA"))
+
+        if not team and player_id is not None:
+            team = _team_abbrev_for_player(int(player_id))
+        accent = TEAM_COLORS.get((team or "").upper(), "#3a86ff")
+
+        # Build percentile rows (rank raw-vs-raw, display normalized).
+        bars = []
+        for label, col, fmt in _HITTER_METRICS:
+            v = _num(row.get(col))
+            if np.isnan(v):
+                continue
+            p = _pct_rank(league_df.get(col), v)
+            if p is None:
+                continue
+            bars.append((label, fmt(v), max(0, min(100, p))))
+
+        # Attack angle from the swing-path leaderboard (matched on _pid).
+        if (swing_path is not None and player_id is not None
+                and "_pid" in getattr(swing_path, "columns", [])):
+            try:
+                spr = swing_path[swing_path["_pid"] == int(player_id)]
+                if not spr.empty:
+                    aa = _num(spr.iloc[0].get("attack_angle"))
+                    p = _pct_rank(swing_path["attack_angle"], aa)
+                    if not np.isnan(aa) and p is not None:
+                        bars.append(("Attack Angle", f"{aa:.0f}°",
+                                     max(0, min(100, p))))
+            except Exception:
+                pass
+
+        if not bars:
+            log.warning("Hitter card: no percentile data for %s", name)
+            return None
+
+        # ── Figure ─────────────────────────────────────────────────
+        fig = plt.figure(figsize=(8.5, 9.5), dpi=150)
+        fig.patch.set_facecolor(WHITE_BG)
+
+        # Headshot with team accent ring
+        if player_id is not None:
+            try:
+                hs = _fetch_headshot(int(player_id), accent=accent)
+                if hs is not None:
+                    ax_hs = fig.add_axes([0.07, 0.85, 0.15, 0.12])
+                    ax_hs.imshow(hs)
+                    ax_hs.axis("off")
+            except Exception:
+                pass
+
+        # Name + subtitle
+        fig.text(0.255, 0.955, name, fontsize=27, fontweight="bold",
+                 color=WHITE_TEXT, ha="left", va="top")
+        sub = f"{season} Hitter Analysis"
+        if not np.isnan(xwoba) and xwoba > 0:
+            sub += f"     xwOBA {('%.3f' % xwoba).lstrip('0')}"
+        fig.text(0.257, 0.905, sub, fontsize=14, color=WHITE_MUTED,
+                 ha="left", va="top")
+
+        # Team logo (best-effort)
+        slug = _HITTER_LOGO_MAP.get((team or "").upper())
+        if slug:
+            try:
+                logo_url = (f"https://a.espncdn.com/combiner/i?img="
+                            f"/i/teamlogos/mlb/500/scoreboard/{slug}.png&h=160&w=160")
+                resp = _requests.get(logo_url, timeout=10)
+                resp.raise_for_status()
+                img = _PILImage.open(BytesIO(resp.content))
+                ax_logo = fig.add_axes([0.58, 0.86, 0.085, 0.10])
+                ax_logo.imshow(img)
+                ax_logo.axis("off")
+            except Exception:
+                pass
+
+        # Swing+ badge
+        ax_badge = fig.add_axes([0.72, 0.85, 0.21, 0.115])
+        ax_badge.axis("off")
+        ax_badge.set_xlim(0, 1)
+        ax_badge.set_ylim(0, 1)
+        ax_badge.add_patch(FancyBboxPatch(
+            (0.03, 0.06), 0.94, 0.88,
+            boxstyle="round,pad=0,rounding_size=0.12",
+            facecolor=accent, edgecolor="none"))
+        ax_badge.text(0.5, 0.60, f"{sp:.0f}" if not np.isnan(sp) else "—",
+                      ha="center", va="center", fontsize=30,
+                      fontweight="bold", color="white")
+        ax_badge.text(0.5, 0.20, "SWING+", ha="center", va="center",
+                      fontsize=11, fontweight="bold", color="white")
+
+        # Divider rule + section title
+        fig.add_artist(plt.Line2D([0.07, 0.93], [0.835, 0.835],
+                       color=WHITE_GRID, linewidth=1.2,
+                       transform=fig.transFigure))
+        fig.text(0.5, 0.815, "Percentile Rankings", fontsize=16,
+                 fontweight="bold", color=WHITE_TEXT, ha="center", va="top")
+
+        # ── Percentile panel ───────────────────────────────────────
+        ax = fig.add_axes([0.07, 0.08, 0.86, 0.71])
+        n = len(bars)
+        ax.set_xlim(-66, 116)
+        ax.set_ylim(-0.7, n - 0.3)
+        ax.axis("off")
+
+        # league-average gridline at the 50th percentile
+        ax.plot([50, 50], [-0.55, n - 0.45], color=WHITE_GRID,
+                linewidth=1, linestyle="--", zorder=1)
+        ax.text(50, n - 0.42, "lg avg", ha="center", va="bottom",
+                fontsize=8, color=WHITE_MUTED)
+
+        for i, (label, disp, p) in enumerate(bars):
+            y = n - 1 - i
+            ax.barh(y, 100, height=0.5, color="#ededed",
+                    edgecolor="none", zorder=2)
+            color = _pctile_color(p)
+            _rounded_bar(ax, 0, y, max(p, 0.5), 0.5, color, alpha=1.0, zorder=4)
+            ax.text(-64, y, label, ha="left", va="center", fontsize=12.5,
+                    color=WHITE_TEXT, zorder=5, clip_on=False)
+            ax.text(-3, y, disp, ha="right", va="center", fontsize=11,
+                    color=WHITE_MUTED, zorder=5, clip_on=False)
+            ax.text(104, y, f"{p}", ha="left", va="center", fontsize=13,
+                    fontweight="bold", color=color, zorder=5, clip_on=False)
+
+        # ── Footer ─────────────────────────────────────────────────
+        fig.text(0.07, 0.02, FOOTER_LEFT, fontsize=11, fontweight="bold",
+                 color=WHITE_TEXT, ha="left", va="bottom")
+        fig.text(0.93, 0.02, "Data: Baseball Savant Bat Tracking",
+                 fontsize=10, color=WHITE_MUTED, ha="right", va="bottom")
+
+        _draw_watermark(fig, alpha=0.06, scale=0.4, dark_bg=False)
+
+        safe = name.replace(" ", "_").lower()
+        out = SCREENSHOTS_DIR / f"hitter_card_{safe}.png"
+        fig.savefig(out, facecolor=WHITE_BG, dpi=150,
+                    bbox_inches="tight", pad_inches=0.25)
+        plt.close(fig)
+        log.info("Saved hitter card: %s", out)
+        return out
+
+    except Exception:
+        log.warning("plot_hitter_card failed for %s", name, exc_info=True)
         return None

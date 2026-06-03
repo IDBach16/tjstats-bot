@@ -3,19 +3,15 @@ name: Daily Baseball Post
 
 on:
   schedule:
+    # Trimmed 2026-06-03 to 3 posts/day: Reds summary + 1 pitching card + hitter analysis
     # 9 AM EST (UTC-5) = 14:00 UTC — Reds daily summary (yesterday's game)
     - cron: '0 14 * * *'
-    # 10 AM EST (UTC-5) = 15:00 UTC — screenshot post
+    # 10 AM EST (UTC-5) = 15:00 UTC — pitching card (season Pitching Summary / game Pitcher Card)
     - cron: '0 15 * * *'
-    # 2 PM EST (UTC-5) = 19:00 UTC — text post
-    - cron: '0 19 * * *'
-    # 5 PM EST (UTC-5) = 22:00 UTC — pitching summary
-    - cron: '0 22 * * *'
-    # 1 PM EST (UTC-5) = 18:00 UTC — biomechanics (daily)
-    # PAUSED 2026-04-29 — uncomment to resume biomechanics posts
-    # - cron: '0 18 * * *'
     # 11 AM EST (UTC-5) = 16:00 UTC — catch-up: run any missed morning slots
     - cron: '0 16 * * *'
+    # 2 PM EST (UTC-5) = 19:00 UTC — Hitter Analysis (text slot)
+    - cron: '0 19 * * *'
   workflow_dispatch:
     inputs:
       slot:
@@ -100,20 +96,10 @@ jobs:
             echo "catchup=" >> $GITHUB_OUTPUT
           else
             HOUR=$(date -u +%H)
-            if [ "$HOUR" -ge 21 ]; then
-              # 5 PM EST (22:00 UTC) — evening visual
-              echo "slot=evening" >> $GITHUB_OUTPUT
-              echo "generator=" >> $GITHUB_OUTPUT
-              echo "catchup=" >> $GITHUB_OUTPUT
-            elif [ "$HOUR" -ge 19 ]; then
-              # 2 PM EST (19:00 UTC) — afternoon text
+            if [ "$HOUR" -ge 19 ]; then
+              # 2 PM EST (19:00 UTC) — Hitter Analysis (text slot)
               echo "slot=text" >> $GITHUB_OUTPUT
               echo "generator=" >> $GITHUB_OUTPUT
-              echo "catchup=" >> $GITHUB_OUTPUT
-            elif [ "$HOUR" -ge 17 ]; then
-              # 1 PM EST (18:00 UTC) — biomechanics (widened window 17-19)
-              echo "slot=biomechanics" >> $GITHUB_OUTPUT
-              echo "generator=biomechanics_101" >> $GITHUB_OUTPUT
               echo "catchup=" >> $GITHUB_OUTPUT
             elif [ "$HOUR" -ge 16 ]; then
               # 11 AM EST (16:00 UTC) — catch-up window
@@ -121,7 +107,7 @@ jobs:
               echo "generator=" >> $GITHUB_OUTPUT
               echo "catchup=true" >> $GITHUB_OUTPUT
             elif [ "$HOUR" -ge 15 ]; then
-              # 10 AM EST (15:00 UTC) — morning visual
+              # 10 AM EST (15:00 UTC) — pitching card
               echo "slot=screenshot" >> $GITHUB_OUTPUT
               echo "generator=" >> $GITHUB_OUTPUT
               echo "catchup=" >> $GITHUB_OUTPUT
@@ -158,7 +144,7 @@ jobs:
           missed = []
           if 'reds_summary' not in today_gens:
               missed.append('daily')
-          if not today_gens & {'pitcher_card', 'milb_pitcher_card', 'milb_trad_pitcher_card', 'velo_distribution', 'release_points', 'movement_profile'}:
+          if not today_gens & {'pitching_summary', 'pitcher_card'}:
               missed.append('screenshot')
           print(f'Missed slots: {missed}')
           with open('missed_slots.txt', 'w') as f:

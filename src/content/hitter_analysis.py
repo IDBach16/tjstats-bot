@@ -1,8 +1,8 @@
-"""Content generator: Hitter Analysis thread (Tue/Fri).
+"""Content generator: Hitter Analysis thread.
 
-Picks a hitter with interesting Swing+ profile, fetches their TJStats
-percentile card screenshot, pulls Savant video clips, and builds an
-analysis thread using Swing+ model data.
+Picks a hitter with an interesting Swing+ profile, renders a coded percentile
+card (charts.plot_hitter_card — no web screenshot), pulls Savant video clips,
+and builds an analysis thread using Swing+ model data.
 """
 
 from __future__ import annotations
@@ -20,6 +20,7 @@ from .base import ContentGenerator, PostContent
 from ..config import SCREENSHOTS_DIR, CLIPS_DIR, MLB_SEASON, DEFAULT_HASHTAGS
 from ..video_clips import _download_mp4
 from .swing_plus_top10 import _compute_swing_plus, FEATURES
+from ..charts import plot_hitter_card
 
 log = logging.getLogger(__name__)
 
@@ -322,48 +323,6 @@ def _build_analysis_tweets(row: pd.Series, swing_path: pd.DataFrame | None,
     return tweets
 
 
-def _make_tjstats_slug(player_name: str, player_id: int) -> str:
-    """Convert player name + ID to TJStats URL slug (e.g. 'ke-bryan-hayes-663647')."""
-    slug = player_name.lower().replace("'", "").replace(".", "").replace(" ", "-")
-    # Collapse multiple hyphens
-    while "--" in slug:
-        slug = slug.replace("--", "-")
-    return f"{slug}-{int(player_id)}"
-
-
-async def _screenshot_tjstats_card(player_name: str, player_id: int) -> Path | None:
-    """Screenshot the TJStats player page as the header card."""
-    from playwright.async_api import async_playwright
-
-    slug = _make_tjstats_slug(player_name, player_id)
-    url = f"https://tjstats.ca/player/{slug}/"
-    safe = player_name.replace(" ", "_").lower()
-    out = SCREENSHOTS_DIR / f"analysis_{safe}_card.png"
-
-    try:
-        async with async_playwright() as pw:
-            browser = await pw.chromium.launch(headless=True)
-            context = await browser.new_context(
-                viewport={"width": 800, "height": 1200},
-                device_scale_factor=2,
-            )
-            page = await context.new_page()
-            await page.goto(url, wait_until="networkidle", timeout=30_000)
-
-            # Wait for card content to render
-            import asyncio as _aio
-            await _aio.sleep(3)
-
-            await page.screenshot(path=str(out), full_page=False)
-            await browser.close()
-
-        log.info("TJStats card screenshot saved: %s", out)
-        return out
-    except Exception:
-        log.warning("TJStats screenshot failed for %s", player_name, exc_info=True)
-        return None
-
-
 class HitterAnalysisGenerator(ContentGenerator):
     name = "hitter_analysis"
 
@@ -374,7 +333,10 @@ class HitterAnalysisGenerator(ContentGenerator):
             log.warning("Swing+ computation failed")
             return PostContent(text="")
 
-        df = result
+        full_df = result   # full leaguewide reference (for card percentiles)
+
+        # Only consider hitters ranked in the top 40 by Swing+
+        df = full_df.nlargest(40, "swing_plus").reset_index(drop=True)
 
         # Pick a hitter
         hitter = _pick_hitter(df)
@@ -408,10 +370,13 @@ class HitterAnalysisGenerator(ContentGenerator):
         if pid and not np.isnan(pid):
             videos = _get_hitter_videos(int(pid), name)
 
-        # Screenshot TJStats card as header image
+        # Coded hitter card as the header image (no web screenshot)
         header_image = None
         if pid and not np.isnan(pid):
-            header_image = await _screenshot_tjstats_card(name, int(pid))
+            header_image = plot_hitter_card(
+                name, hitter, full_df, swing_path=swing_path,
+                player_id=int(pid), season=MLB_SEASON,
+            )
 
         # Determine profile label
         brl = hitter.get("brl_percent", 0)

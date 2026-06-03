@@ -59,7 +59,6 @@ def _compute_swing_plus():
     """Compute Swing+ for all qualified hitters."""
     from sklearn.linear_model import RidgeCV
     from sklearn.preprocessing import StandardScaler
-    from pybaseball import batting_stats
 
     # Fetch bat tracking CSV
     url = (
@@ -145,6 +144,23 @@ def _compute_swing_plus():
         except Exception:
             log.warning("Launch quality data fetch failed", exc_info=True)
 
+        # Merge xwOBA (training target) from Savant expected stats, by player id.
+        # FanGraphs (the old source) now blocks pybaseball with HTTP 403.
+        try:
+            xw_url = (
+                f"https://baseballsavant.mlb.com/leaderboard/expected_statistics?"
+                f"type=batter&year={MLB_SEASON}&position=&team=&filterType=bip&min=q&csv=true"
+            )
+            xw_df = pd.read_csv(io.StringIO(requests.get(xw_url, timeout=30).text))
+            if "est_woba" in xw_df.columns and "player_id" in xw_df.columns:
+                xw_df["_merge_pid"] = pd.to_numeric(xw_df["player_id"], errors="coerce")
+                xw_df = xw_df.rename(columns={"est_woba": "xwOBA"})
+                bt_clean = bt_clean.merge(
+                    xw_df[["_merge_pid", "xwOBA"]], on="_merge_pid", how="left"
+                )
+        except Exception:
+            log.warning("Savant xwOBA fetch failed", exc_info=True)
+
         bt_clean.drop(columns=["_merge_pid"], inplace=True)
 
     # Convert features to numeric
@@ -158,16 +174,19 @@ def _compute_swing_plus():
         log.warning("Only %d hitters after dropna", len(bt_clean))
         return None
 
-    # Get xwOBA for training
-    try:
-        fg = batting_stats(MLB_SEASON, qual=20)
-        fg["name_fg"] = fg["Name"].str.strip()
-        merged = bt_clean.merge(fg[["name_fg", "xwOBA"]], on="name_fg", how="inner")
-        merged = merged.dropna(subset=["xwOBA"])
-    except Exception:
-        log.warning("FanGraphs xwOBA fetch failed — using raw z-scores", exc_info=True)
+    # xwOBA (training target) was merged from Savant above. Keep hitters that have
+    # it; if Savant was unavailable, fall back to a raw z-score composite (xwOBA=0).
+    if "xwOBA" in bt_clean.columns:
+        bt_clean["xwOBA"] = pd.to_numeric(bt_clean["xwOBA"], errors="coerce")
+        merged = bt_clean.dropna(subset=["xwOBA"]).copy()
+        if len(merged) < 20:
+            log.warning("Only %d rows with Savant xwOBA — using raw z-scores", len(merged))
+            merged = bt_clean.copy()
+            merged["xwOBA"] = merged["xwOBA"].fillna(0)
+    else:
+        log.warning("No xwOBA column available — using raw z-scores")
         merged = bt_clean.copy()
-        merged["xwOBA"] = 0  # fallback: no training target
+        merged["xwOBA"] = 0
 
     if len(merged) < 20:
         log.warning("Only %d merged rows", len(merged))

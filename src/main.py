@@ -42,7 +42,10 @@ async def run_post(slot: str, generator_name: str | None = None) -> None:
     elif slot == "text":
         await _generate_and_post(gens[1])
     elif slot == "evening":
-        await _generate_and_post(gens[2])
+        if len(gens) > 2:
+            await _generate_and_post(gens[2])
+        else:
+            log.info("No evening slot scheduled for today")
     elif slot == "biomechanics":
         if len(gens) > 3:
             await _generate_and_post(gens[3])
