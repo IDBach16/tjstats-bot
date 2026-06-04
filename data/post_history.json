@@ -1,24 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-04-02T15:26:30.862785",
-      "generator": "reds_summary",
-      "tweet_id": "2039726172221661492",
-      "tags": [
-        "reds_summary",
-        "2026-04-01"
-      ]
-    },
-    {
-      "date": "2026-04-02T17:29:06.522308",
-      "generator": "reds_summary",
-      "tweet_id": "2039757022732673229",
-      "tags": [
-        "reds_summary",
-        "2026-04-01"
-      ]
-    },
-    {
       "date": "2026-04-06T16:59:25.454007",
       "generator": "swing_plus_top10",
       "tweet_id": "dry-run-0",
@@ -1817,6 +1799,24 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_spencer_torkelson"
+      ]
+    },
+    {
+      "date": "2026-06-04T16:47:19.332166",
+      "generator": "reds_summary",
+      "tweet_id": "2062576944793919898",
+      "tags": [
+        "reds_summary",
+        "2026-06-03"
+      ]
+    },
+    {
+      "date": "2026-06-04T16:48:22.599257",
+      "generator": "pitcher_card",
+      "tweet_id": "2062577188176797961",
+      "tags": [
+        "pitcher_card",
+        "Seth Lugo"
       ]
     }
   ]
