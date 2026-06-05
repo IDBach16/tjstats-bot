@@ -1,14 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-04-06T17:18:30.320019",
-      "generator": "swing_plus_top10",
-      "tweet_id": "dry-run-0",
-      "tags": [
-        "swing_plus_top10"
-      ]
-    },
-    {
       "date": "2026-04-06T17:23:28.859730",
       "generator": "swing_plus_top10",
       "tweet_id": "2041205158651044299",
@@ -1820,6 +1812,15 @@
       "tags": [
         "pitching_summary",
         "Framber Valdez"
+      ]
+    },
+    {
+      "date": "2026-06-05T20:45:26.545787",
+      "generator": "hitter_analysis",
+      "tweet_id": "2062999257452573178",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_byron_buxton"
       ]
     }
   ]
