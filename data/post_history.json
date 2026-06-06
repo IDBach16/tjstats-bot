@@ -1,14 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-04-08T13:47:16.605258",
-      "generator": "swing_plus_young",
-      "tweet_id": "dry-run-0",
-      "tags": [
-        "swing_plus_young"
-      ]
-    },
-    {
       "date": "2026-04-08T13:49:13.562277",
       "generator": "swing_plus_young",
       "tweet_id": "2041876025777299886",
@@ -1823,6 +1815,15 @@
       "tags": [
         "pitcher_card",
         "Logan Webb"
+      ]
+    },
+    {
+      "date": "2026-06-06T20:02:41.078882",
+      "generator": "hitter_analysis",
+      "tweet_id": "2063350885086887997",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_brandon_marsh"
       ]
     }
   ]
