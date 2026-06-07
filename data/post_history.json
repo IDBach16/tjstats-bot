@@ -1,14 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-04-08T13:49:13.562277",
-      "generator": "swing_plus_young",
-      "tweet_id": "2041876025777299886",
-      "tags": [
-        "swing_plus_young"
-      ]
-    },
-    {
       "date": "2026-04-08T15:13:04.962608",
       "generator": "hitter_analysis",
       "tweet_id": "dry-run-0",
@@ -1824,6 +1816,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_brandon_marsh"
+      ]
+    },
+    {
+      "date": "2026-06-07T15:20:31.535328",
+      "generator": "pitching_summary",
+      "tweet_id": "2063642196059005317",
+      "tags": [
+        "pitching_summary",
+        "Hunter Brown"
       ]
     }
   ]
