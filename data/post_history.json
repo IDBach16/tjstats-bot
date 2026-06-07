@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-04-08T15:13:04.962608",
-      "generator": "hitter_analysis",
-      "tweet_id": "dry-run-0",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_jordan_walker"
-      ]
-    },
-    {
       "date": "2026-04-09T17:12:50.427290",
       "generator": "biomechanics_101",
       "tweet_id": "2042289646114103571",
@@ -1825,6 +1816,15 @@
       "tags": [
         "pitching_summary",
         "Hunter Brown"
+      ]
+    },
+    {
+      "date": "2026-06-07T16:05:24.706985",
+      "generator": "reds_summary",
+      "tweet_id": "2063653560751939798",
+      "tags": [
+        "reds_summary",
+        "2026-06-06"
       ]
     }
   ]
