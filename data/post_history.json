@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-04-23T15:46:33.714298",
-      "generator": "best_outing",
-      "tweet_id": "2047341334214713577",
-      "tags": [
-        "best_outing",
-        "Shohei Ohtani"
-      ]
-    },
-    {
       "date": "2026-04-23T16:25:27.949465",
       "generator": "reds_summary",
       "tweet_id": "2047351153952715081",
@@ -1825,6 +1816,15 @@
       "tags": [
         "pitching_summary",
         "Zack Wheeler"
+      ]
+    },
+    {
+      "date": "2026-06-08T21:10:15.447171",
+      "generator": "hitter_analysis",
+      "tweet_id": "2064092665579274421",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_jackson_chourio"
       ]
     }
   ]
