@@ -1,16 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-04-23T22:36:03.211690",
-      "generator": "milb_trad_pitching_summary",
-      "tweet_id": "2047444414583251010",
-      "tags": [
-        "milb_trad_pitching_summary",
-        "Brett Wichrowski",
-        "AA"
-      ]
-    },
-    {
       "date": "2026-04-24T15:03:09.897998",
       "generator": "hitter_analysis",
       "tweet_id": "2047692830760481186",
@@ -1825,6 +1815,15 @@
       "tags": [
         "reds_summary",
         "2026-06-09"
+      ]
+    },
+    {
+      "date": "2026-06-10T17:47:47.380891",
+      "generator": "pitching_summary",
+      "tweet_id": "2064766467606782435",
+      "tags": [
+        "pitching_summary",
+        "Tarik Skubal"
       ]
     }
   ]
