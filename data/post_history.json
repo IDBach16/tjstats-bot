@@ -1,14 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-04-27T15:30:27.977562",
-      "generator": "swing_plus_top10",
-      "tweet_id": "2048786864405147680",
-      "tags": [
-        "swing_plus_top10"
-      ]
-    },
-    {
       "date": "2026-04-27T16:17:00.200702",
       "generator": "reds_summary",
       "tweet_id": "2048798575673389073",
@@ -1821,6 +1813,15 @@
       "tags": [
         "pitching_summary",
         "Roki Sasaki"
+      ]
+    },
+    {
+      "date": "2026-06-15T19:54:14.200793",
+      "generator": "hitter_analysis",
+      "tweet_id": "2066610249919074647",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_jac_caglianone"
       ]
     }
   ]
