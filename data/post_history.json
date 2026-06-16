@@ -1,14 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-04-27T16:18:27.494321",
-      "generator": "swing_plus_top10",
-      "tweet_id": "2048798941819310384",
-      "tags": [
-        "swing_plus_top10"
-      ]
-    },
-    {
       "date": "2026-04-27T17:26:08.265963",
       "generator": "biomechanics_101",
       "tweet_id": "2048815974065865139",
@@ -1822,6 +1814,15 @@
       "tags": [
         "reds_summary",
         "2026-06-15"
+      ]
+    },
+    {
+      "date": "2026-06-16T19:39:54.231787",
+      "generator": "hitter_analysis",
+      "tweet_id": "2066969030830002680",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_byron_buxton"
       ]
     }
   ]
