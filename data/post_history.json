@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-04-27T22:42:10.650548",
-      "generator": "best_outing",
-      "tweet_id": "2048895466423640544",
-      "tags": [
-        "best_outing",
-        "Kyle Harrison"
-      ]
-    },
-    {
       "date": "2026-04-28T16:04:55.319894",
       "generator": "reds_summary",
       "tweet_id": "2049157923893379238",
@@ -1823,6 +1814,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_fernando_tatis_jr."
+      ]
+    },
+    {
+      "date": "2026-06-17T16:52:54.106000",
+      "generator": "reds_summary",
+      "tweet_id": "2067289391144243695",
+      "tags": [
+        "reds_summary",
+        "2026-06-16"
       ]
     }
   ]
