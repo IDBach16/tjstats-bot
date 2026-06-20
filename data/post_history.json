@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-04-29T16:23:29.160147",
-      "generator": "reds_summary",
-      "tweet_id": "2049524982800150530",
-      "tags": [
-        "reds_summary",
-        "2026-04-28"
-      ]
-    },
-    {
       "date": "2026-04-29T17:42:37.086874",
       "generator": "biomechanics_101",
       "tweet_id": "2049544897091313935",
@@ -1820,6 +1811,15 @@
       "tags": [
         "pitcher_card",
         "Sonny Gray"
+      ]
+    },
+    {
+      "date": "2026-06-20T20:10:16.329861",
+      "generator": "hitter_analysis",
+      "tweet_id": "2068426224687620505",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_jackson_chourio"
       ]
     }
   ]
