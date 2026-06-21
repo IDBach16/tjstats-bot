@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-04-29T22:48:13.473788",
-      "generator": "pitching_summary",
-      "tweet_id": "2049621718642127156",
-      "tags": [
-        "pitching_summary",
-        "Chris Sale"
-      ]
-    },
-    {
       "date": "2026-04-30T15:45:19.429523",
       "generator": "best_outing",
       "tweet_id": "2049877744171810918",
@@ -1820,6 +1811,15 @@
       "tags": [
         "reds_summary",
         "2026-06-20"
+      ]
+    },
+    {
+      "date": "2026-06-21T20:20:02.911225",
+      "generator": "hitter_analysis",
+      "tweet_id": "2068791072738639920",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_edouard_julien"
       ]
     }
   ]
