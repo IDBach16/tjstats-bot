@@ -4834,21 +4834,6 @@ def plot_hitter_card(name, row, league_df, swing_path=None, player_id=None,
         fig.text(0.257, 0.905, sub, fontsize=14, color=WHITE_MUTED,
                  ha="left", va="top")
 
-        # Team logo (best-effort)
-        slug = _logo_slug(team)
-        if slug:
-            try:
-                logo_url = (f"https://a.espncdn.com/combiner/i?img="
-                            f"/i/teamlogos/mlb/500/scoreboard/{slug}.png&h=160&w=160")
-                resp = _requests.get(logo_url, timeout=10)
-                resp.raise_for_status()
-                img = _PILImage.open(BytesIO(resp.content))
-                ax_logo = fig.add_axes([0.58, 0.86, 0.085, 0.10])
-                ax_logo.imshow(img)
-                ax_logo.axis("off")
-            except Exception:
-                pass
-
         # Swing+ badge
         ax_badge = fig.add_axes([0.72, 0.85, 0.21, 0.115])
         ax_badge.axis("off")
