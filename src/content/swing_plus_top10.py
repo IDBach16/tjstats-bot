@@ -250,7 +250,8 @@ def _build_top10_image(df):
     fig.patch.set_facecolor(bg_color)
     ax.set_facecolor(bg_color)
 
-    bar_color = "#3a86ff"
+    from matplotlib.colors import LinearSegmentedColormap
+    sp_cmap = LinearSegmentedColormap.from_list("sp", ["#9ec5fe", "#4f8dff", "#1b46c2"])
     max_swing = top10["swing_plus"].max()
     x_max = max_swing + 6
 
@@ -265,6 +266,12 @@ def _build_top10_image(df):
         xwoba = row.get("xwOBA", 0)
         bat_spd = row.get("bat_speed", 0)
 
+        # subtle alternating row shading for readability
+        if i % 2 == 1:
+            ax.axhspan(y - 0.5, y + 0.5, color="#f5f6f8", zorder=0)
+
+        # deepest blue for #1, lighter going down the board
+        bar_color = sp_cmap(1 - i / max(n - 1, 1))
         ax.barh(y, sp_val - bar_left, left=bar_left, height=0.7,
                 color=bar_color, edgecolor="none", zorder=2)
 
@@ -284,15 +291,15 @@ def _build_top10_image(df):
             except Exception:
                 pass
 
-        ax.text(bar_left + 0.2, y + 0.16, name, ha="left", va="center",
-                fontsize=10.5, fontweight="bold", color="#222222", zorder=5)
+        ax.text(bar_left + 0.3, y + 0.16, name, ha="left", va="center",
+                fontsize=10.5, fontweight="bold", color="white", zorder=5)
 
         xw_str = f".{str(xwoba)[2:5]}" if xwoba and xwoba > 0 else ""
         subtitle = f"{bat_spd:.1f} mph"
         if xw_str:
             subtitle += f"  ·  {xw_str} xwOBA"
-        ax.text(bar_left + 0.2, y - 0.17, subtitle, ha="left", va="center",
-                fontsize=7, color="#cc3333", zorder=5)
+        ax.text(bar_left + 0.3, y - 0.17, subtitle, ha="left", va="center",
+                fontsize=7.5, color="#e3ebff", zorder=5)
 
         ax.text(sp_val + 0.4, y, f"{sp_val:.1f}", ha="left", va="center",
                 fontsize=11.5, fontweight="bold", color="#222222")

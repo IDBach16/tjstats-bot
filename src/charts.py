@@ -4710,10 +4710,12 @@ def plot_best_pitch_card(
 _HITTER_METRICS = [
     ("Bat Speed",       "bat_speed",            lambda v: f"{v:.1f} mph"),
     ("Squared-Up%",     "squared_up_rate",      lambda v: f"{(v * 100 if v <= 1 else v):.0f}%"),
+    ("Blast%",          "squared_up_speed_rate",lambda v: f"{(v * 100 if v <= 1 else v):.0f}%"),
     ("Barrel%",         "brl_percent",          lambda v: f"{v:.1f}%"),
+    ("Hard-Hit% (95+)", "ev95percent",          lambda v: f"{(v * 100 if v <= 1 else v):.0f}%"),
+    ("Sweet-Spot%",     "anglesweetspotpercent",lambda v: f"{v:.0f}%"),
     ("Hard-Swing%",     "sweetspot_speed_high", lambda v: f"{(v * 100 if v <= 1 else v):.0f}%"),
     ("Hit Into Play%",  "hit_into_play_rate",   lambda v: f"{(v * 100 if v <= 1 else v):.0f}%"),
-    ("Hard-Hit% (95+)", "ev95percent",          lambda v: f"{(v * 100 if v <= 1 else v):.0f}%"),
     ("Swing Length",    "swing_length",         lambda v: f"{v:.1f} ft"),
 ]
 
@@ -4811,31 +4813,33 @@ def plot_hitter_card(name, row, league_df, swing_path=None, player_id=None,
             return None
 
         # ── Figure ─────────────────────────────────────────────────
-        fig = plt.figure(figsize=(8.5, 9.5), dpi=150)
+        fig = plt.figure(figsize=(8.5, 10.2), dpi=150)
         fig.patch.set_facecolor(WHITE_BG)
+
+        # Team-accent top rule (subtle branding)
+        fig.add_artist(plt.Rectangle((0.0, 0.992), 1.0, 0.008,
+                       transform=fig.transFigure, facecolor=accent,
+                       edgecolor="none", zorder=3))
 
         # Headshot with team accent ring
         if player_id is not None:
             try:
                 hs = _fetch_headshot(int(player_id), accent=accent)
                 if hs is not None:
-                    ax_hs = fig.add_axes([0.07, 0.85, 0.15, 0.12])
+                    ax_hs = fig.add_axes([0.06, 0.865, 0.15, 0.105])
                     ax_hs.imshow(hs)
                     ax_hs.axis("off")
             except Exception:
                 pass
 
         # Name + subtitle
-        fig.text(0.255, 0.955, name, fontsize=27, fontweight="bold",
+        fig.text(0.245, 0.965, name, fontsize=26, fontweight="bold",
                  color=WHITE_TEXT, ha="left", va="top")
-        sub = f"{season} Hitter Analysis"
-        if not np.isnan(xwoba) and xwoba > 0:
-            sub += f"     xwOBA {('%.3f' % xwoba).lstrip('0')}"
-        fig.text(0.257, 0.905, sub, fontsize=14, color=WHITE_MUTED,
-                 ha="left", va="top")
+        fig.text(0.247, 0.927, f"{season} Hitter Analysis", fontsize=13.5,
+                 color=WHITE_MUTED, ha="left", va="top")
 
-        # Swing+ badge
-        ax_badge = fig.add_axes([0.72, 0.85, 0.21, 0.115])
+        # Swing+ badge + percentile caption
+        ax_badge = fig.add_axes([0.74, 0.88, 0.19, 0.095])
         ax_badge.axis("off")
         ax_badge.set_xlim(0, 1)
         ax_badge.set_ylim(0, 1)
@@ -4843,21 +4847,59 @@ def plot_hitter_card(name, row, league_df, swing_path=None, player_id=None,
             (0.03, 0.06), 0.94, 0.88,
             boxstyle="round,pad=0,rounding_size=0.12",
             facecolor=accent, edgecolor="none"))
-        ax_badge.text(0.5, 0.60, f"{sp:.0f}" if not np.isnan(sp) else "—",
-                      ha="center", va="center", fontsize=30,
+        ax_badge.text(0.5, 0.62, f"{sp:.0f}" if not np.isnan(sp) else "—",
+                      ha="center", va="center", fontsize=29,
                       fontweight="bold", color="white")
-        ax_badge.text(0.5, 0.20, "SWING+", ha="center", va="center",
+        ax_badge.text(0.5, 0.22, "SWING+", ha="center", va="center",
                       fontsize=11, fontweight="bold", color="white")
+        sp_pct = _pct_rank(league_df.get("swing_plus"), sp)
+        if sp_pct is not None:
+            suf = ("th" if 10 <= sp_pct % 100 <= 20
+                   else {1: "st", 2: "nd", 3: "rd"}.get(sp_pct % 10, "th"))
+            fig.text(0.835, 0.868, f"{sp_pct}{suf} percentile", fontsize=9,
+                     color=WHITE_MUTED, ha="center", va="top")
+
+        # ── Headline stat strip (fills header with the big numbers) ──
+        strip = []
+        if not np.isnan(xwoba) and xwoba > 0:
+            strip.append(("xwOBA", ("%.3f" % xwoba).lstrip("0")))
+        _bs = _num(row.get("bat_speed"))
+        if not np.isnan(_bs):
+            strip.append(("Bat Speed", f"{_bs:.1f}"))
+        _brl = _num(row.get("brl_percent"))
+        if not np.isnan(_brl):
+            strip.append(("Barrel%", f"{_brl:.1f}%"))
+        _hh = _num(row.get("ev95percent"))
+        if not np.isnan(_hh):
+            strip.append(("Hard-Hit%", f"{(_hh * 100 if _hh <= 1 else _hh):.0f}%"))
+        strip = strip[:4]
+        if strip:
+            band = fig.add_axes([0.06, 0.80, 0.87, 0.055])
+            band.axis("off"); band.set_xlim(0, 1); band.set_ylim(0, 1)
+            band.add_patch(FancyBboxPatch(
+                (0.0, 0.04), 1.0, 0.92,
+                boxstyle="round,pad=0,rounding_size=0.16",
+                facecolor="#f4f5f7", edgecolor="none"))
+            k = len(strip)
+            for j, (lab, val) in enumerate(strip):
+                cx = (j + 0.5) / k
+                band.text(cx, 0.66, val, ha="center", va="center",
+                          fontsize=18, fontweight="bold", color=WHITE_TEXT)
+                band.text(cx, 0.25, lab, ha="center", va="center",
+                          fontsize=9.5, color=WHITE_MUTED)
+                if j:
+                    band.plot([j / k, j / k], [0.20, 0.80], color="#dcdcdc",
+                              linewidth=1, zorder=1)
 
         # Divider rule + section title
-        fig.add_artist(plt.Line2D([0.07, 0.93], [0.835, 0.835],
+        fig.add_artist(plt.Line2D([0.06, 0.94], [0.775, 0.775],
                        color=WHITE_GRID, linewidth=1.2,
                        transform=fig.transFigure))
-        fig.text(0.5, 0.815, "Percentile Rankings", fontsize=16,
+        fig.text(0.5, 0.758, "Percentile Rankings", fontsize=15,
                  fontweight="bold", color=WHITE_TEXT, ha="center", va="top")
 
         # ── Percentile panel ───────────────────────────────────────
-        ax = fig.add_axes([0.07, 0.08, 0.86, 0.71])
+        ax = fig.add_axes([0.07, 0.055, 0.86, 0.665])
         n = len(bars)
         ax.set_xlim(-66, 116)
         ax.set_ylim(-0.7, n - 0.3)
