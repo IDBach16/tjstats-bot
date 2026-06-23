@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-01T15:44:24.382790",
-      "generator": "hitter_analysis",
-      "tweet_id": "2050239924608106929",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_james_wood"
-      ]
-    },
-    {
       "date": "2026-05-01T17:00:33.654353",
       "generator": "biomechanics_101",
       "tweet_id": "2050259088542511471",
@@ -1819,6 +1810,15 @@
       "tags": [
         "pitcher_card",
         "Framber Valdez"
+      ]
+    },
+    {
+      "date": "2026-06-23T20:58:45.118151",
+      "generator": "hitter_analysis",
+      "tweet_id": "2069525588562604296",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_kyle_schwarber"
       ]
     }
   ]
