@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-01T22:41:47.161050",
-      "generator": "pitching_summary",
-      "tweet_id": "2050344930476716346",
-      "tags": [
-        "pitching_summary",
-        "Ryan Helsley"
-      ]
-    },
-    {
       "date": "2026-05-02T14:42:28.785894",
       "generator": "reds_summary",
       "tweet_id": "2050586727320854602",
@@ -1818,6 +1809,15 @@
       "tags": [
         "pitching_summary",
         "Paul Skenes"
+      ]
+    },
+    {
+      "date": "2026-06-24T20:26:20.424019",
+      "generator": "hitter_analysis",
+      "tweet_id": "2069879819693658417",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_owen_caissie"
       ]
     }
   ]
