@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-03T22:32:29.082778",
-      "generator": "pitching_summary",
-      "tweet_id": "2051067363374874931",
-      "tags": [
-        "pitching_summary",
-        "Dylan Cease"
-      ]
-    },
-    {
       "date": "2026-05-04T15:56:19.853597",
       "generator": "swing_plus_top10",
       "tweet_id": "2051330088474436011",
@@ -1816,6 +1807,15 @@
       "tags": [
         "pitching_summary",
         "Logan Webb"
+      ]
+    },
+    {
+      "date": "2026-06-26T20:25:58.864863",
+      "generator": "hitter_analysis",
+      "tweet_id": "2070604505121780180",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_luke_raley"
       ]
     }
   ]
