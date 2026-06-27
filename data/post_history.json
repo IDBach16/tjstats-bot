@@ -1,14 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-04T15:56:19.853597",
-      "generator": "swing_plus_top10",
-      "tweet_id": "2051330088474436011",
-      "tags": [
-        "swing_plus_top10"
-      ]
-    },
-    {
       "date": "2026-05-04T16:25:23.859769",
       "generator": "reds_summary",
       "tweet_id": "2051337403441226041",
@@ -1816,6 +1808,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_luke_raley"
+      ]
+    },
+    {
+      "date": "2026-06-27T15:09:44.292263",
+      "generator": "pitcher_card",
+      "tweet_id": "2070887275349909616",
+      "tags": [
+        "pitcher_card",
+        "Zack Wheeler"
       ]
     }
   ]
