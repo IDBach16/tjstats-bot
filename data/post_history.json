@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-04T17:44:27.226462",
-      "generator": "biomechanics_101",
-      "tweet_id": "2051357298375741729",
-      "tags": [
-        "biomechanics_101",
-        "biomech_shoulder_energy_transfer"
-      ]
-    },
-    {
       "date": "2026-05-05T15:31:20.501507",
       "generator": "hitter_analysis",
       "tweet_id": "2051686187530698896",
@@ -1818,6 +1809,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_byron_buxton"
+      ]
+    },
+    {
+      "date": "2026-06-28T15:13:40.432609",
+      "generator": "pitching_summary",
+      "tweet_id": "2071250665859584157",
+      "tags": [
+        "pitching_summary",
+        "Tarik Skubal"
       ]
     }
   ]
