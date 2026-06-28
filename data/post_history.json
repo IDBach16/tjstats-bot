@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-05T15:31:20.501507",
-      "generator": "hitter_analysis",
-      "tweet_id": "2051686187530698896",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_jordan_walker"
-      ]
-    },
-    {
       "date": "2026-05-05T16:20:37.778320",
       "generator": "reds_summary",
       "tweet_id": "2051698591392030916",
@@ -1818,6 +1809,15 @@
       "tags": [
         "pitching_summary",
         "Tarik Skubal"
+      ]
+    },
+    {
+      "date": "2026-06-28T16:02:00.559137",
+      "generator": "reds_summary",
+      "tweet_id": "2071262850207850818",
+      "tags": [
+        "reds_summary",
+        "2026-06-27"
       ]
     }
   ]
