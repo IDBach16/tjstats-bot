@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-05T16:20:37.778320",
-      "generator": "reds_summary",
-      "tweet_id": "2051698591392030916",
-      "tags": [
-        "reds_summary",
-        "2026-05-04"
-      ]
-    },
-    {
       "date": "2026-05-05T16:21:39.545289",
       "generator": "hitter_analysis",
       "tweet_id": "2051698849819787707",
@@ -1818,6 +1809,15 @@
       "tags": [
         "reds_summary",
         "2026-06-27"
+      ]
+    },
+    {
+      "date": "2026-06-28T20:05:00.153328",
+      "generator": "hitter_analysis",
+      "tweet_id": "2071324001100571083",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_brandon_marsh"
       ]
     }
   ]
