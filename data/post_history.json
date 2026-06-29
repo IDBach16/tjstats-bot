@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-05T16:21:39.545289",
-      "generator": "hitter_analysis",
-      "tweet_id": "2051698849819787707",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_tyler_heineman"
-      ]
-    },
-    {
       "date": "2026-05-05T17:32:49.102563",
       "generator": "biomechanics_101",
       "tweet_id": "2051716758407659520",
@@ -1818,6 +1809,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_brandon_marsh"
+      ]
+    },
+    {
+      "date": "2026-06-29T16:50:44.489541",
+      "generator": "reds_summary",
+      "tweet_id": "2071637501337370781",
+      "tags": [
+        "reds_summary",
+        "2026-06-28"
       ]
     }
   ]
