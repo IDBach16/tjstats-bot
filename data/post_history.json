@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-06T20:16:55.849381",
-      "generator": "explainer",
-      "tweet_id": "2052120446372401533",
-      "tags": [
-        "explainer",
-        "explainer_whiff_vs_chase"
-      ]
-    },
-    {
       "date": "2026-05-06T22:41:16.648590",
       "generator": "pitching_summary",
       "tweet_id": "2052156750933979278",
@@ -1816,6 +1807,15 @@
       "tags": [
         "pitching_summary",
         "Cole Ragans"
+      ]
+    },
+    {
+      "date": "2026-07-01T20:44:59.834449",
+      "generator": "hitter_analysis",
+      "tweet_id": "2072421229751845244",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_jackson_chourio"
       ]
     }
   ]
