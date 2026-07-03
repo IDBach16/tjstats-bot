@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-08T16:07:18.158570",
-      "generator": "reds_summary",
-      "tweet_id": "2052782401189794009",
-      "tags": [
-        "reds_summary",
-        "2026-05-07"
-      ]
-    },
-    {
       "date": "2026-05-08T16:08:26.188931",
       "generator": "hitter_analysis",
       "tweet_id": "2052782686062735429",
@@ -1815,6 +1806,15 @@
       "tags": [
         "pitching_summary",
         "Chris Sale"
+      ]
+    },
+    {
+      "date": "2026-07-03T20:08:35.511722",
+      "generator": "hitter_analysis",
+      "tweet_id": "2073136844011929935",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_mookie_betts"
       ]
     }
   ]
