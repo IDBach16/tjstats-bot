@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-08T16:08:26.188931",
-      "generator": "hitter_analysis",
-      "tweet_id": "2052782686062735429",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_adam_frazier"
-      ]
-    },
-    {
       "date": "2026-05-08T17:22:37.357224",
       "generator": "biomechanics_101",
       "tweet_id": "2052801356004794631",
@@ -1815,6 +1806,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_mookie_betts"
+      ]
+    },
+    {
+      "date": "2026-07-04T14:59:29.144837",
+      "generator": "reds_summary",
+      "tweet_id": "2073421441240854762",
+      "tags": [
+        "reds_summary",
+        "2026-07-03"
       ]
     }
   ]
