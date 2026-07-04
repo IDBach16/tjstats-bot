@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-08T17:22:37.357224",
-      "generator": "biomechanics_101",
-      "tweet_id": "2052801356004794631",
-      "tags": [
-        "biomechanics_101",
-        "biomech_shoulder_energy_transfer"
-      ]
-    },
-    {
       "date": "2026-05-08T22:46:49.476432",
       "generator": "pitching_summary",
       "tweet_id": "2052882925465792798",
@@ -1815,6 +1806,15 @@
       "tags": [
         "reds_summary",
         "2026-07-03"
+      ]
+    },
+    {
+      "date": "2026-07-04T20:03:44.464947",
+      "generator": "hitter_analysis",
+      "tweet_id": "2073498011188248680",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_heliot_ramos"
       ]
     }
   ]
