@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-08T22:46:49.476432",
-      "generator": "pitching_summary",
-      "tweet_id": "2052882925465792798",
-      "tags": [
-        "pitching_summary",
-        "Tarik Skubal"
-      ]
-    },
-    {
       "date": "2026-05-09T14:44:00.978291",
       "generator": "reds_summary",
       "tweet_id": "2053123829317202144",
@@ -1815,6 +1806,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_heliot_ramos"
+      ]
+    },
+    {
+      "date": "2026-07-05T15:58:01.608544",
+      "generator": "pitching_summary",
+      "tweet_id": "2073798529554829414",
+      "tags": [
+        "pitching_summary",
+        "Ryan Helsley"
       ]
     }
   ]
