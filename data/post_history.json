@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-11T16:26:31.471135",
-      "generator": "reds_summary",
-      "tweet_id": "2053874402022797529",
-      "tags": [
-        "reds_summary",
-        "2026-05-10"
-      ]
-    },
-    {
       "date": "2026-05-11T16:27:29.847028",
       "generator": "swing_plus_top10",
       "tweet_id": "2053874646844309982",
@@ -1815,6 +1806,15 @@
         "newsroom",
         "underperformer",
         "Matt McLain"
+      ]
+    },
+    {
+      "date": "2026-07-06T20:55:09.586210",
+      "generator": "hitter_analysis",
+      "tweet_id": "2074235726682804268",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_owen_caissie"
       ]
     }
   ]
