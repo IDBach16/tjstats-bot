@@ -1,8 +1,8 @@
 """Wire service: pull candidate story leads from Baseball Savant leaderboards.
 
 Each lead is a verified, real story angle with the exact numbers attached (so the
-columnist never has to invent anything). The Reds get a lean: when a Red shows up
-near the top of a leaderboard, we prefer them.
+columnist never has to invent anything). Coverage is all-MLB and purely merit-based
+— the best story on the board wins, regardless of team.
 
 Story kinds:
   overperformer  — hitter whose results are way ahead of their batted-ball data
@@ -210,7 +210,8 @@ def _bat_speed_leads(reds: set[int]) -> list[Lead]:
 
 def build_leads() -> dict[str, list[Lead]]:
     """Return up to PER_KIND ranked candidate leads per story kind."""
-    reds = reds_player_ids()
+    # All-MLB, no team lean. Swap in reds_player_ids() here to re-enable a Reds tilt.
+    reds: set[int] = set()
     out: dict[str, list[Lead]] = {
         "overperformer": [], "underperformer": [],
         "nasty_pitch": [], "bat_speed": [],

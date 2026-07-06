@@ -8,7 +8,7 @@ Rules baked in:
     skip to the next candidate (never post video-less).
   * The columnist only ever sees verified numbers; the copy desk re-checks the
     draft and can send it back once before we give up on that story.
-  * Reds lean comes from feeds; the assignment editor ranks the rest.
+  * Coverage is all-MLB and merit-based; the assignment editor ranks candidates.
 """
 
 from __future__ import annotations

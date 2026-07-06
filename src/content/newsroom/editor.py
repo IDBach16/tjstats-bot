@@ -49,7 +49,6 @@ Here are today's candidate stories, each backed by real Baseball Savant data:
 Rank them from MOST to least compelling for a punchy thread today. Favor:
 - extreme, surprising, or league-leading numbers
 - a clear "nobody's talking about this" narrative
-- Reds angles (small bonus — don't force it)
 - variety (don't stack five of the same kind at the top)
 
 Return ONLY JSON: {{"ranked": [the [index] numbers, best first]}}"""
