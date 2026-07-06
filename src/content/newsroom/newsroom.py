@@ -13,11 +13,13 @@ Rules baked in:
 
 from __future__ import annotations
 
+import json
 import logging
 import os
-from datetime import date
+from datetime import date, datetime, timedelta
 
 from ..base import ContentGenerator, PostContent
+from ...config import DATA_DIR
 from ...video_clips import get_pitcher_clip, get_hitter_clip
 from . import feeds, researcher, social, personas, editor, graphics
 
@@ -46,6 +48,9 @@ class NewsroomGenerator(ContentGenerator):
         seed = date.today().timetuple().tm_yday
 
         for lead in ranked[:MAX_CANDIDATES]:
+            if self._recently_covered(lead.subject):
+                log.info("newsroom: %s covered recently — next", lead.subject)
+                continue
             clip = self._get_clip(lead)
             if not clip:
                 log.info("newsroom: no clip for %s (%s) — next", lead.subject, lead.kind)
@@ -76,6 +81,27 @@ class NewsroomGenerator(ContentGenerator):
         for k in KIND_ROTATION:
             out.extend(leads_by_kind.get(k, []))
         return out
+
+    def _recently_covered(self, subject: str, days: int = 14) -> bool:
+        """True if the newsroom already featured this subject in the last `days`."""
+        try:
+            path = DATA_DIR / "post_history.json"
+            if not path.exists():
+                return False
+            posts = json.loads(path.read_text()).get("posts", [])
+            cutoff = datetime.utcnow() - timedelta(days=days)
+            for entry in posts:
+                if entry.get("generator") != "newsroom":
+                    continue
+                try:
+                    when = datetime.fromisoformat(entry["date"])
+                except (KeyError, ValueError):
+                    continue
+                if when >= cutoff and subject in (entry.get("tags") or []):
+                    return True
+        except Exception:
+            log.debug("recently-covered check failed", exc_info=True)
+        return False
 
     def _get_clip(self, lead):
         try:

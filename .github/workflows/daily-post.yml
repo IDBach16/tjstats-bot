@@ -12,6 +12,8 @@ on:
     - cron: '0 16 * * *'
     # 2 PM EST (UTC-5) = 19:00 UTC — Hitter Analysis (text slot)
     - cron: '0 19 * * *'
+    # 5 PM EST (UTC-5) = 21:00 UTC — BachTalk newsroom thread (Mon/Wed/Fri only)
+    - cron: '0 21 * * 1,3,5'
   workflow_dispatch:
     inputs:
       slot:
@@ -66,6 +68,7 @@ on:
           - swing_plus_top10
           - best_pitch_week
           - hitter_analysis
+          - newsroom
 
 permissions:
   contents: write
@@ -96,7 +99,12 @@ jobs:
             echo "catchup=" >> $GITHUB_OUTPUT
           else
             HOUR=$(date -u +%H)
-            if [ "$HOUR" -ge 19 ]; then
+            if [ "$HOUR" -ge 21 ]; then
+              # 5 PM EST (21:00 UTC) — BachTalk newsroom thread (Mon/Wed/Fri via cron)
+              echo "slot=" >> $GITHUB_OUTPUT
+              echo "generator=newsroom" >> $GITHUB_OUTPUT
+              echo "catchup=" >> $GITHUB_OUTPUT
+            elif [ "$HOUR" -ge 19 ]; then
               # 2 PM EST (19:00 UTC) — Hitter Analysis (text slot)
               echo "slot=text" >> $GITHUB_OUTPUT
               echo "generator=" >> $GITHUB_OUTPUT
