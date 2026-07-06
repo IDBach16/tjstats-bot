@@ -1816,6 +1816,7 @@ _TJ_PITCH_COLOURS = {
     'FA': {'colour': '#FF007D', 'name': 'Fastball'},
     'SI': {'colour': '#98165D', 'name': 'Sinker'},
     'FC': {'colour': '#BE5FA0', 'name': 'Cutter'},
+    'CT': {'colour': '#BE5FA0', 'name': 'Cutter'},  # Pitch Profiler's cutter code
     'CH': {'colour': '#F79E70', 'name': 'Changeup'},
     'FS': {'colour': '#FE6100', 'name': 'Splitter'},
     'SC': {'colour': '#F08223', 'name': 'Screwball'},
@@ -2132,11 +2133,12 @@ def plot_pitching_summary(
                 usage = float(row.get("percentage_thrown", 0.1) or 0.1)
                 size = max(100, min(600, usage * 1200))
 
-                # Flip HB for RHP (like the notebook)
-                if p_throws == "R":
-                    hb_plot = -hb_val
-                else:
-                    hb_plot = hb_val
+                # PP hb is pitcher's-view (verified vs Statcast pfx_x: RHP arm
+                # side = +hb, LHP arm side = -hb) — plot raw so arm-side
+                # pitches land on the throwing-arm side for both hands.
+                # (The old "-hb for RHP" flip was designed for catcher's-view
+                # pfx_x data and mirrored the chart with PP data.)
+                hb_plot = hb_val
 
                 ax_break.scatter(hb_plot, ivb_val, c=color, s=size,
                                  edgecolors="black", linewidths=0.8,
@@ -2160,6 +2162,8 @@ def plot_pitching_summary(
             ax_break.set_aspect("equal", adjustable="box")
             ax_break.grid(True, alpha=0.3)
 
+            # Arm side sits on the throwing-arm side: right for RHP, left for
+            # LHP (hb is pitcher's-view, so the data lands there natively).
             if p_throws == "R":
                 ax_break.text(-24, -24, "\u2190 Glove Side",
                               fontstyle="italic", fontsize=10,
@@ -2170,12 +2174,11 @@ def plot_pitching_summary(
                               bbox=dict(facecolor="white", edgecolor="black"),
                               ha="right", va="bottom", zorder=3)
             else:
-                ax_break.invert_xaxis()
-                ax_break.text(24, -24, "\u2190 Arm Side",
+                ax_break.text(-24, -24, "\u2190 Arm Side",
                               fontstyle="italic", fontsize=10,
                               bbox=dict(facecolor="white", edgecolor="black"),
                               ha="left", va="bottom", zorder=3)
-                ax_break.text(-24, -24, "Glove Side \u2192",
+                ax_break.text(24, -24, "Glove Side \u2192",
                               fontstyle="italic", fontsize=10,
                               bbox=dict(facecolor="white", edgecolor="black"),
                               ha="right", va="bottom", zorder=3)
@@ -3760,6 +3763,7 @@ _TJ_PITCH_COLOURS = {
     'FA': {'colour': '#FF007D', 'name': 'Fastball'},
     'SI': {'colour': '#98165D', 'name': 'Sinker'},
     'FC': {'colour': '#BE5FA0', 'name': 'Cutter'},
+    'CT': {'colour': '#BE5FA0', 'name': 'Cutter'},  # Pitch Profiler's cutter code
     'CH': {'colour': '#F79E70', 'name': 'Changeup'},
     'FS': {'colour': '#FE6100', 'name': 'Splitter'},
     'SC': {'colour': '#F08223', 'name': 'Screwball'},
@@ -3794,7 +3798,9 @@ _PITCH_TABLE_COLS = [
     ("woba", "$\\bf{wOBA}$", ".3f", False),
 ]
 
-# Game stats row — game-specific stats (not season totals)
+# Game stats row — game-specific stats (not season totals). Columns are shown
+# only when present, so both data paths (Pitch Profiler / MLB fallback) fill
+# the row with whatever they support.
 _GAME_STATS = [
     ("innings_pitched", "$\\bf{IP}$", ".1f"),
     ("hits", "$\\bf{H}$", ".0f"),
@@ -3804,9 +3810,30 @@ _GAME_STATS = [
     ("walks", "$\\bf{BB}$", ".0f"),
     ("home_runs", "$\\bf{HR}$", ".0f"),
     ("pitches_thrown", "$\\bf{NP}$", ".0f"),
+    ("strike_percentage", "$\\bf{Strike\\%}$", ".1%"),
+    ("csw_rate", "$\\bf{CSW\\%}$", ".1%"),
     ("whiff_rate", "$\\bf{Whiff\\%}$", ".1%"),
     ("stuff_plus", "$\\bf{Stf+}$", ".0f"),
     ("pitching_plus", "$\\bf{Pit+}$", ".0f"),
+]
+
+# Reds game card pitch-table column pool: canonical Pitch Profiler columns plus
+# the MLB-derived substitutes (CSW%/Zone%). The card keeps a column only when at
+# least one pitch row has a value, so no more all-"—" dead columns on the
+# fallback path.
+_REDS_PITCH_COL_POOL = [
+    ("velocity", "$\\bf{Velo}$", ".1f", True),
+    ("ivb", "$\\bf{iVB}$", ".1f", None),
+    ("hb", "$\\bf{HB}$", ".1f", None),
+    ("spin_rate", "$\\bf{Spin}$", ".0f", None),
+    ("release_extension", "$\\bf{Ext.}$", ".1f", True),
+    ("stuff_plus", "$\\bf{Stf+}$", ".0f", True),
+    ("whiff_rate", "$\\bf{Whiff\\%}$", ".1%", True),
+    ("chase_percentage", "$\\bf{Chase\\%}$", ".1%", True),
+    ("csw_rate", "$\\bf{CSW\\%}$", ".1%", True),
+    ("zone_rate", "$\\bf{Zone\\%}$", ".1%", None),
+    ("run_value_per_100_pitches", "$\\bf{RV\\/100}$", ".1f", True),
+    ("woba", "$\\bf{wOBA}$", ".3f", False),
 ]
 
 # (team logos resolved via the canonical _logo_slug() helper near the top)
@@ -4054,6 +4081,7 @@ def plot_reds_game_summary(
                     "velocity", "ivb", "hb", "spin_rate",
                     "release_extension", "stuff_plus",
                     "whiff_rate", "chase_percentage",
+                    "csw_rate", "zone_rate",
                     "percentage_thrown", "woba",
                     "run_value_per_100_pitches",
                 ]
@@ -4090,10 +4118,22 @@ def plot_reds_game_summary(
             hspace=0.25, wspace=0.4,
         )
 
-        # Border axes (hidden)
-        for pos in [gs[0, 1:8], gs[6, 1:8], gs[:, 0], gs[:, -1]]:
+        # Border axes: top/bottom become slim team-color accent bars,
+        # the side gutters stay invisible.
+        for pos in (gs[0, 1:8], gs[6, 1:8]):
+            bax = fig.add_subplot(pos)
+            bax.set_facecolor(accent)
+            bax.set_xticks([]); bax.set_yticks([])
+            for sp in bax.spines.values():
+                sp.set_visible(False)
+        for pos in (gs[:, 0], gs[:, -1]):
             bax = fig.add_subplot(pos)
             bax.axis("off")
+
+        # Light team-color tint used for table header rows
+        _ar, _ag, _ab = mcolors.to_rgb(accent)
+        header_tint = mcolors.to_hex((_ar * 0.10 + 0.90, _ag * 0.10 + 0.90,
+                                      _ab * 0.10 + 0.90))
 
         # ── Row 1: Header — headshot / bio / logo (figure-level) ────
         # Hide the grid-based header axes
@@ -4169,9 +4209,9 @@ def plot_reds_game_summary(
             tbl.set_fontsize(20)
             tbl.scale(1, 2.5)
             for key, cell in tbl.get_celld().items():
-                cell.set_edgecolor("#cccccc")
+                cell.set_edgecolor("#dddddd")
                 if key[0] == 0:
-                    cell.set_facecolor("#f0f0f0")
+                    cell.set_facecolor(header_tint)
                     cell.set_text_props(fontweight="bold")
 
         # Season stats subtitle (below game stats table)
@@ -4211,8 +4251,10 @@ def plot_reds_game_summary(
                 usage = float(row.get("percentage_thrown", 0.1) or 0.1)
                 size = max(100, min(600, usage * 1200))
 
-                # Flip HB for RHP
-                hb_plot = -hb_val if p_throws == "R" else hb_val
+                # PP/MLB hb is pitcher's-view (verified vs Statcast pfx_x:
+                # RHP arm side = +hb, LHP arm side = -hb), so plotting it raw
+                # puts arm-side pitches on the throwing-arm side for both hands.
+                hb_plot = hb_val
 
                 ax_break.scatter(hb_plot, ivb_val, c=color, s=size,
                                  edgecolors="black", linewidths=0.8,
@@ -4236,6 +4278,8 @@ def plot_reds_game_summary(
             ax_break.set_aspect("equal", adjustable="box")
             ax_break.grid(True, alpha=0.3)
 
+            # Arm side sits on the throwing-arm side: right for RHP, left for
+            # LHP (hb is pitcher's-view, so the data lands there natively).
             if p_throws == "R":
                 ax_break.text(-24, -24, "\u2190 Glove Side",
                               fontstyle="italic", fontsize=10,
@@ -4246,12 +4290,11 @@ def plot_reds_game_summary(
                               bbox=dict(facecolor="white", edgecolor="black"),
                               ha="right", va="bottom", zorder=3)
             else:
-                ax_break.invert_xaxis()
-                ax_break.text(24, -24, "\u2190 Arm Side",
+                ax_break.text(-24, -24, "\u2190 Arm Side",
                               fontstyle="italic", fontsize=10,
                               bbox=dict(facecolor="white", edgecolor="black"),
                               ha="left", va="bottom", zorder=3)
-                ax_break.text(-24, -24, "Glove Side \u2192",
+                ax_break.text(24, -24, "Glove Side \u2192",
                               fontstyle="italic", fontsize=10,
                               bbox=dict(facecolor="white", edgecolor="black"),
                               ha="right", va="bottom", zorder=3)
@@ -4293,17 +4336,15 @@ def plot_reds_game_summary(
                            markeredgecolor="white", markersize=7,
                            label=_TJ_NAME.get(pt, pt)) for pt in _loc_types]
             if _loc_legend:
-                ax_loc.legend(handles=_loc_legend, loc="lower center",
+                ax_loc.legend(handles=_loc_legend, loc="upper center",
                              ncol=min(len(_loc_legend), 3), fontsize=10,
                              framealpha=0.9, edgecolor="#ddd",
                              markerscale=1.3,
-                             bbox_to_anchor=(0.5, -0.1))
+                             bbox_to_anchor=(0.5, -0.01))
         ax_loc.set_xlim(-2.5, 2.5)
         ax_loc.set_ylim(-0.5, 5.0)
         ax_loc.set_aspect("equal")
-        ax_loc.set_xlabel("Plate Side (ft)", fontsize=10)
-        ax_loc.set_ylabel("Height (ft)", fontsize=10)
-        ax_loc.tick_params(labelsize=8)
+        ax_loc.set_xticks([]); ax_loc.set_yticks([])
         for _sp in ax_loc.spines.values():
             _sp.set_color("#dddddd")
 
@@ -4351,16 +4392,14 @@ def plot_reds_game_summary(
                 _ResLine([0],[0],marker="o",color="none",markerfacecolor="#2ec4b6",
                         markeredgecolor="white",markersize=7,label="In Play"),
             ]
-            ax_res.legend(handles=_res_legend, loc="lower center",
+            ax_res.legend(handles=_res_legend, loc="upper center",
                          ncol=3, fontsize=10, framealpha=0.9,
                          edgecolor="#ddd", markerscale=1.3,
-                         bbox_to_anchor=(0.5, -0.1))
+                         bbox_to_anchor=(0.5, -0.01))
         ax_res.set_xlim(-2.5, 2.5)
         ax_res.set_ylim(-0.5, 5.0)
         ax_res.set_aspect("equal")
-        ax_res.set_xlabel("Plate Side (ft)", fontsize=10)
-        ax_res.set_ylabel("Height (ft)", fontsize=10)
-        ax_res.tick_params(labelsize=8)
+        ax_res.set_xticks([]); ax_res.set_yticks([])
         for _sp in ax_res.spines.values():
             _sp.set_color("#dddddd")
 
@@ -4370,6 +4409,14 @@ def plot_reds_game_summary(
 
         if not pitch_rows.empty:
             league_df = all_pitches_df if all_pitches_df is not None else game_pitches_df
+
+            # Adaptive columns: keep a column only if at least one pitch row has
+            # a value, so the MLB-fallback path never renders all-"—" columns.
+            active_cols = [
+                spec for spec in _REDS_PITCH_COL_POOL
+                if spec[0] in pitch_rows.columns
+                and pd.to_numeric(pitch_rows[spec[0]], errors="coerce").notna().any()
+            ]
 
             cell_text = []
             cell_colors = []
@@ -4383,7 +4430,7 @@ def plot_reds_game_summary(
                 row_colors = ["#ffffff", "#ffffff"]
                 row_label_colors.append(_TJ_COLOUR.get(pt, "#888888"))
 
-                for pp_col, _, fmt, higher_good in _PITCH_TABLE_COLS:
+                for pp_col, _, fmt, higher_good in active_cols:
                     if pp_col not in row.index:
                         row_data.append("\u2014")
                         row_colors.append("#ffffff")
@@ -4426,7 +4473,7 @@ def plot_reds_game_summary(
 
             # Headers
             actual_headers = ["$\\bf{Pitch\\ Name}$", "$\\bf{Pitch\\%}$"]
-            for pp_col, header, _, _ in _PITCH_TABLE_COLS:
+            for pp_col, header, _, _ in active_cols:
                 actual_headers.append(header)
 
             n_cols = len(actual_headers)
@@ -4447,7 +4494,7 @@ def plot_reds_game_summary(
             # Style header row
             for i in range(n_cols):
                 cell = tbl.get_celld()[(0, i)]
-                cell.set_facecolor("#f0f0f0")
+                cell.set_facecolor(header_tint)
                 cell.set_edgecolor("#cccccc")
                 cell.set_text_props(fontweight="bold")
 
@@ -4473,7 +4520,13 @@ def plot_reds_game_summary(
                        "Colour Coding Compares to League Average By Pitch",
                        ha="center", va="top", fontsize=14,
                        color="#666666")
-        ax_footer.text(1, 1, "Data: Pitch Profiler\nImages: MLB, ESPN",
+        # Credit whichever source actually supplied the pitch data this run
+        _pp_live = (not pitch_rows.empty
+                    and "stuff_plus" in pitch_rows.columns
+                    and pd.to_numeric(pitch_rows["stuff_plus"],
+                                      errors="coerce").notna().any())
+        _src = "Pitch Profiler" if _pp_live else "MLB Statcast"
+        ax_footer.text(1, 1, f"Data: {_src}\nImages: MLB, ESPN",
                        ha="right", va="top", fontsize=22)
 
         # ── Save ─────────────────────────────────────────────────────

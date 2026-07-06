@@ -275,6 +275,22 @@ class RedsSummaryGenerator(ContentGenerator):
             if pitcher_pbp.empty and not _mlb_raw_pbp.empty and pid:
                 pitcher_pbp = _mlb_raw_pbp[_mlb_raw_pbp["pitcher_id"] == pid]
 
+            # Boxscore rows have no whiff/CSW — derive game-level rates from the
+            # play-by-play so those cells aren't blank on the fallback path.
+            if ("whiff_rate" not in player_row.index
+                    and not pitcher_pbp.empty and "description" in pitcher_pbp.columns):
+                desc = pitcher_pbp["description"].astype(str)
+                swing_descs = ["swinging_strike", "swinging_strike_blocked",
+                               "foul", "foul_tip", "hit_into_play",
+                               "hit_into_play_no_out", "hit_into_play_score"]
+                swings = desc.isin(swing_descs).sum()
+                whiffs = desc.isin(["swinging_strike", "swinging_strike_blocked"]).sum()
+                called = (desc == "called_strike").sum()
+                if swings > 0:
+                    player_row["whiff_rate"] = whiffs / swings
+                if len(desc) > 0:
+                    player_row["csw_rate"] = (called + whiffs) / len(desc)
+
             card_path = plot_reds_game_summary(
                 name=pname,
                 game_stats=player_row,
@@ -394,44 +410,57 @@ class RedsSummaryGenerator(ContentGenerator):
         )
 
     def _get_season_stats(self, pitcher_id: int, season: int) -> dict:
-        """Fetch season pitching stats from MLB Stats API for the header row."""
-        url = (f"{MLB_API_BASE}/people/{pitcher_id}/stats"
-               f"?stats=season&season={season}&group=pitching")
+        """Fetch season pitching stats + handedness from the MLB Stats API.
+
+        Uses the person endpoint with a stats hydrate so ONE call returns both
+        the season splits and pitchHand (the bare /stats endpoint has no
+        pitchHand — the old code always came back with an empty hand, so
+        fallback-path cards defaulted every pitcher to RHP).
+        """
+        url = (f"{MLB_API_BASE}/people/{pitcher_id}"
+               f"?hydrate=stats(group=[pitching],type=[season],season={season})")
         try:
             resp = requests.get(url, timeout=10)
             resp.raise_for_status()
-            data = resp.json()
+            people = resp.json().get("people", [])
         except Exception:
             log.debug("MLB season stats failed for %d", pitcher_id)
             return {}
+        if not people:
+            return {}
 
-        for split_group in data.get("stats", []):
+        person = people[0]
+        p_throws = person.get("pitchHand", {}).get("code", "")
+
+        for split_group in person.get("stats", []):
             for split in split_group.get("splits", []):
                 s = split.get("stat", {})
                 if not s:
                     continue
-                ip = float(s.get("inningsPitched", "0") or "0")
+                ip_disp = float(s.get("inningsPitched", "0") or "0")
+                # baseball IP notation: .1/.2 are thirds — convert for the math
+                ip_real = int(ip_disp) + (round(ip_disp % 1, 1) * 10) / 3
                 bf = int(s.get("battersFaced", 0) or 0)
                 k = int(s.get("strikeOuts", 0) or 0)
                 bb = int(s.get("baseOnBalls", 0) or 0)
                 hr = int(s.get("homeRuns", 0) or 0)
-                er = int(s.get("earnedRuns", 0) or 0)
                 # Calculate percentages and FIP
                 k_pct = k / bf if bf > 0 else 0
                 bb_pct = bb / bf if bf > 0 else 0
                 # FIP = ((13*HR + 3*BB - 2*K) / IP) + 3.2
-                fip = ((13 * hr + 3 * bb - 2 * k) / ip + 3.2) if ip > 0 else 0
+                fip = ((13 * hr + 3 * bb - 2 * k) / ip_real + 3.2) if ip_real > 0 else 0
                 return {
-                    "innings_pitched": ip,
+                    "innings_pitched": ip_disp,
                     "batters_faced": bf,
                     "whip": float(s.get("whip", "0") or "0"),
                     "era": float(s.get("era", "0") or "0"),
                     "fip": fip,
                     "strike_out_percentage": k_pct,
                     "walk_percentage": bb_pct,
-                    "p_throws": s.get("pitchHand", {}).get("code", ""),
+                    "p_throws": p_throws,
                 }
-        return {}
+        # No splits (e.g. season debut pending) — still return the hand
+        return {"p_throws": p_throws} if p_throws else {}
 
     @staticmethod
     def _map_pitch_desc(desc: str) -> str:
@@ -473,17 +502,29 @@ class RedsSummaryGenerator(ContentGenerator):
                 whiff_descs = ["swinging_strike", "swinging_strike_blocked"]
                 swings = grp["description"].isin(swing_descs).sum()
                 whiffs = grp["description"].isin(whiff_descs).sum()
+                called = (grp["description"] == "called_strike").sum()
                 whiff_rate = whiffs / swings if swings > 0 else 0
+                csw_rate = (called + whiffs) / n if n > 0 else 0
 
-                # Chase%: swings on pitches outside zone
+                # Chase% / Zone% from plate coordinates
                 px = pd.to_numeric(grp.get("plate_x", pd.Series()), errors="coerce")
                 pz = pd.to_numeric(grp.get("plate_z", pd.Series()), errors="coerce")
+                has_loc = px.notna() & pz.notna()
                 in_zone = (px.abs() <= 0.83) & (pz >= 1.5) & (pz <= 3.5)
-                out_zone = (~in_zone) & px.notna() & pz.notna()
+                out_zone = (~in_zone) & has_loc
                 out_swings = grp.loc[out_zone.values, "description"].isin(swing_descs).sum() if out_zone.any() else 0
                 out_total = out_zone.sum()
                 chase_pct = out_swings / out_total if out_total > 0 else 0
+                zone_rate = (in_zone & has_loc).sum() / has_loc.sum() if has_loc.any() else None
 
+                ext = None
+                if "release_extension" in grp.columns:
+                    ext_vals = pd.to_numeric(grp["release_extension"], errors="coerce").dropna()
+                    if not ext_vals.empty:
+                        ext = ext_vals.mean()
+
+                # NOTE: no stuff_plus/woba/RV here — the card's pitch table is
+                # adaptive and swaps in CSW%/Zone% when those PP columns are absent.
                 result_rows.append({
                     "pitcher_id": pid,
                     "pitch_type": pt,
@@ -491,12 +532,12 @@ class RedsSummaryGenerator(ContentGenerator):
                     "ivb": grp["ivb"].dropna().mean(),
                     "hb": grp["hb"].dropna().mean(),
                     "spin_rate": grp["spin_rate"].dropna().mean(),
+                    "release_extension": ext,
                     "percentage_thrown": n / total,
                     "whiff_rate": whiff_rate,
                     "chase_percentage": chase_pct,
-                    "stuff_plus": None,
-                    "woba": None,
-                    "run_value_per_100_pitches": None,
+                    "csw_rate": csw_rate,
+                    "zone_rate": zone_rate,
                 })
 
         return pd.DataFrame(result_rows) if result_rows else pd.DataFrame()
@@ -539,6 +580,7 @@ class RedsSummaryGenerator(ContentGenerator):
                     "ivb": breaks.get("breakVerticalInduced"),
                     "hb": breaks.get("breakHorizontal"),
                     "spin_rate": breaks.get("spinRate"),
+                    "release_extension": pitch_data.get("extension"),
                     "plate_x": coords.get("pX"),
                     "plate_z": coords.get("pZ"),
                     "description": self._map_pitch_desc(details.get("description", "")),
