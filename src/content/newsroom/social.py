@@ -10,7 +10,6 @@ from pathlib import Path
 
 from ..base import PostContent
 from .feeds import Lead
-from .personas import SIGN_OFF
 from .writer import MAX_TWEET
 
 HARD_LIMIT = 278  # absolute X ceiling with a little safety
@@ -45,7 +44,6 @@ def build_post(article: dict, lead: Lead, video_path: Path,
         replies.append(PostContent(text="The receipts 📊", image_path=chart_path,
                                    alt_text=f"{lead.subject} stat card",
                                    tags=["newsroom", lead.kind]))
-    replies.append(PostContent(text=SIGN_OFF, tags=["newsroom", "signoff"]))
 
     return PostContent(
         text=tweets[0],
