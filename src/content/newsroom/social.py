@@ -27,13 +27,24 @@ def _fit(text: str) -> str:
     return cut.rstrip() + "…"
 
 
-def build_post(article: dict, lead: Lead, video_path: Path) -> PostContent:
+def build_post(article: dict, lead: Lead, video_path: Path,
+               chart_path: Path | None = None) -> PostContent:
     tweets = [_fit(t) for t in article["tweets"]]
     headline = article.get("headline", "") or lead.subject
 
     replies: list[PostContent] = []
-    for t in tweets[1:]:
-        replies.append(PostContent(text=t, tags=["newsroom", lead.kind]))
+    body = tweets[1:]
+    for i, t in enumerate(body):
+        reply = PostContent(text=t, tags=["newsroom", lead.kind])
+        if i == 0 and chart_path is not None:      # hero card on the first reply
+            reply.image_path = chart_path
+            reply.alt_text = f"{lead.subject} stat card"
+        replies.append(reply)
+    # if the thread had no body tweets, still show the card
+    if chart_path is not None and not body:
+        replies.append(PostContent(text="The receipts 📊", image_path=chart_path,
+                                   alt_text=f"{lead.subject} stat card",
+                                   tags=["newsroom", lead.kind]))
     replies.append(PostContent(text=SIGN_OFF, tags=["newsroom", "signoff"]))
 
     return PostContent(

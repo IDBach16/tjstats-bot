@@ -44,8 +44,18 @@ PERSONAS = [
         "blurb": "Comes in with a spicy claim and dares you to disagree, then backs "
                  "it up with the receipts.",
     },
+    {
+        "name": "The Explainer",
+        "blurb": "Makes the nerdy stat click for a casual fan with a killer analogy, "
+                 "then lands the 'oh THAT'S why it matters' punch.",
+    },
 ]
 
 
 def default_persona() -> dict:
     return PERSONAS[0]
+
+
+def pick_persona(seed: int) -> dict:
+    """Rotate columnists so the account doesn't sound like one person."""
+    return PERSONAS[seed % len(PERSONAS)]

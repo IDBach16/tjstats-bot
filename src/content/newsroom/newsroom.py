@@ -1,14 +1,14 @@
 """Orchestrator: run the newsroom pipeline and return a ready-to-post thread.
 
-feeds -> pick a story WITH available game film -> researcher -> writer -> social.
+feeds -> editor (rank) -> pick a story WITH game film -> researcher -> writer
+       -> copy desk (fact-check, one retry) -> graphics (hero card) -> social.
 
 Rules baked in:
   * Every thread leads with a real game video clip. If a subject has no clip, we
     skip to the next candidate (never post video-less).
-  * Reds lean comes from feeds (a Red near the top of a board is preferred).
-  * Story kind rotates by day so the account doesn't repeat itself.
-
-Phase 2 will slot an LLM assignment editor + copy-desk fact-checker into this flow.
+  * The columnist only ever sees verified numbers; the copy desk re-checks the
+    draft and can send it back once before we give up on that story.
+  * Reds lean comes from feeds; the assignment editor ranks the rest.
 """
 
 from __future__ import annotations
@@ -19,12 +19,12 @@ from datetime import date
 
 from ..base import ContentGenerator, PostContent
 from ...video_clips import get_pitcher_clip, get_hitter_clip
-from . import feeds, researcher, social, personas
+from . import feeds, researcher, social, personas, editor, graphics
 
 log = logging.getLogger(__name__)
 
 KIND_ROTATION = ["nasty_pitch", "overperformer", "bat_speed", "underperformer"]
-MAX_CANDIDATES = 6  # bound how many clip lookups we attempt per run
+MAX_CANDIDATES = 6  # bound how many clip lookups / write attempts per run
 
 
 class NewsroomGenerator(ContentGenerator):
@@ -37,45 +37,45 @@ class NewsroomGenerator(ContentGenerator):
             log.warning("newsroom: feeds failed", exc_info=True)
             return PostContent(text="", tags=["newsroom", "error"])
 
-        candidates = self._order_candidates(leads_by_kind)
+        candidates = self._candidates(leads_by_kind)
         if not candidates:
             log.warning("newsroom: no candidate leads")
             return PostContent(text="", tags=["newsroom", "no_leads"])
 
-        for lead in candidates[:MAX_CANDIDATES]:
+        ranked = editor.rank(candidates)
+        seed = date.today().timetuple().tm_yday
+
+        for lead in ranked[:MAX_CANDIDATES]:
             clip = self._get_clip(lead)
             if not clip:
-                log.info("newsroom: no clip for %s (%s) — trying next",
-                         lead.subject, lead.kind)
+                log.info("newsroom: no clip for %s (%s) — next", lead.subject, lead.kind)
                 continue
 
             fact_sheet = researcher.build_fact_sheet(lead)
-            article = self._write(fact_sheet)
+            persona = personas.pick_persona(seed)
+            article = self._write_and_check(fact_sheet, persona)
             if not article:
                 continue
 
-            log.info("newsroom: publishing '%s' on %s (%s%s)",
+            chart = graphics.render_stat_card(fact_sheet, lead)
+            log.info("newsroom: publishing '%s' — %s (%s%s), by %s",
                      article.get("headline", "")[:60], lead.subject, lead.kind,
-                     ", RED" if lead.is_red else "")
-            return social.build_post(article, lead, clip)
+                     ", RED" if lead.is_red else "", persona["name"])
+            return social.build_post(article, lead, clip, chart)
 
         log.warning("newsroom: no publishable story with a clip today")
         return PostContent(text="", tags=["newsroom", "no_clip"])
 
     # ── helpers ────────────────────────────────────────────────────────
-    def _order_candidates(self, leads_by_kind: dict) -> list:
-        """Rotate the featured kind by day; env NEWSROOM_KIND forces one."""
+    def _candidates(self, leads_by_kind: dict) -> list:
+        """All candidates (env NEWSROOM_KIND restricts to one kind for testing)."""
         override = os.environ.get("NEWSROOM_KIND")
         if override in KIND_ROTATION:
-            order = [override] + [k for k in KIND_ROTATION if k != override]
-        else:
-            rot = date.today().timetuple().tm_yday % len(KIND_ROTATION)
-            order = KIND_ROTATION[rot:] + KIND_ROTATION[:rot]
-
-        ordered: list = []
-        for k in order:
-            ordered.extend(leads_by_kind.get(k, []))
-        return ordered
+            return list(leads_by_kind.get(override, []))
+        out: list = []
+        for k in KIND_ROTATION:
+            out.extend(leads_by_kind.get(k, []))
+        return out
 
     def _get_clip(self, lead):
         try:
@@ -86,11 +86,24 @@ class NewsroomGenerator(ContentGenerator):
             log.warning("newsroom: clip fetch failed for %s", lead.subject, exc_info=True)
             return None
 
-    def _write(self, fact_sheet: dict):
-        from . import writer
+    def _write_and_check(self, fact_sheet: dict, persona: dict):
+        """Write the thread, then fact-check it. One revision, then give up."""
+        from . import writer, copydesk
         try:
-            return writer.write_thread(fact_sheet, personas.default_persona())
+            article = writer.write_thread(fact_sheet, persona)
+            if not article:
+                return None
+            verdict = copydesk.review(article, fact_sheet)
+            if not verdict["ok"]:
+                log.info("newsroom: copydesk sent back %s — revising", fact_sheet["subject"])
+                article = writer.write_thread(fact_sheet, persona,
+                                              revision_notes=verdict["issues"])
+                if not article or not copydesk.review(article, fact_sheet)["ok"]:
+                    log.warning("newsroom: %s failed fact-check twice — skipping",
+                                fact_sheet["subject"])
+                    return None
+            return article
         except Exception:
-            log.warning("newsroom: writer failed for %s",
+            log.warning("newsroom: write/check failed for %s",
                         fact_sheet.get("subject"), exc_info=True)
             return None

@@ -63,11 +63,20 @@ def _parse_json(text: str) -> dict | None:
             return None
 
 
-def write_thread(fact_sheet: dict, persona: dict) -> dict | None:
-    """Return {'headline': str, 'tweets': [str, ...]} or None."""
+def write_thread(fact_sheet: dict, persona: dict,
+                 revision_notes: list[str] | None = None) -> dict | None:
+    """Return {'headline': str, 'tweets': [str, ...]} or None.
+
+    If revision_notes is given (from the copy desk), the writer must fix those
+    problems and re-submit.
+    """
+    fix_block = ""
+    if revision_notes:
+        fix_block = ("\n\nA FACT-CHECKER REJECTED YOUR LAST DRAFT. Fix these and use ONLY "
+                     "fact-sheet numbers:\n- " + "\n- ".join(revision_notes) + "\n")
     prompt = f"""You are {persona['name']} for BachTalk. {persona['blurb']}
 
-Write an X (Twitter) THREAD in your voice about this story.
+Write an X (Twitter) THREAD in your voice about this story.{fix_block}
 
 FACT SHEET (use ONLY these numbers — invent nothing):
 {fact_sheet['sheet']}
