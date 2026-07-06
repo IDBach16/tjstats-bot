@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-10T22:37:53.569425",
-      "generator": "pitching_summary",
-      "tweet_id": "2053605443335815434",
-      "tags": [
-        "pitching_summary",
-        "Cole Ragans"
-      ]
-    },
-    {
       "date": "2026-05-11T16:26:31.471135",
       "generator": "reds_summary",
       "tweet_id": "2053874402022797529",
@@ -1814,6 +1805,16 @@
         "newsroom",
         "nasty_pitch",
         "Chase Burns"
+      ]
+    },
+    {
+      "date": "2026-07-06T18:04:01.402202",
+      "generator": "newsroom",
+      "tweet_id": "2074192659145445788",
+      "tags": [
+        "newsroom",
+        "underperformer",
+        "Matt McLain"
       ]
     }
   ]
