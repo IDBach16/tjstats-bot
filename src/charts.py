@@ -4118,15 +4118,14 @@ def plot_reds_game_summary(
             hspace=0.25, wspace=0.4,
         )
 
-        # Border axes: top/bottom become slim team-color accent bars,
-        # the side gutters stay invisible.
-        for pos in (gs[0, 1:8], gs[6, 1:8]):
-            bax = fig.add_subplot(pos)
-            bax.set_facecolor(accent)
-            bax.set_xticks([]); bax.set_yticks([])
-            for sp in bax.spines.values():
-                sp.set_visible(False)
-        for pos in (gs[:, 0], gs[:, -1]):
+        # Border axes: the bottom border is a slim team-color accent bar;
+        # the top and side gutters stay invisible.
+        bax = fig.add_subplot(gs[6, 1:8])
+        bax.set_facecolor(accent)
+        bax.set_xticks([]); bax.set_yticks([])
+        for sp in bax.spines.values():
+            sp.set_visible(False)
+        for pos in (gs[0, 1:8], gs[:, 0], gs[:, -1]):
             bax = fig.add_subplot(pos)
             bax.axis("off")
 
