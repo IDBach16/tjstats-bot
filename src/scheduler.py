@@ -60,6 +60,9 @@ from .content.season_summary import SeasonSummaryGenerator
 # Daily generators (run every day regardless of rotation)
 from .content.reds_summary import RedsSummaryGenerator
 
+# Newsroom — multi-agent Barstool-style article threads (Savant/FanGraphs)
+from .content.newsroom import NewsroomGenerator
+
 log = logging.getLogger(__name__)
 
 HISTORY_PATH = DATA_DIR / "post_history.json"
@@ -96,6 +99,7 @@ GENERATORS: dict[str, type[ContentGenerator]] = {
     "best_pitch_week": BestPitchWeekGenerator,
     "season_summary": SeasonSummaryGenerator,
     "hitter_analysis": HitterAnalysisGenerator,
+    "newsroom": NewsroomGenerator,
 }
 
 # Daily generators — these run every day in addition to the rotation schedule

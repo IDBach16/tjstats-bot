@@ -432,3 +432,119 @@ def get_pitcher_clip(pitcher_id: int, pitcher_name: str) -> Path | None:
         return output_path
 
     return None
+
+
+# ── Hitter clips (Film Room search by BatterId) ────────────────────────
+# Title keywords that signal a good hitter highlight — home runs first.
+_HITTER_PREFER = (
+    "homers", "home run", "grand slam", " hr ", "crushes", "blasts", "launches",
+    "smashes", "go-ahead", "walk-off", "two-run", "three-run", "solo home",
+    "doubles", "triples", "rbi",
+)
+
+
+def _search_filmroom_batter(batter_id: int, season: int) -> tuple[str | None, str | None]:
+    """Search MLB Film Room for a highlight of this hitter (prefers homers)."""
+    search_terms = f"BatterId = {batter_id} AND Season = {season}"
+    query = """
+    {
+      search(query: "%s", limit: 25) {
+        total
+        plays {
+          gameDate
+          mediaPlayback {
+            slug
+            title
+            feeds { playbacks { name url } }
+          }
+        }
+      }
+    }
+    """ % search_terms
+
+    try:
+        resp = requests.post(
+            FILMROOM_GRAPHQL, json={"query": query},
+            headers={"Content-Type": "application/json"}, timeout=15,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+    except Exception:
+        log.warning("Film Room batter search request failed", exc_info=True)
+        return None, None
+
+    if data.get("errors"):
+        log.warning("Film Room batter query error: %s",
+                    data["errors"][0].get("message", ""))
+        return None, None
+
+    plays = (data.get("data", {}).get("search") or {}).get("plays") or []
+    if not plays:
+        log.info("No Film Room clips found for batter %s season %s", batter_id, season)
+        return None, None
+
+    # Prefer homers / big hits, penalize multi-play recaps
+    scored = []
+    for play in plays:
+        mp_list = play.get("mediaPlayback") or []
+        if not mp_list:
+            continue
+        mp = mp_list[0]
+        title = (mp.get("title") or "").lower()
+        score = 0
+        if any(kw in title for kw in _HITTER_PREFER):
+            score += 10
+        for word in ("highlights", "scoreless", "outing", "innings", "recap",
+                     "every", "career", "complete game"):
+            if word in title:
+                score -= 8
+                break
+        scored.append((score, mp))
+
+    scored.sort(key=lambda x: x[0], reverse=True)
+    for _score, mp in scored:
+        title = mp.get("title", "")
+        mp4_url = _pick_best_mp4(mp)
+        if not mp4_url:
+            continue
+        try:
+            head = requests.head(mp4_url, timeout=10, allow_redirects=True)
+            size = int(head.headers.get("Content-Length", 0))
+            if size > MAX_CLIP_SIZE_MB * 1024 * 1024:
+                log.info("Skipping hitter clip (%.0f MB): %s", size / (1024 * 1024), title)
+                continue
+        except Exception:
+            pass
+        log.info("Found Film Room hitter clip: %s", title)
+        return mp4_url, title
+
+    return None, None
+
+
+def get_hitter_clip(batter_id: int, batter_name: str) -> Path | None:
+    """Find and download a game highlight clip for a hitter (prefers homers).
+
+    Mirrors get_pitcher_clip but searches Film Room by BatterId. Tries the current
+    season, then the previous one. Returns the Path to the MP4, or None.
+    """
+    _cleanup_old_clips()
+
+    mp4_url, _title = _search_filmroom_batter(batter_id, MLB_SEASON)
+    season_used = MLB_SEASON
+    if not mp4_url:
+        mp4_url, _title = _search_filmroom_batter(batter_id, MLB_SEASON - 1)
+        season_used = MLB_SEASON - 1
+    if not mp4_url:
+        return None
+
+    safe_name = batter_name.replace(" ", "_").lower()
+    output_path = CLIPS_DIR / f"{safe_name}_{season_used}_hit.mp4"
+
+    if output_path.exists():
+        log.info("Hitter clip already downloaded: %s", output_path.name)
+        return output_path
+
+    if _download_mp4(mp4_url, output_path):
+        return output_path
+
+    return None
