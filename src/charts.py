@@ -3850,63 +3850,79 @@ def plot_reds_matchup_header(
     num_pitchers: int,
     score_line: str = "",
     is_home: bool = True,
+    opponent_id: "int | None" = None,
 ) -> Path | None:
-    """Generate MLB-style split-screen matchup header with team colors + logos."""
+    """Generate MLB-style split-screen matchup header with team colors + logos.
+
+    The opponent is resolved by MLB team id when available (bulletproof), else by
+    the passed abbreviation. Logos come from the canonical _logo_slug() map — the
+    single source of truth verified against the ESPN CDN — so renamed/aliased
+    teams (Athletics->ATH, AZ->ari, WSN->wsh) no longer break.
+    """
     try:
         from io import BytesIO
         from PIL import Image
 
-        _LOGO_SLUGS = {
-            "ARI": "ari", "ATL": "atl", "BAL": "bal", "BOS": "bos",
-            "CHC": "chc", "CWS": "chw", "CIN": "cin", "CLE": "cle",
-            "COL": "col", "DET": "det", "HOU": "hou", "KC": "kc",
-            "LAA": "laa", "LAD": "lad", "MIA": "mia", "MIL": "mil",
-            "MIN": "min", "NYM": "nym", "NYY": "nyy", "OAK": "oak",
-            "PHI": "phi", "PIT": "pit", "SD": "sd", "SF": "sf",
-            "SEA": "sea", "STL": "stl", "TB": "tb", "TEX": "tex",
-            "TOR": "tor", "WSH": "wsh",
-        }
+        # Team colors + display names keyed by the canonical 2026 abbreviations.
         _TEAM_BG_COLORS = {
-            "ARI": "#A71930", "ATL": "#13274F", "BAL": "#DF4601", "BOS": "#0C2340",
+            "AZ": "#A71930", "ATL": "#13274F", "BAL": "#DF4601", "BOS": "#0C2340",
             "CHC": "#0E3386", "CWS": "#27251F", "CIN": "#C6011F", "CLE": "#00385D",
             "COL": "#333366", "DET": "#0C2340", "HOU": "#002D62", "KC": "#004687",
             "LAA": "#862633", "LAD": "#005A9C", "MIA": "#00A3E0", "MIL": "#12284B",
-            "MIN": "#002B5C", "NYM": "#002D72", "NYY": "#0C2340", "OAK": "#003831",
+            "MIN": "#002B5C", "NYM": "#002D72", "NYY": "#0C2340", "ATH": "#003831",
             "PHI": "#E81828", "PIT": "#27251F", "SD": "#2F241D", "SF": "#FD5A1E",
             "SEA": "#0C2C56", "STL": "#C41E3A", "TB": "#092C5C", "TEX": "#003278",
             "TOR": "#134A8E", "WSH": "#AB0003",
         }
         _TEAM_NAMES = {
-            "ARI": "D-backs", "ATL": "Braves", "BAL": "Orioles", "BOS": "Red Sox",
+            "AZ": "D-backs", "ATL": "Braves", "BAL": "Orioles", "BOS": "Red Sox",
             "CHC": "Cubs", "CWS": "White Sox", "CIN": "Reds", "CLE": "Guardians",
             "COL": "Rockies", "DET": "Tigers", "HOU": "Astros", "KC": "Royals",
             "LAA": "Angels", "LAD": "Dodgers", "MIA": "Marlins", "MIL": "Brewers",
-            "MIN": "Twins", "NYM": "Mets", "NYY": "Yankees", "OAK": "Athletics",
+            "MIN": "Twins", "NYM": "Mets", "NYY": "Yankees", "ATH": "Athletics",
             "PHI": "Phillies", "PIT": "Pirates", "SD": "Padres", "SF": "Giants",
             "SEA": "Mariners", "STL": "Cardinals", "TB": "Rays", "TEX": "Rangers",
             "TOR": "Blue Jays", "WSH": "Nationals",
         }
+        # Fold legacy/alternate abbreviations onto the canonical key.
+        _ABBREV_ALIAS = {"ARI": "AZ", "OAK": "ATH", "CHW": "CWS", "WSN": "WSH"}
+
+        def _canon(ab: str) -> str:
+            ab = (ab or "").upper().strip()
+            return _ABBREV_ALIAS.get(ab, ab)
 
         def _get_logo(abbrev):
-            slug = _LOGO_SLUGS.get(abbrev, abbrev.lower())
-            url = (f"https://a.espncdn.com/combiner/i?img="
-                   f"/i/teamlogos/mlb/500/{slug}.png&h=500&w=500")
-            resp = _requests.get(url, timeout=10, allow_redirects=True)
-            img = Image.open(BytesIO(resp.content)).convert("RGBA")
-            # Convert logo to white (keep alpha) so it pops on team-color bg
+            """Fetch a team logo, whitened. Returns a transparent placeholder on
+            any failure so one missing logo never blanks the whole header."""
             import numpy as _np
-            arr = _np.array(img)
-            mask = arr[:, :, 3] > 50  # visible pixels
-            arr[mask, 0] = 255
-            arr[mask, 1] = 255
-            arr[mask, 2] = 255
-            return Image.fromarray(arr)
+            slug = _logo_slug(abbrev) or (abbrev or "").lower()
+            try:
+                url = (f"https://a.espncdn.com/combiner/i?img="
+                       f"/i/teamlogos/mlb/500/{slug}.png&h=500&w=500")
+                resp = _requests.get(url, timeout=10, allow_redirects=True)
+                if resp.status_code != 200 or not resp.content:
+                    raise ValueError(f"logo HTTP {resp.status_code} for {abbrev}/{slug}")
+                img = Image.open(BytesIO(resp.content)).convert("RGBA")
+                arr = _np.array(img)
+                mask = arr[:, :, 3] > 50  # visible pixels -> white so it pops on bg
+                arr[mask, 0] = 255
+                arr[mask, 1] = 255
+                arr[mask, 2] = 255
+                return Image.fromarray(arr)
+            except Exception:
+                log.warning("matchup header: logo fetch failed for %s (slug=%s)",
+                            abbrev, slug, exc_info=True)
+                return Image.new("RGBA", (500, 500), (0, 0, 0, 0))
+
+        # Resolve the opponent by team id first (bulletproof), else the abbrev.
+        opp_ab = _canon(_TEAM_ID_ABBREV.get(opponent_id) if opponent_id else "") \
+            or _canon(opponent_abbrev)
 
         # Away team on left, home team on right (MLB style)
         if is_home:
-            left_abbrev, right_abbrev = opponent_abbrev, "CIN"
+            left_abbrev, right_abbrev = opp_ab, "CIN"
         else:
-            left_abbrev, right_abbrev = "CIN", opponent_abbrev
+            left_abbrev, right_abbrev = "CIN", opp_ab
 
         left_logo = _get_logo(left_abbrev)
         right_logo = _get_logo(right_abbrev)

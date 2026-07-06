@@ -344,6 +344,7 @@ class RedsSummaryGenerator(ContentGenerator):
             num_pitchers=len(cards),
             score_line=score_line,
             is_home=game_info.get("is_home", True),
+            opponent_id=game_info.get("opponent_id"),
         )
 
         # ── 7. Build thread ────────────────────────────────────────
@@ -695,9 +696,11 @@ class RedsSummaryGenerator(ContentGenerator):
 
         if is_home:
             opponent = away_team
+            opponent_id = away.get("team", {}).get("id")
             score_line = f"Reds {home_score}, {away_team} {away_score}"
         else:
             opponent = home_team
+            opponent_id = home.get("team", {}).get("id")
             score_line = f"{home_team} {home_score}, Reds {away_score}"
 
         # Simplify opponent name (e.g. "San Francisco Giants" -> "SF Giants")
@@ -713,6 +716,7 @@ class RedsSummaryGenerator(ContentGenerator):
             "game_pk": game_pk,
             "opponent": opponent_short,
             "opponent_full": opponent,
+            "opponent_id": opponent_id,
             "is_home": is_home,
             "score_line": score_line,
             "away_score": away_score,
