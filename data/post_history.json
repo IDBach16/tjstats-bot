@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-10T15:41:07.944426",
-      "generator": "movement_profile",
-      "tweet_id": "2053500542253482445",
-      "tags": [
-        "movement_profile",
-        "Hunter Brown"
-      ]
-    },
-    {
       "date": "2026-05-10T22:37:53.569425",
       "generator": "pitching_summary",
       "tweet_id": "2053605443335815434",
@@ -1813,6 +1804,16 @@
       "tags": [
         "pitching_summary",
         "Roki Sasaki"
+      ]
+    },
+    {
+      "date": "2026-07-06T17:47:46.593113",
+      "generator": "newsroom",
+      "tweet_id": "2074188570395316503",
+      "tags": [
+        "newsroom",
+        "nasty_pitch",
+        "Chase Burns"
       ]
     }
   ]
