@@ -1,14 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-11T16:27:29.847028",
-      "generator": "swing_plus_top10",
-      "tweet_id": "2053874646844309982",
-      "tags": [
-        "swing_plus_top10"
-      ]
-    },
-    {
       "date": "2026-05-11T17:15:29.836802",
       "generator": "biomechanics_101",
       "tweet_id": "2053886726515405138",
@@ -1815,6 +1807,16 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_owen_caissie"
+      ]
+    },
+    {
+      "date": "2026-07-06T22:06:54.283849",
+      "generator": "newsroom",
+      "tweet_id": "2074253782171763063",
+      "tags": [
+        "newsroom",
+        "underperformer",
+        "Will Smith"
       ]
     }
   ]
