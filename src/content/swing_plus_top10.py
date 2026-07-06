@@ -39,6 +39,14 @@ FEATURES = [
     "brl_percent", "anglesweetspotpercent", "ev95percent",
 ]
 
+# Scale of the "+" metric: 100 = league average, 1 SD = SWING_PLUS_SD points.
+# Swing quality (mechanics) varies far less than results, so we use a tighter
+# spread than results-based stats like wRC+ (SD 15). At SD 10 the elite tops out
+# near ~130 instead of the ~150 an SD-15 scale produced for outliers like Wood/
+# Alvarez. hitter_analysis.py imports this so xwoba_plus stays on the same scale
+# (their gap comparison is only valid when both use identical scaling).
+SWING_PLUS_SD = 10
+
 # Column mapping: Savant CSV name -> model feature name
 # Handles both 2025 and 2026 column formats
 _COL_MAPS = [
@@ -209,7 +217,7 @@ def _compute_swing_plus():
     pm, ps = pred.mean(), pred.std()
     if ps == 0:
         ps = 1
-    merged["swing_plus"] = np.round(100 + ((pred - pm) / ps) * 15, 1)
+    merged["swing_plus"] = np.round(100 + ((pred - pm) / ps) * SWING_PLUS_SD, 1)
 
     # Store player_id
     if id_col and id_col in merged.columns:

@@ -19,7 +19,7 @@ import requests
 from .base import ContentGenerator, PostContent
 from ..config import SCREENSHOTS_DIR, CLIPS_DIR, MLB_SEASON, DEFAULT_HASHTAGS
 from ..video_clips import _download_mp4
-from .swing_plus_top10 import _compute_swing_plus, FEATURES
+from .swing_plus_top10 import _compute_swing_plus, FEATURES, SWING_PLUS_SD
 from ..charts import plot_hitter_card
 
 log = logging.getLogger(__name__)
@@ -67,7 +67,7 @@ def _pick_hitter(df: pd.DataFrame) -> pd.Series | None:
     if xwoba_std == 0:
         xwoba_std = 1
     df = df.copy()
-    df["xwoba_plus"] = 100 + ((df["xwOBA"] - xwoba_mean) / xwoba_std) * 15
+    df["xwoba_plus"] = 100 + ((df["xwOBA"] - xwoba_mean) / xwoba_std) * SWING_PLUS_SD
     df["gap"] = abs(df["swing_plus"] - df["xwoba_plus"])
 
     # Sort by gap (most interesting discrepancies first)
