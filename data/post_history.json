@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-13T16:19:50.192898",
-      "generator": "reds_summary",
-      "tweet_id": "2054597494617632851",
-      "tags": [
-        "reds_summary",
-        "2026-05-12"
-      ]
-    },
-    {
       "date": "2026-05-13T16:20:59.644719",
       "generator": "velo_distribution",
       "tweet_id": "2054597761383748054",
@@ -1827,6 +1818,16 @@
         "Cade Townsend",
         "Ole Miss Rebels",
         "NCAA"
+      ]
+    },
+    {
+      "date": "2026-07-07T21:37:50.088511",
+      "generator": "newsroom",
+      "tweet_id": "2074608854395183367",
+      "tags": [
+        "newsroom",
+        "nasty_pitch",
+        "Jes\u00fas Luzardo"
       ]
     }
   ]
