@@ -583,8 +583,25 @@ def find_player_video(name: str, team_name: str = "",
 
     parts = name.lower().split()
     first, surname = parts[0], parts[-1]
-    hl_words = ("highlight", "baseball", "pitching", "strikeout", "scoreless",
-                "innings", "start", "debut", "gem", " vs", "vs ")
+    # On-field / on-mound action words — a returned clip MUST contain one, so
+    # what posts is the player (or team) PLAYING, never talking.
+    action_words = ("highlight", "highlights", "pitching", "pitches",
+                    "strikeout", "strikeouts", "k's", "scoreless", "innings",
+                    "gem", "dominant", "dominates", "dealing", "outing",
+                    "complete game", "shutout", "no-hitter", "no hitter",
+                    "punchout", "punch out", "punches out", " vs ", " vs.",
+                    "vs ", "fastball", "slider", "on the mound", "start",
+                    "bullpen session", "showcase")
+    # Interview / talk / off-field content — reject outright, even on a name
+    # match (this is what keeps interviews and podcasts out of the post).
+    interview_words = ("interview", "podcast", "press conference", "presser",
+                       "sits down", "sit down", "one-on-one", "one on one",
+                       "q&a", "q & a", "reaction", "talks", "korner",
+                       "media day", "availability", "commit", "commitment",
+                       "committed", "signing", "signs with", "draft day",
+                       "preview", "previews", "get ready", "gets ready",
+                       "catches up", "day in the life", "vlog", "mic'd",
+                       "recruiting", "announces")
     # Distinctive team tokens only — drop generic location/qualifier words so
     # the team fallback can't false-match an unrelated club's highlight.
     _generic = {"state", "university", "college", "valley", "city", "county",
@@ -600,32 +617,29 @@ def find_player_video(name: str, team_name: str = "",
         # whole words only, so "Berg" can't match inside "Bergman"
         return set(re.findall(r"[a-z0-9']+", t.lower()))
 
-    # 1) Strongest: the player's *full* name appears (first + last as whole
-    #    words) — prefer a highlight over an interview, else take the first.
-    full = [(v, t) for v, t in vids
-            if surname in _words(t) and first in _words(t)]
-    for v, t in full:
-        if any(w in t.lower() for w in hl_words):
-            return _url(v), "player"
-    if full:
-        return _url(full[0][0]), "player"
+    def _action(tl):
+        return any(w in tl for w in action_words)
 
-    # 2) Surname (whole word) + a highlight word — YouTube already ranked
-    #    these for the full-name query, so the top hit is usually right.
-    for v, t in vids:
-        if surname in _words(t) and any(w in t.lower() for w in hl_words):
+    # Drop any interview / talk / off-field content up front.
+    cand = [(v, t) for v, t in vids
+            if not any(w in t.lower() for w in interview_words)]
+
+    # 1) The player's *full* name (first + last as whole words) + an action
+    #    word. Full name required — a surname-only match risks a different
+    #    player with the same last name (e.g. Cade vs Cal Fisher).
+    for v, t in cand:
+        if surname in _words(t) and first in _words(t) and _action(t.lower()):
             return _url(v), "player"
 
-    # 3) Fallback: a highlight of the player's *team* (distinctive team token
-    #    + a highlight word) — relevant even without a name match.
+    # 2) Fallback: game footage of the player's *team* (distinctive team token
+    #    + an action word) — still on-field play, never an interview.
     if team_tokens:
-        for v, t in vids:
+        for v, t in cand:
             tl = t.lower()
-            if any(tok in tl for tok in team_tokens) and \
-                    any(w in tl for w in hl_words):
+            if any(tok in tl for tok in team_tokens) and _action(tl):
                 return _url(v), "team"
 
-    # 4) Nothing we can confidently tie to the player — post no video.
+    # 3) Nothing that's clearly the player/team PLAYING — post no video.
     return None
 
 
