@@ -69,6 +69,7 @@ on:
           - best_pitch_week
           - hitter_analysis
           - newsroom
+          - draft_prospect
 
 permissions:
   contents: write
