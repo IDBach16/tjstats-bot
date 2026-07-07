@@ -488,13 +488,18 @@ def pick_college_prospect(start_date: str | None = None,
                           top_n: int = 20,
                           leagues: set[str] | None = None,
                           exclude_ids: set[int] | None = None,
+                          exclude_names: set[str] | None = None,
                           rng=None) -> dict | None:
     """Pick a standout amateur pitching prospect from a date window.
 
     Ranks qualified arms by a simple "stuff" score (whiff% + K%) and
     samples one from the top ``top_n`` so the card rotates day to day.
     ``leagues`` restricts the pool (and percentile baseline); the
-    batters-faced floor screens out small-sample flukes.
+    batters-faced floor screens out small-sample flukes. ``exclude_names``
+    drops arms already featured (cross-run de-dup) so the deterministic
+    "highest-ranked" pick advances to the next prospect instead of
+    repeating — unless excluding would empty the pool, in which case the
+    exclusion is ignored so a card is still produced.
     """
     import random
 
@@ -517,11 +522,21 @@ def pick_college_prospect(start_date: str | None = None,
     if df.empty:
         return None
 
+    df = df.copy()
+    df["_norm"] = df["pitcher_name"].map(_norm_name)
+
+    # Drop arms already featured (by name) so runs don't repeat a prospect.
+    # If that would empty the pool (everyone's been posted), keep the full
+    # pool rather than produce nothing.
+    if exclude_names:
+        ex = {_norm_name(n) for n in exclude_names}
+        kept = df[~df["_norm"].isin(ex)]
+        if not kept.empty:
+            df = kept
+
     # Prefer a curated-ranking prospect who actually has tracked data —
     # feature the highest-ranked such arm. Otherwise fall back to a
     # "stuff"-scored pick (whiff% + K%), sampled from the top ``top_n``.
-    df = df.copy()
-    df["_norm"] = df["pitcher_name"].map(_norm_name)
     ranked = df[df["_norm"].isin(_PROSPECT_BY_NAME.keys())]
 
     if not ranked.empty:

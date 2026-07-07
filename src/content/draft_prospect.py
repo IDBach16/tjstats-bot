@@ -43,8 +43,19 @@ class DraftProspectGenerator(ContentGenerator):
         start, end = college_season_window(MLB_SEASON)
         pool = {NCAA_LEAGUE}
 
+        # Don't repeat a prospect we've already featured. Pull the names of
+        # previously-posted draft prospects (tags[1]) and exclude them so the
+        # deterministic "highest-ranked" pick advances to the next arm.
+        # (local import: scheduler imports this generator, so avoid a cycle)
+        from ..scheduler import recent_generator_tags
+        already_posted = recent_generator_tags(self.name)
+        if already_posted:
+            log.info("Excluding %d already-posted prospect(s): %s",
+                     len(already_posted), sorted(already_posted))
+
         prospect = pick_college_prospect(
-            start, end, min_pitches=_MIN_PITCHES, leagues=pool)
+            start, end, min_pitches=_MIN_PITCHES, leagues=pool,
+            exclude_names=already_posted)
         if not prospect:
             log.warning("No qualified prospect found in %s..%s", start, end)
             return PostContent(text="")

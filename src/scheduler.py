@@ -181,3 +181,22 @@ def was_recently_posted(tag: str, lookback: int = 7) -> bool:
         if tag in entry.get("tags", []):
             return True
     return False
+
+
+def recent_generator_tags(
+    generator_name: str, index: int = 1, lookback: int = 200
+) -> set[str]:
+    """Return the tag values at position ``index`` for recent posts from a
+    given generator — e.g. every featured player name (tags[1]) the
+    ``draft_prospect`` generator has already posted, for cross-run
+    de-duplication so it doesn't repeat the same prospect."""
+    history = _load_history()
+    recent = history.get("posts", [])[-lookback:]
+    out: set[str] = set()
+    for entry in recent:
+        if entry.get("generator") != generator_name:
+            continue
+        tags = entry.get("tags", [])
+        if len(tags) > index and tags[index]:
+            out.add(tags[index])
+    return out
