@@ -15,6 +15,7 @@ from .base import ContentGenerator, PostContent
 from ..college_statcast import (
     NCAA_LEAGUE,
     college_season_window,
+    download_youtube_clip,
     fetch_college_window,
     find_player_video,
     get_college_pitchers,
@@ -27,6 +28,10 @@ from ..config import DEFAULT_HASHTAGS, MLB_SEASON
 log = logging.getLogger(__name__)
 
 _MIN_PITCHES = 40
+# Upload the highlight natively (download + attach) vs. just linking it.
+# Native upload re-hosts third-party footage — flip to False to post the
+# YouTube link instead if that's a concern.
+_NATIVE_VIDEO = True
 
 
 class DraftProspectGenerator(ContentGenerator):
@@ -110,24 +115,34 @@ class DraftProspectGenerator(ContentGenerator):
             f"@TJStats {DEFAULT_HASHTAGS} #MLBDraft #CollegeBaseball"
         )
 
-        # Thread a highlight clip if we can find one — worded honestly
-        # depending on whether it's the player or just their team.
-        reply = None
+        # Thread a highlight clip if we can find one. For a player-named
+        # clip we try to upload it natively (download + transcode); if that
+        # fails, or it's only a team highlight, we fall back to the link.
+        replies = []
         found = find_player_video(name, team_name, extra="baseball highlights")
         if found:
             video_url, kind = found
-            if kind == "player":
-                rtext = f"🎥 Watch {name}: {video_url}"
+            clip = None
+            if kind == "player" and _NATIVE_VIDEO:
+                clip = download_youtube_clip(video_url, name, max_seconds=140)
+            if clip:
+                replies.append(PostContent(
+                    text=f"🎥 {name} — highlights\n(clip via YouTube: {video_url})",
+                    video_path=clip, tags=["draft_prospect_video"]))
+                log.info("Draft prospect NATIVE video for %s: %s", name, clip)
             else:
-                rtext = f"🎥 {team_name} highlights: {video_url}"
-            reply = PostContent(text=rtext, tags=["draft_prospect_video"])
-            log.info("Draft prospect video (%s) for %s: %s",
-                     kind, name, video_url)
+                label = (f"Watch {name}" if kind == "player"
+                         else f"{team_name} highlights")
+                replies.append(PostContent(
+                    text=f"🎥 {label}: {video_url}",
+                    tags=["draft_prospect_video"]))
+                log.info("Draft prospect video LINK (%s) for %s: %s",
+                         kind, name, video_url)
 
         return PostContent(
             text=text,
             image_path=image_path,
             alt_text=f"{MLB_SEASON} MLB Draft prospect pitcher card for {name}",
             tags=["draft_prospect", name, team_name, league_label],
-            reply=reply,
+            replies=replies,
         )

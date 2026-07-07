@@ -40,7 +40,7 @@ import numpy as np
 import pandas as pd
 import requests
 
-from .config import DATA_DIR, MLB_SEASON
+from .config import CLIPS_DIR, DATA_DIR, MLB_SEASON
 from .milb_statcast import (
     _CALL_MAP,
     aggregate_pitch_stats,
@@ -627,3 +627,81 @@ def find_player_video(name: str, team_name: str = "",
 
     # 4) Nothing we can confidently tie to the player — post no video.
     return None
+
+
+def download_youtube_clip(url: str, name: str,
+                          max_seconds: int = 140) -> "Path | None":
+    """Download a YouTube clip and re-encode it to an X-ready MP4.
+
+    yt-dlp grabs the first ``max_seconds`` (X caps native video at 2:20),
+    then ffmpeg transcodes to H.264/AAC + faststart with even dimensions
+    and 30fps so the tweet upload always accepts it. Returns the MP4 path
+    or ``None`` on any failure (caller falls back to posting the link).
+
+    NOTE: this re-hosts third-party highlight footage. Only enable native
+    upload for clips you have the right to post — otherwise keep the link.
+    """
+    import re as _re
+    import subprocess
+
+    try:
+        import yt_dlp
+    except Exception:
+        log.warning("yt-dlp not installed — cannot download clip")
+        return None
+
+    CLIPS_DIR.mkdir(parents=True, exist_ok=True)
+    safe = _re.sub(r"\W+", "_", name).strip("_").lower() or "clip"
+    raw_tmpl = str(CLIPS_DIR / f"yt_{safe}_raw.%(ext)s")
+    final = CLIPS_DIR / f"yt_{safe}.mp4"
+    if final.exists():
+        return final
+
+    # clear any stale raw parts
+    for f in CLIPS_DIR.glob(f"yt_{safe}_raw.*"):
+        try:
+            f.unlink()
+        except OSError:
+            pass
+
+    ydl_opts = {
+        "format": "bv*[height<=720]+ba/b[height<=720]/b",
+        "outtmpl": raw_tmpl,
+        "merge_output_format": "mp4",
+        "quiet": True, "no_warnings": True, "noprogress": True,
+        "download_ranges": yt_dlp.utils.download_range_func(
+            None, [(0, max_seconds)]),
+        "force_keyframes_at_cuts": True,
+    }
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([url])
+    except Exception:
+        log.warning("yt-dlp download failed for %s", url, exc_info=True)
+        return None
+
+    raws = list(CLIPS_DIR.glob(f"yt_{safe}_raw.*"))
+    if not raws:
+        return None
+    raw = raws[0]
+
+    cmd = [
+        "ffmpeg", "-y", "-i", str(raw), "-t", str(max_seconds),
+        "-c:v", "libx264", "-pix_fmt", "yuv420p",
+        "-profile:v", "high", "-level", "4.0",
+        "-vf", "scale='min(1280,iw)':-2,fps=30",
+        "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart",
+        str(final),
+    ]
+    try:
+        subprocess.run(cmd, check=True, capture_output=True, timeout=240)
+    except Exception:
+        log.warning("ffmpeg transcode failed for %s", raw.name, exc_info=True)
+        return None
+    finally:
+        try:
+            raw.unlink()
+        except OSError:
+            pass
+
+    return final if final.exists() and final.stat().st_size > 0 else None
