@@ -1,10 +1,10 @@
 """Content generator: MLB Draft prospect pitcher card.
 
-Renders a Statcast prospect card for a standout amateur pitcher using
-Hawk-Eye tracking from whichever draft showcase is currently being played
-and tracked — NCAA D1 in spring, the Cape Cod / MLB Draft / Appalachian
-leagues in summer — and threads a YouTube highlight clip as a reply
-(amateur Savant has no video of its own).
+Renders a Statcast prospect card for a standout NCAA D1 pitcher using
+Hawk-Eye tracking from the tracked college season, in the Reds
+game-summary layout (+ release-point plot & vs-league percentile panel).
+Prefers pitchers on Lance Brozdowski's 2026 Draft rankings when they have
+tracked data (crediting @LanceBroz), and threads a YouTube highlight clip.
 """
 
 from __future__ import annotations
@@ -13,28 +13,19 @@ import logging
 
 from .base import ContentGenerator, PostContent
 from ..college_statcast import (
-    default_window,
+    NCAA_LEAGUE,
+    college_season_window,
     fetch_college_window,
     find_player_video,
     get_college_pitchers,
     get_college_pitches,
     pick_college_prospect,
-    pick_target_league,
 )
 from ..charts import plot_draft_prospect_card
 from ..config import DEFAULT_HASHTAGS, MLB_SEASON
 
 log = logging.getLogger(__name__)
 
-# Full-name subtitle per league for the tweet copy.
-_LEAGUE_NAMES = {
-    "Cape Cod Baseball League": "Cape Cod League",
-    "MLB Draft League": "MLB Draft League",
-    "College Baseball": "NCAA D1",
-    "Appalachian League": "Appalachian League",
-    "Northwoods League": "Northwoods League",
-    "Prospect League": "Prospect League",
-}
 _MIN_PITCHES = 40
 
 
@@ -42,14 +33,13 @@ class DraftProspectGenerator(ContentGenerator):
     name = "draft_prospect"
 
     async def generate(self) -> PostContent:
-        start, end = default_window()
-
-        # Feature the most-scouted showcase with a usable percentile pool.
-        target = pick_target_league(start, end, min_pitches=_MIN_PITCHES)
-        leagues = {target} if target else None
+        # NCAA D1 tracked games across the full college season — this is
+        # the domain of the draft pitching rankings we lean on.
+        start, end = college_season_window(MLB_SEASON)
+        pool = {NCAA_LEAGUE}
 
         prospect = pick_college_prospect(
-            start, end, min_pitches=_MIN_PITCHES, leagues=leagues)
+            start, end, min_pitches=_MIN_PITCHES, leagues=pool)
         if not prospect:
             log.warning("No qualified prospect found in %s..%s", start, end)
             return PostContent(text="")
@@ -65,10 +55,10 @@ class DraftProspectGenerator(ContentGenerator):
         team_name = prospect.get("team_name", "") or team
         league = prospect.get("league", "")
         league_label = prospect.get("league_label", "COLLEGE")
-        league_full = _LEAGUE_NAMES.get(league, "college baseball")
+        rank = prospect.get("rank")
+        fv = prospect.get("fv")
+        ranked_source = prospect.get("ranked_source")
 
-        # Same-league pool → fair percentiles + correct arsenal.
-        pool = {league} if league else None
         season_df = get_college_pitchers(
             start, end, min_pitches=_MIN_PITCHES, leagues=pool)
         pitches_df = get_college_pitches(start, end, leagues=pool)
@@ -82,7 +72,7 @@ class DraftProspectGenerator(ContentGenerator):
             return PostContent(text="")
 
         # This player's slices: season aggregate row, per-pitch-type rows,
-        # and raw pitches (for the location/result scatter plots).
+        # and raw pitches (for the location/result/release scatter plots).
         srow = season_df[season_df["player_id"] == pid]
         prows = pitches_df[pitches_df["player_id"] == pid]
         if srow.empty or prows.empty:
@@ -91,25 +81,32 @@ class DraftProspectGenerator(ContentGenerator):
         season_row = srow.iloc[0]
         p_throws = str(season_row.get("p_throws", "R") or "R")
 
-        raw = fetch_college_window(start, end)
+        raw = fetch_college_window(start, end, leagues=pool)
         pbp_df = raw[raw["pitcher"] == pid] if not raw.empty else None
 
-        # Card in the Reds game-summary layout; league-wide pitch aggregate
-        # (pitches_df) drives the vs-league colour coding in the table.
+        # Reds game-summary layout + release plot + percentile panel; the
+        # league-wide aggregates drive the vs-league colouring/percentiles.
         image_path = plot_draft_prospect_card(
             name, season_row, prows, pbp_df=pbp_df,
-            league_pitches_df=pitches_df, p_throws=p_throws,
-            team=team, team_name=team_name, league=league,
+            league_pitches_df=pitches_df, league_season_df=season_df,
+            p_throws=p_throws, team=team, team_name=team_name, league=league,
             league_label=league_label, league_full=league, season=MLB_SEASON,
+            rank=rank, fv=fv, ranked_source=ranked_source,
         )
         if not image_path:
             log.warning("Draft prospect card render failed for %s", name)
             return PostContent(text="")
 
+        # Tweet copy — headline the ranking when the arm is on the list.
         subtitle = f" ({team_name})" if team_name else ""
+        if rank is not None:
+            headline = (f"{name}{subtitle} — #{rank} on {ranked_source}'s "
+                        f"{MLB_SEASON} MLB Draft pitching rankings")
+        else:
+            headline = f"{name}{subtitle} — {MLB_SEASON} MLB Draft Prospect Card"
         text = (
-            f"{name}{subtitle} — {MLB_SEASON} MLB Draft Prospect Card\n\n"
-            f"Full arsenal + Hawk-Eye tracking from the {league_full}.\n\n"
+            f"{headline}\n\n"
+            f"Full arsenal + Hawk-Eye tracking from the college season.\n\n"
             f"@TJStats {DEFAULT_HASHTAGS} #MLBDraft #CollegeBaseball"
         )
 

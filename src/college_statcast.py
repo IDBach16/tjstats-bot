@@ -203,6 +203,8 @@ def _pitches_from_gf(gf: dict) -> list[dict]:
                     "release_extension": _f(p.get("extension")),
                     "plate_x": _f(p.get("plate_x", p.get("px"))),
                     "plate_z": _f(p.get("plate_z", p.get("pz"))),
+                    "release_pos_x": _f(p.get("x0")),   # release side (ft)
+                    "release_pos_z": _f(p.get("z0")),   # release height (ft)
                     "sz_top": _f(p.get("sz_top")),
                     "sz_bot": _f(p.get("sz_bot")),
                     "zone": p.get("zone"),
@@ -332,7 +334,9 @@ def get_college_pitchers(start_date: str, end_date: str,
     key = f"{start_date}_{end_date}_{min_pitches}_{_league_key(leagues)}"
     if key in _pitchers_cache:
         return _pitchers_cache[key]
-    raw = fetch_college_window(start_date, end_date)
+    # Fetch only the target league's games when a single league is requested
+    # (avoids scraping every amateur league across the window).
+    raw = fetch_college_window(start_date, end_date, leagues=leagues)
     if raw.empty:
         return pd.DataFrame()
     if leagues and "league" in raw.columns:
@@ -358,7 +362,7 @@ def get_college_pitches(start_date: str, end_date: str,
     key = f"{start_date}_{end_date}_{_league_key(leagues)}"
     if key in _pitches_cache:
         return _pitches_cache[key]
-    raw = fetch_college_window(start_date, end_date)
+    raw = fetch_college_window(start_date, end_date, leagues=leagues)
     if raw.empty:
         return pd.DataFrame()
     if leagues and "league" in raw.columns:
@@ -371,6 +375,48 @@ def get_college_pitches(start_date: str, end_date: str,
 
 
 # ── Prospect picking ─────────────────────────────────────────────────
+
+NCAA_LEAGUE = "College Baseball"  # MLB Stats API league name for NCAA D1
+
+# Curated 2026 MLB Draft college pitching rankings, from Lance Brozdowski
+# (lancebroz.substack.com). Only #1 is public in the free preview; add the
+# rest (rank, name, school, hand, fv) as you get access. Names are matched
+# case-insensitively against tracked Statcast pitcher names so a ranked arm
+# is featured whenever their college data is tracked.
+DRAFT_RANKINGS_SOURCE = "@LanceBroz"
+DRAFT_PROSPECTS: list[dict] = [
+    {"rank": 1, "name": "Jackson Flora", "school": "UC Santa Barbara",
+     "hand": "R", "fv": 50},
+    # {"rank": 2, "name": "", "school": "", "hand": "", "fv": 50},
+    # … paste ranks 2–15 here from the article …
+]
+
+
+def _norm_name(n: str) -> str:
+    """Normalise a name for matching ('Last, First' → 'first last')."""
+    n = str(n or "").strip()
+    if "," in n:
+        parts = n.split(", ")
+        if len(parts) == 2:
+            n = f"{parts[1]} {parts[0]}"
+    return " ".join(n.lower().split())
+
+
+_PROSPECT_BY_NAME = {_norm_name(p["name"]): p for p in DRAFT_PROSPECTS}
+
+
+def match_prospect(name: str) -> dict | None:
+    """Return the curated ranking entry for a pitcher name, or None."""
+    return _PROSPECT_BY_NAME.get(_norm_name(name))
+
+
+def college_season_window(season: int = MLB_SEASON) -> tuple[str, str]:
+    """Full NCAA D1 season window (Feb → Jun) — the tracked College
+    Baseball games in the MLB Stats API are marquee/postseason events
+    spread across the whole spring, so draft-prospect content pulls from
+    the entire season rather than a trailing window."""
+    return (f"{season}-02-01", f"{season}-06-30")
+
 
 def default_window(days: int = 14) -> tuple[str, str]:
     """A recent trailing window ending today.
@@ -441,21 +487,32 @@ def pick_college_prospect(start_date: str | None = None,
     if df.empty:
         return None
 
-    # Stuff score: reward swing-and-miss and strikeouts (both available at
-    # the season-aggregate level).
-    whiff = pd.to_numeric(df["whiff_rate"], errors="coerce").fillna(0)
-    k_pct = pd.to_numeric(df["strike_out_percentage"], errors="coerce").fillna(0)
-    df["_score"] = whiff * 100 + k_pct * 100
+    # Prefer a curated-ranking prospect who actually has tracked data —
+    # feature the highest-ranked such arm. Otherwise fall back to a
+    # "stuff"-scored pick (whiff% + K%), sampled from the top ``top_n``.
+    df = df.copy()
+    df["_norm"] = df["pitcher_name"].map(_norm_name)
+    ranked = df[df["_norm"].isin(_PROSPECT_BY_NAME.keys())]
 
-    df = df.sort_values("_score", ascending=False).head(top_n)
-    if df.empty:
-        return None
-
-    rng = rng or random
-    weights = (df["_score"] - df["_score"].min() + 1.0).tolist()
-    row = rng.choices(df.to_dict("records"), weights=weights, k=1)[0]
+    if not ranked.empty:
+        ranked = ranked.copy()
+        ranked["_rank"] = ranked["_norm"].map(
+            lambda x: _PROSPECT_BY_NAME[x]["rank"])
+        row = ranked.sort_values("_rank").iloc[0].to_dict()
+    else:
+        whiff = pd.to_numeric(df["whiff_rate"], errors="coerce").fillna(0)
+        k_pct = pd.to_numeric(df["strike_out_percentage"],
+                              errors="coerce").fillna(0)
+        df["_score"] = whiff * 100 + k_pct * 100
+        top = df.sort_values("_score", ascending=False).head(top_n)
+        if top.empty:
+            return None
+        rng = rng or random
+        weights = (top["_score"] - top["_score"].min() + 1.0).tolist()
+        row = rng.choices(top.to_dict("records"), weights=weights, k=1)[0]
 
     league = row.get("league", "") or ""
+    meta = match_prospect(row.get("pitcher_name", ""))
     return {
         "name": row.get("pitcher_name", "Unknown"),
         "id": _int(row.get("player_id")),
@@ -463,6 +520,9 @@ def pick_college_prospect(start_date: str | None = None,
         "team_name": row.get("team_name", "") or row.get("team", ""),
         "league": league,
         "league_label": LEAGUE_LABELS.get(league, "COLLEGE"),
+        "rank": meta.get("rank") if meta else None,
+        "fv": meta.get("fv") if meta else None,
+        "ranked_source": DRAFT_RANKINGS_SOURCE if meta else None,
         "start_date": start_date,
         "end_date": end_date,
     }

@@ -4590,6 +4590,7 @@ def plot_draft_prospect_card(
     pitch_rows: "pd.DataFrame",
     pbp_df: "pd.DataFrame | None" = None,
     league_pitches_df: "pd.DataFrame | None" = None,
+    league_season_df: "pd.DataFrame | None" = None,
     p_throws: str = "R",
     team: str = "",
     team_name: str = "",
@@ -4597,11 +4598,16 @@ def plot_draft_prospect_card(
     league_label: str = "COLLEGE",
     league_full: str = "",
     season: int | None = None,
+    rank: int | None = None,
+    fv: int | None = None,
+    ranked_source: str | None = None,
 ) -> Path | None:
     """Render an MLB Draft prospect pitcher card in the Reds game-summary
     visual language (header + aggregate stat line + movement / location /
-    result plots + colour-coded arsenal table), adapted for amateur data
-    (no MLB headshot/team logo → an accent monogram + league badge).
+    result plots + colour-coded arsenal table), plus a release-point plot
+    and a vs-league percentile panel. Adapted for amateur data (no MLB
+    headshot/team logo → an accent monogram + league badge). When ``rank``
+    is set the header shows a ranking chip crediting ``ranked_source``.
     """
     from matplotlib.patches import Rectangle as _Rect
     if season is None:
@@ -4624,14 +4630,17 @@ def plot_draft_prospect_card(
                 prows = prows.sort_values("percentage_thrown", ascending=False)
             prows = prows.reset_index(drop=True)
 
-        # ── Figure + GridSpec (mirrors the Reds card) ───────────────
-        fig = plt.figure(figsize=(20, 22), dpi=150)
+        # ── Figure + GridSpec (mirrors the Reds card, + release/pctile row)
+        # The header is drawn as figure-text in the band reserved above the
+        # grid (top=0.86); the grid itself holds stat line → plots →
+        # release+percentile → arsenal → footer.
+        fig = plt.figure(figsize=(20, 26), dpi=150)
         fig.set_facecolor("white")
         gs = gridspec.GridSpec(
             7, 9,
-            height_ratios=[1, 4, 8, 35, 30, 5, 1],
+            height_ratios=[1, 8, 30, 26, 30, 5, 1],
             width_ratios=[1, 7, 7, 7, 7, 7, 7, 7, 1],
-            hspace=0.25, wspace=0.4,
+            hspace=0.22, wspace=0.4, top=0.875, bottom=0.015,
         )
 
         # Bottom accent bar; invisible top/side gutters.
@@ -4647,36 +4656,42 @@ def plot_draft_prospect_card(
         header_tint = mcolors.to_hex((_ar * 0.10 + 0.90, _ag * 0.10 + 0.90,
                                       _ab * 0.10 + 0.90))
 
-        # ── Header ──────────────────────────────────────────────────
-        for pos in [gs[1, 1:3], gs[1, 3:7], gs[1, 7:8]]:
-            _ax = fig.add_subplot(pos); _ax.axis("off")
-
+        # ── Header (figure-text band above the grid) ────────────────
         # Accent monogram (left) in place of a headshot.
         initials = "".join(w[0] for w in name.split()[:2]).upper() or "P"
-        fig.text(0.105, 0.885, initials, ha="center", va="center",
+        fig.text(0.105, 0.950, initials, ha="center", va="center",
                  color="white", fontsize=34, fontweight="bold",
                  bbox=dict(boxstyle="circle,pad=0.55", facecolor=accent,
                            edgecolor="white", linewidth=2.5))
         # League badge (right) in place of a team logo.
-        fig.text(0.895, 0.90, league_label, ha="center", va="center",
+        fig.text(0.895, 0.958, league_label, ha="center", va="center",
                  color="white", fontsize=20, fontweight="bold",
                  bbox=dict(boxstyle="round,pad=0.6", facecolor=accent,
                            edgecolor="none"))
 
-        fig.text(0.5, 0.94, name, va="top", ha="center",
+        fig.text(0.5, 0.978, name, va="top", ha="center",
                  fontsize=42, fontweight="bold")
         sub = f"{pr}HP" + (f"  ·  {team_name}" if team_name else "")
-        fig.text(0.5, 0.905, sub, va="top", ha="center",
+        fig.text(0.5, 0.953, sub, va="top", ha="center",
                  fontsize=22, color="#555555")
-        fig.text(0.5, 0.875, f"{season} MLB Draft Prospect",
+        fig.text(0.5, 0.934, f"{season} MLB Draft Prospect",
                  va="top", ha="center", fontsize=26, fontweight="bold",
                  color=accent)
-        fig.text(0.5, 0.845, league_full or league or "College Baseball",
+        fig.text(0.5, 0.917, league_full or league or "College Baseball",
                  va="top", ha="center", fontsize=20, fontstyle="italic",
                  color="#666666")
+        # Ranking chip (only when the featured arm is on the curated list).
+        if rank is not None:
+            chip = f"#{rank} on {ranked_source} 2026 Draft Rankings"
+            if fv is not None:
+                chip += f"   ·   {fv} FV"
+            fig.text(0.5, 0.900, chip, va="top", ha="center", fontsize=16,
+                     fontweight="bold", color="white",
+                     bbox=dict(boxstyle="round,pad=0.5", facecolor=accent,
+                               edgecolor="none"))
 
-        # ── Row 2: aggregate stat line ──────────────────────────────
-        ax_stats = fig.add_subplot(gs[2, 1:8]); ax_stats.axis("off")
+        # ── Row 1: aggregate stat line ──────────────────────────────
+        ax_stats = fig.add_subplot(gs[1, 1:8]); ax_stats.axis("off")
         headers, values = [], []
         for col, header, fmt in _PROSPECT_STAT_LINE:
             if season_row is not None and col in season_row.index:
@@ -4696,9 +4711,9 @@ def plot_draft_prospect_card(
                     cell.set_facecolor(header_tint)
                     cell.set_text_props(fontweight="bold")
 
-        # ── Row 3: movement / location / result ─────────────────────
+        # ── Row 2: movement / location / result ─────────────────────
         _row3 = gridspec.GridSpecFromSubplotSpec(
-            1, 3, subplot_spec=gs[3, 1:8], wspace=0.35)
+            1, 3, subplot_spec=gs[2, 1:8], wspace=0.35)
 
         # (left) movement
         ax_break = fig.add_subplot(_row3[0, 0])
@@ -4815,6 +4830,128 @@ def plot_draft_prospect_card(
                           framealpha=0.9, edgecolor="#ddd", markerscale=1.3,
                           bbox_to_anchor=(0.5, -0.01))
 
+        # ── Row 3: release-point plot (left) + percentile panel (right)
+        _row4 = gridspec.GridSpecFromSubplotSpec(
+            1, 2, subplot_spec=gs[3, 1:8], width_ratios=[3, 4], wspace=0.28)
+
+        # (left) release point — side vs height, coloured by pitch type
+        ax_rel = fig.add_subplot(_row4[0, 0]); ax_rel.set_facecolor("#fafafa")
+        ax_rel.set_title("Release Point", fontsize=18, fontweight="bold", pad=8)
+        _rp = None
+        if (_loc is not None and not _loc.empty
+                and "release_pos_x" in _loc.columns):
+            _rp = _loc.dropna(subset=["release_pos_x", "release_pos_z"])
+        if _rp is not None and not _rp.empty:
+            for _, r in _rp.iterrows():
+                pt = str(r.get("pitch_type", ""))
+                ax_rel.scatter(float(r["release_pos_x"]), float(r["release_pos_z"]),
+                               c=_TJ_COLOUR.get(pt, "#888888"), s=45, alpha=0.6,
+                               edgecolors="white", linewidths=0.4, zorder=3)
+            ax_rel.axvline(0, color="#cccccc", ls="--", zorder=1)
+            ax_rel.set_xlim(-4, 4); ax_rel.set_ylim(0, 8)
+            ax_rel.set_xlabel("Release Side (ft, catcher view)", fontsize=13)
+            ax_rel.set_ylabel("Release Height (ft)", fontsize=13)
+            ax_rel.set_aspect("equal", adjustable="box")
+            ax_rel.grid(True, alpha=0.3)
+            if "release_extension" in _loc.columns:
+                _ext = pd.to_numeric(_loc["release_extension"],
+                                     errors="coerce").mean()
+                if pd.notna(_ext):
+                    ax_rel.text(0.5, 0.97, f"Avg Extension: {_ext:.1f} ft",
+                                transform=ax_rel.transAxes, ha="center",
+                                va="top", fontsize=12, fontweight="bold",
+                                bbox=dict(boxstyle="round", facecolor="white",
+                                          edgecolor="#ffbe0b"))
+        else:
+            ax_rel.axis("off")
+            ax_rel.text(0.5, 0.5, "No release data", ha="center",
+                        va="center", fontsize=14)
+
+        # (right) percentile panel vs the league pool
+        ax_pct = fig.add_subplot(_row4[0, 1]); ax_pct.axis("off")
+
+        def _pctile(series, val, higher_good=True):
+            s = pd.to_numeric(series, errors="coerce").dropna()
+            if s.empty or pd.isna(val):
+                return None
+            p = (s < float(val)).mean() * 100.0
+            return p if higher_good else 100.0 - p
+
+        pct_rows = []   # (section, label, pctile, value_str)
+        _results = [
+            ("strike_out_percentage", "K%", True, ".1%"),
+            ("whiff_rate", "Whiff%", True, ".1%"),
+            ("chase_percentage", "Chase%", True, ".1%"),
+            ("called_strikes_plus_whiffs_percentage", "CSW%", True, ".1%"),
+            ("walk_percentage", "BB%", False, ".1%"),
+            ("ground_ball_percentage", "GB%", True, ".1%"),
+        ]
+        if (season_row is not None and league_season_df is not None
+                and not league_season_df.empty):
+            for col, label, hg, fmt in _results:
+                if col in season_row.index and col in league_season_df.columns:
+                    val = pd.to_numeric(pd.Series([season_row[col]]),
+                                        errors="coerce").iloc[0]
+                    p = _pctile(league_season_df[col], val, hg)
+                    if p is not None and pd.notna(val):
+                        pct_rows.append(("RESULTS", label, p,
+                                         format(float(val), fmt)))
+
+        # STUFF: the primary fastball's velo / spin / extension vs league
+        fb = None
+        if not prows.empty:
+            _fbs = prows[prows["pitch_type"].isin(["FF", "SI", "FC"])]
+            if not _fbs.empty and "percentage_thrown" in _fbs.columns:
+                fb = _fbs.sort_values("percentage_thrown",
+                                      ascending=False).iloc[0]
+        if fb is not None and league_pitches_df is not None:
+            _ft = str(fb["pitch_type"])
+            _lgfb = league_pitches_df[league_pitches_df["pitch_type"] == _ft]
+            for col, label, fmt in (("velocity", "FB Velo", ".1f"),
+                                    ("spin_rate", "FB Spin", ".0f"),
+                                    ("release_extension", "Extension", ".1f")):
+                if col in fb.index and col in _lgfb.columns:
+                    val = pd.to_numeric(pd.Series([fb[col]]),
+                                        errors="coerce").iloc[0]
+                    p = _pctile(_lgfb[col], val, True)
+                    if p is not None and pd.notna(val):
+                        pct_rows.append(("STUFF", label, p,
+                                         format(float(val), fmt)))
+
+        if pct_rows:
+            # one slot per bar plus one per section header, drawn top-down
+            slots, cur = [], None
+            for sec, label, p, vs in pct_rows:
+                if sec != cur:
+                    slots.append(("hdr", sec, None, None)); cur = sec
+                slots.append(("bar", label, p, vs))
+            n = len(slots)
+            ax_pct.set_xlim(-34, 124); ax_pct.set_ylim(-0.5, n - 0.5)
+            for i, (kind, label, p, vs) in enumerate(slots):
+                y = n - 1 - i
+                if kind == "hdr":
+                    ax_pct.text(-34, y, label, ha="left", va="center",
+                                fontsize=15, fontweight="bold", color="#333333")
+                    continue
+                _rounded_bar(ax_pct, 0, y - 0.22, 100, 0.44, "#e9e9e9",
+                             alpha=1, zorder=1)
+                col = _pctile_color(p)
+                _rounded_bar(ax_pct, 0, y - 0.22, max(p, 1.5), 0.44, col,
+                             alpha=1, zorder=2)
+                ax_pct.text(-3, y, label, ha="right", va="center", fontsize=14)
+                ax_pct.scatter(p, y, s=560, color=col, edgecolors="white",
+                               linewidths=1.5, zorder=3)
+                _r, _g, _b = mcolors.to_rgb(col)
+                _lum = 0.299 * _r + 0.587 * _g + 0.114 * _b
+                ax_pct.text(p, y, f"{p:.0f}", ha="center", va="center",
+                            fontsize=11, fontweight="bold", zorder=4,
+                            color="white" if _lum < 0.6 else "#222222")
+                ax_pct.text(116, y, vs, ha="right", va="center",
+                            fontsize=14, color="#555555")
+        else:
+            ax_pct.text(0.5, 0.5, "No percentile data", ha="center",
+                        va="center", fontsize=14, transform=ax_pct.transAxes)
+
         # ── Row 4: colour-coded arsenal table ───────────────────────
         ax_table = fig.add_subplot(gs[4, 1:8]); ax_table.axis("off")
         if not prows.empty:
@@ -4880,7 +5017,7 @@ def plot_draft_prospect_card(
         ax_footer = fig.add_subplot(gs[5, 1:8]); ax_footer.axis("off")
         ax_footer.text(0, 1, "By: @BachTalk1", ha="left", va="top",
                        fontsize=22, fontweight="bold")
-        ax_footer.text(0.5, 1, "Colour Coding Compares to League Average By Pitch",
+        ax_footer.text(0.42, 1, "Colour Coding & Percentiles Compare to League",
                        ha="center", va="top", fontsize=14, color="#666666")
         ax_footer.text(1, 1, "Data: Baseball Savant\n(Hawk-Eye tracking)",
                        ha="right", va="top", fontsize=22)
