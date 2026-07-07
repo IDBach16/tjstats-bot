@@ -4544,6 +4544,362 @@ def plot_reds_game_summary(
         return None
 
 
+# ── Draft Prospect Card (Reds-card layout, amateur data) ─────────────
+
+# Per-league accent colour (amateurs have no MLB team colour).
+_LEAGUE_ACCENT = {
+    "MLB Draft League": "#c8102e",          # draft-league red
+    "Cape Cod Baseball League": "#0a2240",  # navy
+    "Appalachian League": "#1b7a3d",        # green
+    "College Baseball": "#1f6feb",          # NCAA blue
+    "Northwoods League": "#0b6b3a",
+    "Prospect League": "#12507b",
+}
+
+# Aggregate stat line shown up top (parallels the Reds game-line table).
+_PROSPECT_STAT_LINE = [
+    ("total_pitches", "$\\bf{Pitches}$", ".0f"),
+    ("batters_faced", "$\\bf{BF}$", ".0f"),
+    ("strike_out_percentage", "$\\bf{K\\%}$", ".1%"),
+    ("walk_percentage", "$\\bf{BB\\%}$", ".1%"),
+    ("whiff_rate", "$\\bf{Whiff\\%}$", ".1%"),
+    ("called_strikes_plus_whiffs_percentage", "$\\bf{CSW\\%}$", ".1%"),
+    ("chase_percentage", "$\\bf{Chase\\%}$", ".1%"),
+    ("zone_percentage", "$\\bf{Zone\\%}$", ".1%"),
+    ("first_pitch_strike_percentage", "$\\bf{FPS\\%}$", ".1%"),
+]
+
+# Arsenal-table columns matching college_statcast's aggregate output
+# (col, header, fmt, higher_is_better|None). None = no good/bad colouring.
+_PROSPECT_PITCH_COL_POOL = [
+    ("velocity", "$\\bf{Velo}$", ".1f", True),
+    ("ivb", "$\\bf{iVB}$", ".1f", None),
+    ("hb", "$\\bf{HB}$", ".1f", None),
+    ("spin_rate", "$\\bf{Spin}$", ".0f", None),
+    ("release_extension", "$\\bf{Ext.}$", ".1f", True),
+    ("whiff_rate", "$\\bf{Whiff\\%}$", ".1%", True),
+    ("chase_percentage", "$\\bf{Chase\\%}$", ".1%", True),
+    ("csw", "$\\bf{CSW\\%}$", ".1%", True),
+    ("zone_rate", "$\\bf{Zone\\%}$", ".1%", None),
+]
+
+
+def plot_draft_prospect_card(
+    name: str,
+    season_row: "pd.Series",
+    pitch_rows: "pd.DataFrame",
+    pbp_df: "pd.DataFrame | None" = None,
+    league_pitches_df: "pd.DataFrame | None" = None,
+    p_throws: str = "R",
+    team: str = "",
+    team_name: str = "",
+    league: str = "",
+    league_label: str = "COLLEGE",
+    league_full: str = "",
+    season: int | None = None,
+) -> Path | None:
+    """Render an MLB Draft prospect pitcher card in the Reds game-summary
+    visual language (header + aggregate stat line + movement / location /
+    result plots + colour-coded arsenal table), adapted for amateur data
+    (no MLB headshot/team logo → an accent monogram + league badge).
+    """
+    from matplotlib.patches import Rectangle as _Rect
+    if season is None:
+        season = MLB_SEASON
+
+    try:
+        accent = _LEAGUE_ACCENT.get(league, "#1f6feb")
+        pr = str(p_throws or "R")[0].upper()
+
+        # ── Arsenal rows: already per-pitch-type for this player ─────
+        prows = pitch_rows.copy() if pitch_rows is not None else pd.DataFrame()
+        if not prows.empty and "pitch_type" in prows.columns:
+            prows = prows[~prows["pitch_type"].isin(_NOISE_PITCHES)]
+            for nc in ("velocity", "ivb", "hb", "spin_rate",
+                       "release_extension", "whiff_rate", "chase_percentage",
+                       "csw", "zone_rate", "percentage_thrown"):
+                if nc in prows.columns:
+                    prows[nc] = pd.to_numeric(prows[nc], errors="coerce")
+            if "percentage_thrown" in prows.columns:
+                prows = prows.sort_values("percentage_thrown", ascending=False)
+            prows = prows.reset_index(drop=True)
+
+        # ── Figure + GridSpec (mirrors the Reds card) ───────────────
+        fig = plt.figure(figsize=(20, 22), dpi=150)
+        fig.set_facecolor("white")
+        gs = gridspec.GridSpec(
+            7, 9,
+            height_ratios=[1, 4, 8, 35, 30, 5, 1],
+            width_ratios=[1, 7, 7, 7, 7, 7, 7, 7, 1],
+            hspace=0.25, wspace=0.4,
+        )
+
+        # Bottom accent bar; invisible top/side gutters.
+        bax = fig.add_subplot(gs[6, 1:8])
+        bax.set_facecolor(accent)
+        bax.set_xticks([]); bax.set_yticks([])
+        for sp in bax.spines.values():
+            sp.set_visible(False)
+        for pos in (gs[0, 1:8], gs[:, 0], gs[:, -1]):
+            _b = fig.add_subplot(pos); _b.axis("off")
+
+        _ar, _ag, _ab = mcolors.to_rgb(accent)
+        header_tint = mcolors.to_hex((_ar * 0.10 + 0.90, _ag * 0.10 + 0.90,
+                                      _ab * 0.10 + 0.90))
+
+        # ── Header ──────────────────────────────────────────────────
+        for pos in [gs[1, 1:3], gs[1, 3:7], gs[1, 7:8]]:
+            _ax = fig.add_subplot(pos); _ax.axis("off")
+
+        # Accent monogram (left) in place of a headshot.
+        initials = "".join(w[0] for w in name.split()[:2]).upper() or "P"
+        fig.text(0.105, 0.885, initials, ha="center", va="center",
+                 color="white", fontsize=34, fontweight="bold",
+                 bbox=dict(boxstyle="circle,pad=0.55", facecolor=accent,
+                           edgecolor="white", linewidth=2.5))
+        # League badge (right) in place of a team logo.
+        fig.text(0.895, 0.90, league_label, ha="center", va="center",
+                 color="white", fontsize=20, fontweight="bold",
+                 bbox=dict(boxstyle="round,pad=0.6", facecolor=accent,
+                           edgecolor="none"))
+
+        fig.text(0.5, 0.94, name, va="top", ha="center",
+                 fontsize=42, fontweight="bold")
+        sub = f"{pr}HP" + (f"  ·  {team_name}" if team_name else "")
+        fig.text(0.5, 0.905, sub, va="top", ha="center",
+                 fontsize=22, color="#555555")
+        fig.text(0.5, 0.875, f"{season} MLB Draft Prospect",
+                 va="top", ha="center", fontsize=26, fontweight="bold",
+                 color=accent)
+        fig.text(0.5, 0.845, league_full or league or "College Baseball",
+                 va="top", ha="center", fontsize=20, fontstyle="italic",
+                 color="#666666")
+
+        # ── Row 2: aggregate stat line ──────────────────────────────
+        ax_stats = fig.add_subplot(gs[2, 1:8]); ax_stats.axis("off")
+        headers, values = [], []
+        for col, header, fmt in _PROSPECT_STAT_LINE:
+            if season_row is not None and col in season_row.index:
+                try:
+                    values.append(format(float(season_row[col]), fmt))
+                    headers.append(header)
+                except (TypeError, ValueError):
+                    pass
+        if values:
+            tbl = ax_stats.table(cellText=[values], colLabels=headers,
+                                 cellLoc="center", bbox=[0.0, 0.0, 1, 1])
+            tbl.auto_set_font_size(False); tbl.set_fontsize(20)
+            tbl.scale(1, 2.5)
+            for key, cell in tbl.get_celld().items():
+                cell.set_edgecolor("#dddddd")
+                if key[0] == 0:
+                    cell.set_facecolor(header_tint)
+                    cell.set_text_props(fontweight="bold")
+
+        # ── Row 3: movement / location / result ─────────────────────
+        _row3 = gridspec.GridSpecFromSubplotSpec(
+            1, 3, subplot_spec=gs[3, 1:8], wspace=0.35)
+
+        # (left) movement
+        ax_break = fig.add_subplot(_row3[0, 0])
+        if not prows.empty and {"hb", "ivb"}.issubset(prows.columns):
+            for _, row in prows.iterrows():
+                pt = str(row["pitch_type"])
+                hb_val = float(row.get("hb", 0) or 0)
+                ivb_val = float(row.get("ivb", 0) or 0)
+                color = _TJ_COLOUR.get(pt, "#888888")
+                usage = float(row.get("percentage_thrown", 0.1) or 0.1)
+                ax_break.scatter(hb_val, ivb_val, c=color,
+                                 s=max(100, min(600, usage * 1200)),
+                                 edgecolors="black", linewidths=0.8, zorder=2)
+                ax_break.annotate(_TJ_NAME.get(pt, pt), (hb_val, ivb_val),
+                                  textcoords="offset points", xytext=(10, 6),
+                                  fontsize=10, fontweight="bold", color=color)
+            ax_break.axhline(0, color="#808080", alpha=0.5, ls="--", zorder=1)
+            ax_break.axvline(0, color="#808080", alpha=0.5, ls="--", zorder=1)
+            ax_break.set_xlabel("Horizontal Break (in)", fontsize=16)
+            ax_break.set_ylabel("Induced Vertical Break (in)", fontsize=16)
+            ax_break.set_title("Pitch Movement", fontsize=20, fontweight="bold")
+            ax_break.set_xlim(-25, 25); ax_break.set_ylim(-25, 25)
+            ax_break.set_aspect("equal", adjustable="box")
+            ax_break.grid(True, alpha=0.3)
+            _bbox = dict(facecolor="white", edgecolor="black")
+            if pr == "R":
+                ax_break.text(-24, -24, "← Glove Side", fontstyle="italic",
+                              fontsize=10, bbox=_bbox, ha="left", va="bottom", zorder=3)
+                ax_break.text(24, -24, "Arm Side →", fontstyle="italic",
+                              fontsize=10, bbox=_bbox, ha="right", va="bottom", zorder=3)
+            else:
+                ax_break.text(-24, -24, "← Arm Side", fontstyle="italic",
+                              fontsize=10, bbox=_bbox, ha="left", va="bottom", zorder=3)
+                ax_break.text(24, -24, "Glove Side →", fontstyle="italic",
+                              fontsize=10, bbox=_bbox, ha="right", va="bottom", zorder=3)
+        else:
+            ax_break.axis("off")
+            ax_break.text(0.5, 0.5, "No movement data", ha="center",
+                          va="center", fontsize=16)
+
+        def _draw_zone(ax):
+            ax.add_patch(_Rect((-0.83, 1.5), 1.66, 2.0, linewidth=2.5,
+                               edgecolor="#1a1a2e", facecolor="none", zorder=3))
+            for _zx in (-0.277, 0.277):
+                ax.plot([_zx, _zx], [1.5, 3.5], color="#cccccc", lw=0.8, alpha=0.5)
+            for _zy in (2.167, 2.833):
+                ax.plot([-0.83, 0.83], [_zy, _zy], color="#cccccc", lw=0.8, alpha=0.5)
+            ax.set_xlim(-2.5, 2.5); ax.set_ylim(-0.5, 5.0)
+            ax.set_aspect("equal"); ax.set_xticks([]); ax.set_yticks([])
+            for _sp in ax.spines.values():
+                _sp.set_color("#dddddd")
+
+        _loc = None
+        if pbp_df is not None and not pbp_df.empty and "plate_x" in pbp_df.columns:
+            _loc = pbp_df.copy()
+            _loc["plate_x"] = pd.to_numeric(_loc["plate_x"], errors="coerce")
+            _loc["plate_z"] = pd.to_numeric(_loc["plate_z"], errors="coerce")
+            _loc = _loc.dropna(subset=["plate_x", "plate_z"])
+
+        # (center) location by type
+        ax_loc = fig.add_subplot(_row3[0, 1]); ax_loc.set_facecolor("#fafafa")
+        ax_loc.set_title("Pitch Location by Type", fontsize=18,
+                         fontweight="bold", pad=8)
+        _draw_zone(ax_loc)
+        if _loc is not None and not _loc.empty:
+            for _, _lr in _loc.iterrows():
+                pt = str(_lr.get("pitch_type", ""))
+                ax_loc.scatter(float(_lr["plate_x"]), float(_lr["plate_z"]),
+                               c=_TJ_COLOUR.get(pt, "#888888"), s=60, alpha=0.8,
+                               edgecolors="white", linewidths=0.5, zorder=4)
+            from matplotlib.lines import Line2D as _L
+            _lt = _loc["pitch_type"].unique()
+            _lg = [_L([0], [0], marker="o", color="none",
+                      markerfacecolor=_TJ_COLOUR.get(pt, "#888"),
+                      markeredgecolor="white", markersize=7,
+                      label=_TJ_NAME.get(pt, pt)) for pt in _lt]
+            if _lg:
+                ax_loc.legend(handles=_lg, loc="upper center",
+                              ncol=min(len(_lg), 3), fontsize=10, framealpha=0.9,
+                              edgecolor="#ddd", markerscale=1.3,
+                              bbox_to_anchor=(0.5, -0.01))
+
+        # (right) result by type
+        ax_res = fig.add_subplot(_row3[0, 2]); ax_res.set_facecolor("#fafafa")
+        ax_res.set_title("Pitch Result by Type", fontsize=18,
+                         fontweight="bold", pad=8)
+        _draw_zone(ax_res)
+        _RES_COL = {
+            "swinging_strike": "#ff6b6b", "swinging_strike_blocked": "#ff6b6b",
+            "called_strike": "#3a86ff", "foul": "#ffbe0b", "foul_tip": "#ffbe0b",
+            "ball": "#8b949e", "hit_into_play": "#2ec4b6",
+            "hit_into_play_no_out": "#2ec4b6", "hit_into_play_score": "#2ec4b6",
+        }
+        if _loc is not None and not _loc.empty and "description" in _loc.columns:
+            for _, _rr in _loc.iterrows():
+                ax_res.scatter(float(_rr["plate_x"]), float(_rr["plate_z"]),
+                               c=_RES_COL.get(str(_rr.get("description", "")), "#888888"),
+                               s=60, alpha=0.8, edgecolors="white",
+                               linewidths=0.5, zorder=4)
+            from matplotlib.lines import Line2D as _L2
+            _rl = [
+                _L2([0], [0], marker="o", color="none", markerfacecolor="#ff6b6b",
+                    markeredgecolor="white", markersize=7, label="Whiff"),
+                _L2([0], [0], marker="o", color="none", markerfacecolor="#3a86ff",
+                    markeredgecolor="white", markersize=7, label="Called K"),
+                _L2([0], [0], marker="o", color="none", markerfacecolor="#ffbe0b",
+                    markeredgecolor="white", markersize=7, label="Foul"),
+                _L2([0], [0], marker="o", color="none", markerfacecolor="#8b949e",
+                    markeredgecolor="white", markersize=7, label="Ball"),
+                _L2([0], [0], marker="o", color="none", markerfacecolor="#2ec4b6",
+                    markeredgecolor="white", markersize=7, label="In Play"),
+            ]
+            ax_res.legend(handles=_rl, loc="upper center", ncol=3, fontsize=10,
+                          framealpha=0.9, edgecolor="#ddd", markerscale=1.3,
+                          bbox_to_anchor=(0.5, -0.01))
+
+        # ── Row 4: colour-coded arsenal table ───────────────────────
+        ax_table = fig.add_subplot(gs[4, 1:8]); ax_table.axis("off")
+        if not prows.empty:
+            league_df = (league_pitches_df
+                         if league_pitches_df is not None else prows)
+            active = [
+                spec for spec in _PROSPECT_PITCH_COL_POOL
+                if spec[0] in prows.columns
+                and pd.to_numeric(prows[spec[0]], errors="coerce").notna().any()
+            ]
+            cell_text, cell_colors, row_label_colors = [], [], []
+            for _, row in prows.iterrows():
+                pt = str(row["pitch_type"])
+                usage = float(row.get("percentage_thrown", 0) or 0)
+                rd = [_TJ_NAME.get(pt, pt), f"{usage:.1%}"]
+                rc = ["#ffffff", "#ffffff"]
+                row_label_colors.append(_TJ_COLOUR.get(pt, "#888888"))
+                for col, _, fmt, higher_good in active:
+                    try:
+                        val = float(row[col])
+                    except (TypeError, ValueError, KeyError):
+                        rd.append("—"); rc.append("#ffffff"); continue
+                    if pd.isna(val):
+                        rd.append("—"); rc.append("#ffffff"); continue
+                    rd.append(format(val, fmt))
+                    if (higher_good is not None and league_df is not None
+                            and not league_df.empty and col in league_df.columns):
+                        lv = pd.to_numeric(
+                            league_df[league_df["pitch_type"] == pt][col],
+                            errors="coerce").dropna()
+                        if not lv.empty:
+                            cmap = _CMAP_GOOD if higher_good else _CMAP_BAD
+                            rc.append(_get_table_cell_color(val, lv.mean(), cmap))
+                        else:
+                            rc.append("#ffffff")
+                    else:
+                        rc.append("#ffffff")
+                cell_text.append(rd); cell_colors.append(rc)
+
+            actual_headers = ["$\\bf{Pitch\\ Name}$", "$\\bf{Pitch\\%}$"]
+            actual_headers += [h for _, h, _, _ in active]
+            n_cols = len(actual_headers)
+            tbl = ax_table.table(
+                cellText=cell_text, colLabels=actual_headers, cellLoc="center",
+                bbox=[0, -0.05, 1, 1], colWidths=[2.5] + [1] * (n_cols - 1),
+                cellColours=cell_colors)
+            tbl.auto_set_font_size(False); tbl.set_fontsize(16); tbl.scale(1, 2.2)
+            for i in range(n_cols):
+                c = tbl.get_celld()[(0, i)]
+                c.set_facecolor(header_tint); c.set_edgecolor("#cccccc")
+                c.set_text_props(fontweight="bold")
+            for i in range(len(cell_text)):
+                c = tbl.get_celld()[(i + 1, 0)]
+                c.set_facecolor(row_label_colors[i])
+                r, g, b = mcolors.to_rgb(row_label_colors[i])
+                luma = 0.299 * r + 0.587 * g + 0.114 * b
+                c.set_text_props(color="white" if luma < 0.5 else "black",
+                                 fontweight="bold")
+                for j in range(n_cols):
+                    tbl.get_celld()[(i + 1, j)].set_edgecolor("#cccccc")
+
+        # ── Footer ──────────────────────────────────────────────────
+        ax_footer = fig.add_subplot(gs[5, 1:8]); ax_footer.axis("off")
+        ax_footer.text(0, 1, "By: @BachTalk1", ha="left", va="top",
+                       fontsize=22, fontweight="bold")
+        ax_footer.text(0.5, 1, "Colour Coding Compares to League Average By Pitch",
+                       ha="center", va="top", fontsize=14, color="#666666")
+        ax_footer.text(1, 1, "Data: Baseball Savant\n(Hawk-Eye tracking)",
+                       ha="right", va="top", fontsize=22)
+
+        safe = name.replace(" ", "_").lower()
+        out = SCREENSHOTS_DIR / f"draft_prospect_{safe}.png"
+        _draw_watermark(fig, alpha=0.08, dark_bg=False)
+        fig.savefig(out, facecolor="white", dpi=150,
+                    bbox_inches="tight", pad_inches=0.3)
+        plt.close(fig)
+        log.info("Saved draft prospect card: %s", out)
+        return out
+
+    except Exception:
+        log.warning("plot_draft_prospect_card failed for %s", name,
+                    exc_info=True)
+        return None
+
+
 # ── Best Pitch Card ──────────────────────────────────────────────────
 
 _BEST_PITCH_COLORS = {

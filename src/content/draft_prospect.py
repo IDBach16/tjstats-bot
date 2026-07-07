@@ -14,13 +14,14 @@ import logging
 from .base import ContentGenerator, PostContent
 from ..college_statcast import (
     default_window,
+    fetch_college_window,
     find_player_video,
     get_college_pitchers,
     get_college_pitches,
     pick_college_prospect,
     pick_target_league,
 )
-from ..charts import plot_milb_pitcher_card
+from ..charts import plot_draft_prospect_card
 from ..config import DEFAULT_HASHTAGS, MLB_SEASON
 
 log = logging.getLogger(__name__)
@@ -75,19 +76,31 @@ class DraftProspectGenerator(ContentGenerator):
             log.warning("No data to render prospect card for %s", name)
             return PostContent(text="")
 
-        # Fix the display name in both frames (match on player_id).
         pid = prospect.get("id")
-        if pid is not None:
-            season_df = season_df.copy()
-            pitches_df = pitches_df.copy()
-            season_df.loc[season_df["player_id"] == pid, "pitcher_name"] = name
-            pitches_df.loc[pitches_df["player_id"] == pid, "pitcher_name"] = name
+        if pid is None:
+            log.warning("Prospect %s has no player_id", name)
+            return PostContent(text="")
 
-        # player_id passed as None: amateurs have no MLB headshot and their
-        # id would make the card resolve a bogus MLB "current team".
-        image_path = plot_milb_pitcher_card(
-            name, season_df, pitches_df,
-            team=team, player_id=None, level=league_label,
+        # This player's slices: season aggregate row, per-pitch-type rows,
+        # and raw pitches (for the location/result scatter plots).
+        srow = season_df[season_df["player_id"] == pid]
+        prows = pitches_df[pitches_df["player_id"] == pid]
+        if srow.empty or prows.empty:
+            log.warning("No aggregated data for prospect %s", name)
+            return PostContent(text="")
+        season_row = srow.iloc[0]
+        p_throws = str(season_row.get("p_throws", "R") or "R")
+
+        raw = fetch_college_window(start, end)
+        pbp_df = raw[raw["pitcher"] == pid] if not raw.empty else None
+
+        # Card in the Reds game-summary layout; league-wide pitch aggregate
+        # (pitches_df) drives the vs-league colour coding in the table.
+        image_path = plot_draft_prospect_card(
+            name, season_row, prows, pbp_df=pbp_df,
+            league_pitches_df=pitches_df, p_throws=p_throws,
+            team=team, team_name=team_name, league=league,
+            league_label=league_label, league_full=league, season=MLB_SEASON,
         )
         if not image_path:
             log.warning("Draft prospect card render failed for %s", name)
