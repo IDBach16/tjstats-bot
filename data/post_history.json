@@ -1,16 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-12T22:54:03.745002",
-      "generator": "milb_pitching_summary",
-      "tweet_id": "2054334286749417499",
-      "tags": [
-        "milb_pitching_summary",
-        "Brody Hopkins",
-        "AAA"
-      ]
-    },
-    {
       "date": "2026-05-13T16:19:50.192898",
       "generator": "reds_summary",
       "tweet_id": "2054597494617632851",
@@ -1825,6 +1815,17 @@
         "draft_prospect",
         "Cole Carlon",
         "Arizona State Sun Devils",
+        "NCAA"
+      ]
+    },
+    {
+      "date": "2026-07-07T19:26:00.508749",
+      "generator": "draft_prospect",
+      "tweet_id": "2074575677844562134",
+      "tags": [
+        "draft_prospect",
+        "Cade Townsend",
+        "Ole Miss Rebels",
         "NCAA"
       ]
     }
