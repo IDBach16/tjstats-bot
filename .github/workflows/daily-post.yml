@@ -14,6 +14,12 @@ on:
     - cron: '0 19 * * *'
     # 5 PM EST (UTC-5) = 21:00 UTC — BachTalk newsroom thread (daily)
     - cron: '0 21 * * *'
+    # ── TEMPORARY: draft_prospect 3x/day for 2026 MLB Draft week ──
+    # Auto-disables after 2026-07-14 via a date guard below (posts become
+    # no-ops). Safe to delete these 3 crons once the draft has passed.
+    - cron: '0 17 * * *'   # 12 PM EST — draft prospect card
+    - cron: '0 20 * * *'   # 3 PM EST — draft prospect card
+    - cron: '0 23 * * *'   # 6 PM EST — draft prospect card
   workflow_dispatch:
     inputs:
       slot:
@@ -100,15 +106,33 @@ jobs:
             echo "catchup=" >> $GITHUB_OUTPUT
           else
             HOUR=$(date -u +%H)
-            if [ "$HOUR" -ge 21 ]; then
+            # draft_prospect runs 3x/day but ONLY through the 2026 draft
+            # weekend; after the cutoff these slots become clean no-ops.
+            if [ "$(date -u +%Y%m%d)" -le "20260714" ]; then DRAFT=draft_prospect; else DRAFT=SKIP; fi
+            if [ "$HOUR" -ge 23 ]; then
+              # 6 PM EST (23:00 UTC) — Draft prospect card (draft week)
+              echo "slot=" >> $GITHUB_OUTPUT
+              echo "generator=$DRAFT" >> $GITHUB_OUTPUT
+              echo "catchup=" >> $GITHUB_OUTPUT
+            elif [ "$HOUR" -ge 21 ]; then
               # 5 PM EST (21:00 UTC) — BachTalk newsroom thread (daily via cron)
               echo "slot=" >> $GITHUB_OUTPUT
               echo "generator=newsroom" >> $GITHUB_OUTPUT
+              echo "catchup=" >> $GITHUB_OUTPUT
+            elif [ "$HOUR" -ge 20 ]; then
+              # 3 PM EST (20:00 UTC) — Draft prospect card (draft week)
+              echo "slot=" >> $GITHUB_OUTPUT
+              echo "generator=$DRAFT" >> $GITHUB_OUTPUT
               echo "catchup=" >> $GITHUB_OUTPUT
             elif [ "$HOUR" -ge 19 ]; then
               # 2 PM EST (19:00 UTC) — Hitter Analysis (text slot)
               echo "slot=text" >> $GITHUB_OUTPUT
               echo "generator=" >> $GITHUB_OUTPUT
+              echo "catchup=" >> $GITHUB_OUTPUT
+            elif [ "$HOUR" -ge 17 ]; then
+              # 12 PM EST (17:00 UTC) — Draft prospect card (draft week)
+              echo "slot=" >> $GITHUB_OUTPUT
+              echo "generator=$DRAFT" >> $GITHUB_OUTPUT
               echo "catchup=" >> $GITHUB_OUTPUT
             elif [ "$HOUR" -ge 16 ]; then
               # 11 AM EST (16:00 UTC) — catch-up window
@@ -139,6 +163,10 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           REDS_GAME_DATE: ${{ inputs.game_date }}
         run: |
+          if [ "${{ steps.slot.outputs.generator }}" = "SKIP" ]; then
+            echo "Draft-week window has passed — skipping draft_prospect slot."
+            exit 0
+          fi
           if [ "${{ steps.slot.outputs.catchup }}" = "true" ]; then
             # Catch-up: check post history and run any missed morning slots
             echo "=== CATCH-UP MODE ==="
