@@ -124,7 +124,7 @@ class DraftProspectGenerator(ContentGenerator):
             video_url, kind = found
             clip = None
             if kind == "player" and _NATIVE_VIDEO:
-                clip = download_youtube_clip(video_url, name, max_seconds=140)
+                clip = download_youtube_clip(video_url, name, max_seconds=30)
             if clip:
                 replies.append(PostContent(
                     text=f"🎥 {name} — highlights\n(clip via YouTube: {video_url})",

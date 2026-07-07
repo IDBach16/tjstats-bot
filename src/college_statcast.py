@@ -630,7 +630,7 @@ def find_player_video(name: str, team_name: str = "",
 
 
 def download_youtube_clip(url: str, name: str,
-                          max_seconds: int = 140) -> "Path | None":
+                          max_seconds: int = 30) -> "Path | None":
     """Download a YouTube clip and re-encode it to an X-ready MP4.
 
     yt-dlp grabs the first ``max_seconds`` (X caps native video at 2:20),
@@ -652,13 +652,15 @@ def download_youtube_clip(url: str, name: str,
 
     CLIPS_DIR.mkdir(parents=True, exist_ok=True)
     safe = _re.sub(r"\W+", "_", name).strip("_").lower() or "clip"
-    raw_tmpl = str(CLIPS_DIR / f"yt_{safe}_raw.%(ext)s")
-    final = CLIPS_DIR / f"yt_{safe}.mp4"
+    # duration in the name so re-trimming to a different length can't be
+    # short-circuited by a stale cached clip of another length
+    raw_tmpl = str(CLIPS_DIR / f"yt_{safe}_{max_seconds}s_raw.%(ext)s")
+    final = CLIPS_DIR / f"yt_{safe}_{max_seconds}s.mp4"
     if final.exists():
         return final
 
     # clear any stale raw parts
-    for f in CLIPS_DIR.glob(f"yt_{safe}_raw.*"):
+    for f in CLIPS_DIR.glob(f"yt_{safe}_{max_seconds}s_raw.*"):
         try:
             f.unlink()
         except OSError:
@@ -680,7 +682,7 @@ def download_youtube_clip(url: str, name: str,
         log.warning("yt-dlp download failed for %s", url, exc_info=True)
         return None
 
-    raws = list(CLIPS_DIR.glob(f"yt_{safe}_raw.*"))
+    raws = list(CLIPS_DIR.glob(f"yt_{safe}_{max_seconds}s_raw.*"))
     if not raws:
         return None
     raw = raws[0]
