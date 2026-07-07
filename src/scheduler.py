@@ -57,6 +57,9 @@ from .content.biomechanics_101 import BiomechanicsGenerator
 # Season summary
 from .content.season_summary import SeasonSummaryGenerator
 
+# College (MLB Draft) prospect cards — NCAA D1 Statcast
+from .content.draft_prospect import DraftProspectGenerator
+
 # Daily generators (run every day regardless of rotation)
 from .content.reds_summary import RedsSummaryGenerator
 
@@ -100,6 +103,7 @@ GENERATORS: dict[str, type[ContentGenerator]] = {
     "season_summary": SeasonSummaryGenerator,
     "hitter_analysis": HitterAnalysisGenerator,
     "newsroom": NewsroomGenerator,
+    "draft_prospect": DraftProspectGenerator,
 }
 
 # Daily generators — these run every day in addition to the rotation schedule

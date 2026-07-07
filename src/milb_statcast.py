@@ -583,8 +583,14 @@ def aggregate_pitch_stats(raw: pd.DataFrame) -> pd.DataFrame:
 
 # ── Aggregation: season-level pitcher stats ───────────────────────────
 
-def aggregate_pitcher_stats(raw: pd.DataFrame) -> pd.DataFrame:
-    """Aggregate raw pitch data into per-pitcher season stats."""
+def aggregate_pitcher_stats(raw: pd.DataFrame,
+                            min_pitches: int = 100) -> pd.DataFrame:
+    """Aggregate raw pitch data into per-pitcher season stats.
+
+    ``min_pitches`` sets the qualification floor (default 100 for MiLB
+    seasons; callers with sparser data — e.g. college, where a single
+    tracked start is ~90 pitches — can lower it).
+    """
     if raw.empty:
         return pd.DataFrame()
 
@@ -781,7 +787,7 @@ def aggregate_pitcher_stats(raw: pd.DataFrame) -> pd.DataFrame:
 
     # Rename & filter
     agg = agg.rename(columns={pid_col: "player_id"})
-    agg = agg[agg["total_pitches"] >= 100]  # minimum threshold
+    agg = agg[agg["total_pitches"] >= min_pitches]  # minimum threshold
 
     # Clean up internal columns
     agg = agg.drop(columns=["swings", "whiffs", "called_strikes", "chases",
