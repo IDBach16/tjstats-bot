@@ -378,17 +378,47 @@ def get_college_pitches(start_date: str, end_date: str,
 
 NCAA_LEAGUE = "College Baseball"  # MLB Stats API league name for NCAA D1
 
-# Curated 2026 MLB Draft college pitching rankings, from Lance Brozdowski
-# (lancebroz.substack.com). Only #1 is public in the free preview; add the
-# rest (rank, name, school, hand, fv) as you get access. Names are matched
-# case-insensitively against tracked Statcast pitcher names so a ranked arm
-# is featured whenever their college data is tracked.
-DRAFT_RANKINGS_SOURCE = "@LanceBroz"
+# Curated 2026 MLB Draft college arms, pulled from ESPN's pre-draft Top 150
+# board (Kiley McDaniel), updated 2026-07-07 ahead of the July 11–12 draft.
+# ``rank`` is the OVERALL board rank; names are matched case-insensitively
+# against tracked Statcast pitcher names so the highest-ranked arm with
+# tracked college data gets featured (with a rank chip). ``fv`` is optional
+# (ESPN's board isn't graded on the 20–80 FV scale) — add grades later if a
+# graded source is handy; the card omits the FV bit of the chip when absent.
+DRAFT_RANKINGS_SOURCE = "ESPN"
 DRAFT_PROSPECTS: list[dict] = [
-    {"rank": 1, "name": "Jackson Flora", "school": "UC Santa Barbara",
-     "hand": "R", "fv": 50},
-    # {"rank": 2, "name": "", "school": "", "hand": "", "fv": 50},
-    # … paste ranks 2–15 here from the article …
+    {"rank": 4,   "name": "Jackson Flora",     "school": "UC Santa Barbara",  "hand": "R"},
+    {"rank": 9,   "name": "Cameron Flukey",    "school": "Coastal Carolina",  "hand": "R"},
+    {"rank": 13,  "name": "Liam Peterson",     "school": "Florida",           "hand": "R"},
+    {"rank": 15,  "name": "Cole Carlon",       "school": "Arizona State",     "hand": "L"},
+    {"rank": 16,  "name": "Cade Townsend",     "school": "Ole Miss",          "hand": "R"},
+    {"rank": 18,  "name": "Tegan Kuhns",       "school": "Tennessee",         "hand": "R"},
+    {"rank": 20,  "name": "Mason Edwards",     "school": "USC",               "hand": "L"},
+    {"rank": 23,  "name": "Logan Reddemann",   "school": "UCLA",              "hand": "R"},
+    {"rank": 24,  "name": "Hunter Dietz",      "school": "Arkansas",          "hand": "L"},
+    {"rank": 42,  "name": "Ben Blair",         "school": "Liberty",           "hand": "R"},
+    {"rank": 46,  "name": "Ethan Kleinschmit", "school": "Oregon State",      "hand": "L"},
+    {"rank": 49,  "name": "Jack Radel",        "school": "Notre Dame",        "hand": "R"},
+    {"rank": 50,  "name": "Wes Mendes",        "school": "Florida State",     "hand": "L"},
+    {"rank": 60,  "name": "Ethan Norby",       "school": "East Carolina",     "hand": "L"},
+    {"rank": 65,  "name": "Ruger Riojas",      "school": "Texas",             "hand": "R"},
+    {"rank": 67,  "name": "Joey Volchko",      "school": "Georgia",           "hand": "R"},
+    {"rank": 76,  "name": "Brett Renfrow",     "school": "Virginia Tech",     "hand": "R"},
+    {"rank": 78,  "name": "Jacob Dudan",       "school": "NC State",          "hand": "R"},
+    {"rank": 80,  "name": "Ryan Peterson",     "school": "Sam Houston State", "hand": "R"},
+    {"rank": 85,  "name": "Ryan Marohn",       "school": "NC State",          "hand": "L"},
+    {"rank": 86,  "name": "Deven Sheerin",     "school": "LSU",               "hand": "R"},
+    {"rank": 107, "name": "Ryan Lynch",        "school": "North Carolina",    "hand": "R"},
+    {"rank": 120, "name": "Jason Decaro",      "school": "North Carolina",    "hand": "R"},
+    {"rank": 126, "name": "Trey Beard",        "school": "Florida State",     "hand": "L"},
+    {"rank": 129, "name": "Aidan Knaak",       "school": "Clemson",           "hand": "R"},
+    {"rank": 139, "name": "Luke McNeillie",    "school": "Florida",           "hand": "R"},
+    {"rank": 140, "name": "Tommy LaPour",      "school": "TCU",               "hand": "R"},
+    {"rank": 144, "name": "Maxx Yehl",         "school": "West Virginia",     "hand": "L"},
+    {"rank": 145, "name": "Carson Wiggins",    "school": "Arkansas",          "hand": "R"},
+    {"rank": 147, "name": "Duncan Marsten",    "school": "Wake Forest",       "hand": "R"},
+    {"rank": 151, "name": "Justin LeGuernic",  "school": "Clemson",           "hand": "L"},
+    {"rank": 152, "name": "Taylor Rabe",       "school": "Ole Miss",          "hand": "R"},
 ]
 
 

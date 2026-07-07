@@ -106,12 +106,15 @@ class DraftProspectGenerator(ContentGenerator):
         subtitle = f" ({team_name})" if team_name else ""
         if rank is not None:
             headline = (f"{name}{subtitle} — #{rank} on {ranked_source}'s "
-                        f"{MLB_SEASON} MLB Draft pitching rankings")
+                        f"{MLB_SEASON} MLB Draft Big Board")
+            credit = f"Rankings via {ranked_source}.\n"
         else:
             headline = f"{name}{subtitle} — {MLB_SEASON} MLB Draft Prospect Card"
+            credit = ""
         text = (
             f"{headline}\n\n"
-            f"Full arsenal + Hawk-Eye tracking from the college season.\n\n"
+            f"Full arsenal + Hawk-Eye tracking from the college season.\n"
+            f"{credit}\n"
             f"@TJStats {DEFAULT_HASHTAGS} #MLBDraft #CollegeBaseball"
         )
 

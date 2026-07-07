@@ -4682,7 +4682,7 @@ def plot_draft_prospect_card(
                  color="#666666")
         # Ranking chip (only when the featured arm is on the curated list).
         if rank is not None:
-            chip = f"#{rank} on {ranked_source} 2026 Draft Rankings"
+            chip = f"#{rank} on {ranked_source}'s 2026 MLB Draft Big Board"
             if fv is not None:
                 chip += f"   ·   {fv} FV"
             fig.text(0.5, 0.900, chip, va="top", ha="center", fontsize=16,
