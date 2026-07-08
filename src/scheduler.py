@@ -64,7 +64,7 @@ from .content.draft_prospect import DraftProspectGenerator
 from .content.reds_summary import RedsSummaryGenerator
 
 # Newsroom — multi-agent Barstool-style article threads (Savant/FanGraphs)
-from .content.newsroom import NewsroomGenerator
+from .content.newsroom import NewsroomGenerator, NewsroomArticleGenerator
 
 log = logging.getLogger(__name__)
 
@@ -103,6 +103,7 @@ GENERATORS: dict[str, type[ContentGenerator]] = {
     "season_summary": SeasonSummaryGenerator,
     "hitter_analysis": HitterAnalysisGenerator,
     "newsroom": NewsroomGenerator,
+    "newsroom_article": NewsroomArticleGenerator,
     "draft_prospect": DraftProspectGenerator,
 }
 

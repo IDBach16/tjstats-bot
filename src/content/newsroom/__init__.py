@@ -8,6 +8,6 @@ Additive: this package does not modify any existing generator. It plugs into the
 scheduler as one new generator (`newsroom`).
 """
 
-from .newsroom import NewsroomGenerator
+from .newsroom import NewsroomGenerator, NewsroomArticleGenerator
 
-__all__ = ["NewsroomGenerator"]
+__all__ = ["NewsroomGenerator", "NewsroomArticleGenerator"]

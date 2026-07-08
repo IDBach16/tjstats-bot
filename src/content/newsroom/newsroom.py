@@ -33,6 +33,10 @@ MAX_CANDIDATES = 6  # bound how many clip lookups / write attempts per run
 class NewsroomGenerator(ContentGenerator):
     name = "newsroom"
 
+    # Subclasses set force_kind to dedicate the slot to one story kind (with a
+    # graceful fallback to the full board). None = rank the whole board.
+    force_kind: str | None = None
+
     async def generate(self) -> PostContent:
         try:
             leads_by_kind = feeds.build_leads()
@@ -40,14 +44,35 @@ class NewsroomGenerator(ContentGenerator):
             log.warning("newsroom: feeds failed", exc_info=True)
             return PostContent(text="", tags=["newsroom", "error"])
 
-        candidates = self._candidates(leads_by_kind)
-        if not candidates:
-            log.warning("newsroom: no candidate leads")
-            return PostContent(text="", tags=["newsroom", "no_leads"])
-
-        ranked = editor.rank(candidates)
         seed = date.today().timetuple().tm_yday
+        # An env override (for testing one kind) wins; otherwise a dedicated
+        # slot's force_kind biases the pick.
+        env_kind = os.environ.get("NEWSROOM_KIND")
+        only = env_kind or self.force_kind
+        if only not in KIND_ROTATION:
+            only = None
 
+        post = self._run(self._candidates(leads_by_kind, only), seed)
+        if post is not None:
+            return post
+
+        # Dedicated-slot fallback: a forced kind found nothing publishable, so
+        # fall back to the full board rather than post nothing. (An explicit env
+        # override is a test of one kind — don't fall back in that case.)
+        if only and not env_kind:
+            log.info("newsroom: no publishable '%s' story — falling back to full board", only)
+            post = self._run(self._candidates(leads_by_kind, None), seed)
+            if post is not None:
+                return post
+
+        log.warning("newsroom: no publishable story today")
+        return PostContent(text="", tags=["newsroom", "no_story"])
+
+    def _run(self, candidates: list, seed: int) -> PostContent | None:
+        """Rank candidates and publish the first one we can fully build."""
+        if not candidates:
+            return None
+        ranked = editor.rank(candidates)
         for lead in ranked[:MAX_CANDIDATES]:
             if self._recently_covered(lead.subject):
                 log.info("newsroom: %s covered recently — next", lead.subject)
@@ -70,16 +95,14 @@ class NewsroomGenerator(ContentGenerator):
                      article.get("headline", "")[:60], lead.subject, lead.kind,
                      ", RED" if lead.is_red else "", persona["name"])
             return social.build_post(article, lead, clip, chart)
-
-        log.warning("newsroom: no publishable story with a clip today")
-        return PostContent(text="", tags=["newsroom", "no_clip"])
+        return None
 
     # ── helpers ────────────────────────────────────────────────────────
-    def _candidates(self, leads_by_kind: dict) -> list:
-        """All candidates (env NEWSROOM_KIND restricts to one kind for testing)."""
-        override = os.environ.get("NEWSROOM_KIND")
-        if override in KIND_ROTATION:
-            return list(leads_by_kind.get(override, []))
+    def _candidates(self, leads_by_kind: dict, only: str | None = None) -> list:
+        """Candidate leads. ``only`` (a kind) restricts to that bucket; None
+        returns the whole board (the caller resolves env/force_kind first)."""
+        if only in KIND_ROTATION:
+            return list(leads_by_kind.get(only, []))
         out: list = []
         for k in KIND_ROTATION:
             out.extend(leads_by_kind.get(k, []))
@@ -136,3 +159,11 @@ class NewsroomGenerator(ContentGenerator):
             log.warning("newsroom: write/check failed for %s",
                         fact_sheet.get("subject"), exc_info=True)
             return None
+
+
+class NewsroomArticleGenerator(NewsroomGenerator):
+    """Dedicated article-reaction slot (a few days a week): prefer a fresh
+    FanGraphs / Baseball Savant article, but fall back to the full data board
+    if there's nothing worth reacting to that day, so the slot never wastes."""
+    name = "newsroom_article"
+    force_kind = "article"

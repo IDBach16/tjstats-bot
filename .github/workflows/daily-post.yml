@@ -14,6 +14,9 @@ on:
     - cron: '0 19 * * *'
     # 5 PM EST (UTC-5) = 21:00 UTC — BachTalk newsroom thread (daily)
     - cron: '0 21 * * *'
+    # 18:00 UTC, Mon/Wed/Fri (1-3-5) — dedicated article-reaction newsroom
+    # (FanGraphs / Baseball Savant); falls back to a data thread if no article.
+    - cron: '0 18 * * 1,3,5'
     # ── TEMPORARY: draft_prospect 3x/day for 2026 MLB Draft week ──
     # Auto-disables after 2026-07-14 via a date guard below (posts become
     # no-ops). Safe to delete these 3 crons once the draft has passed.
@@ -75,6 +78,7 @@ on:
           - best_pitch_week
           - hitter_analysis
           - newsroom
+          - newsroom_article
           - draft_prospect
 
 permissions:
@@ -128,6 +132,12 @@ jobs:
               # 2 PM EST (19:00 UTC) — Hitter Analysis (text slot)
               echo "slot=text" >> $GITHUB_OUTPUT
               echo "generator=" >> $GITHUB_OUTPUT
+              echo "catchup=" >> $GITHUB_OUTPUT
+            elif [ "$HOUR" -ge 18 ]; then
+              # 18:00 UTC — dedicated article-reaction newsroom (Mon/Wed/Fri only;
+              # this cron only fires on those days). Falls back to a data thread.
+              echo "slot=" >> $GITHUB_OUTPUT
+              echo "generator=newsroom_article" >> $GITHUB_OUTPUT
               echo "catchup=" >> $GITHUB_OUTPUT
             elif [ "$HOUR" -ge 17 ]; then
               # 12 PM EST (17:00 UTC) — Draft prospect card (draft week)
