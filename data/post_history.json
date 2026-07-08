@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-13T18:05:44.907335",
-      "generator": "biomechanics_101",
-      "tweet_id": "2054624148119298524",
-      "tags": [
-        "biomechanics_101",
-        "biomech_shoulder_energy_transfer"
-      ]
-    },
-    {
       "date": "2026-05-13T22:58:36.128701",
       "generator": "pitching_summary",
       "tweet_id": "2054697818477223947",
@@ -1829,6 +1820,15 @@
         "newsroom",
         "article",
         "Juan Soto\u2019s Hot Streaks Are Delightful"
+      ]
+    },
+    {
+      "date": "2026-07-08T15:58:36.442504",
+      "generator": "pitching_summary",
+      "tweet_id": "2074885851587240254",
+      "tags": [
+        "pitching_summary",
+        "Dylan Cease"
       ]
     }
   ]
