@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-13T17:09:16.372090",
-      "generator": "biomechanics_101",
-      "tweet_id": "2054609935795978345",
-      "tags": [
-        "biomechanics_101",
-        "biomech_velo_vs_shoulder_ir_moment"
-      ]
-    },
-    {
       "date": "2026-05-13T18:05:44.907335",
       "generator": "biomechanics_101",
       "tweet_id": "2054624148119298524",
@@ -1828,6 +1819,16 @@
       "tags": [
         "reds_summary",
         "no_game"
+      ]
+    },
+    {
+      "date": "2026-07-08T13:03:37.430162",
+      "generator": "newsroom_article",
+      "tweet_id": "2074841836674339260",
+      "tags": [
+        "newsroom",
+        "article",
+        "Juan Soto\u2019s Hot Streaks Are Delightful"
       ]
     }
   ]
