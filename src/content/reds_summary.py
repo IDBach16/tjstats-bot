@@ -132,11 +132,18 @@ class RedsSummaryGenerator(ContentGenerator):
         # ── 1. Check MLB schedule for yesterday's game ─────────────
         game_info = self._get_game_info(date_str)
         if game_info is None:
-            log.info("No Reds game found for %s", date_str)
+            log.info("No Reds game scheduled for %s (off day)", date_str)
             return PostContent(
                 text=f"No Reds game yesterday \u2014 {display_date}\n\n@TJStats @PitchProfiler #Reds #MLB",
                 tags=["reds_summary", "no_game"],
             )
+        if not game_info.get("is_final"):
+            # A game exists but isn't finished (in progress / not started /
+            # postponed). Don't post a false "no game" \u2014 skip this run; a
+            # later run posts the recap once the game is final.
+            log.info("Reds game on %s not final yet (status=%s) \u2014 skipping",
+                     date_str, game_info.get("status"))
+            return PostContent(text="", tags=["reds_summary", "not_final"])
 
         game_pk = game_info["game_pk"]
         opponent = game_info["opponent"]
@@ -690,10 +697,24 @@ class RedsSummaryGenerator(ContentGenerator):
         log.info("Boxscore fallback: found %d Reds pitchers", len(df))
         return df, "pitcher_name", "pitcher_id", pitcher_ids
 
+    @staticmethod
+    def _is_final(game: dict) -> bool:
+        """True if a scheduled game has finished (final / completed / game over)."""
+        st = game.get("status", {})
+        ds = st.get("detailedState", "")
+        return (
+            "Final" in ds or "Completed" in ds or ds == "Game Over"
+            or st.get("abstractGameState") == "Final"
+            or st.get("codedGameState") in ("F", "O")
+        )
+
     def _get_game_info(self, date_str: str) -> dict | None:
         """Check MLB Stats API schedule for a Reds game on the given date.
 
-        Returns dict with game_pk, opponent, is_home, score_line or None.
+        Returns:
+          * None                      — no game scheduled (off day)
+          * {"is_final": False, ...}  — a game exists but isn't final yet
+          * {"is_final": True, ...}   — completed game (game_pk, opponent, …)
         """
         url = (
             f"{MLB_API_BASE}/schedule"
@@ -714,16 +735,20 @@ class RedsSummaryGenerator(ContentGenerator):
 
         games = dates[0].get("games", [])
         if not games:
-            return None
+            return None   # off day — no game scheduled
 
-        game = games[0]
+        # Prefer a completed game (also handles doubleheaders). If none are
+        # final yet, report that a game exists but isn't done — so the caller
+        # skips rather than claiming there was no game.
+        final_games = [g for g in games if self._is_final(g)]
+        if not final_games:
+            statuses = ", ".join(
+                g.get("status", {}).get("detailedState", "?") for g in games)
+            log.info("Reds game(s) on %s not final yet: %s", date_str, statuses)
+            return {"is_final": False, "status": statuses}
+
+        game = final_games[-1]   # most recent completed game
         game_pk = game.get("gamePk")
-        status = game.get("status", {}).get("detailedState", "")
-
-        # Only process completed games
-        if "Final" not in status and "Completed" not in status:
-            log.info("Game %d status: %s (not final)", game_pk, status)
-            return None
 
         teams = game.get("teams", {})
         away = teams.get("away", {})
@@ -755,6 +780,7 @@ class RedsSummaryGenerator(ContentGenerator):
             opponent_short = opponent
 
         return {
+            "is_final": True,
             "game_pk": game_pk,
             "opponent": opponent_short,
             "opponent_full": opponent,
