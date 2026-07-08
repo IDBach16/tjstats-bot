@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-15T15:58:25.961728",
-      "generator": "hitter_analysis",
-      "tweet_id": "2055316883306352779",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_jarred_kelenic"
-      ]
-    },
-    {
       "date": "2026-05-15T16:31:55.806701",
       "generator": "reds_summary",
       "tweet_id": "2055325314008723722",
@@ -1833,6 +1824,16 @@
         "Logan Reddemann",
         "UCLA Bruins",
         "NCAA"
+      ]
+    },
+    {
+      "date": "2026-07-08T21:18:20.605904",
+      "generator": "newsroom",
+      "tweet_id": "2074966337051631990",
+      "tags": [
+        "newsroom",
+        "article",
+        "2026 Mock Draft 1.0"
       ]
     }
   ]
