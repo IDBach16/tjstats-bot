@@ -28,6 +28,8 @@ def _key_stat(lead: Lead) -> str:
                 f"(lg {f.get('league_whiff')}%)")
     if lead.kind == "bat_speed":
         return f"{f.get('avg_bat_speed')} mph bat speed (lg {f.get('league_bat_speed')})"
+    if lead.kind == "article":
+        return f"\"{str(f.get('title', ''))[:90]}\" — {f.get('outlet')} ({f.get('author') or 'staff'})"
     return ""
 
 
@@ -38,17 +40,19 @@ def rank(candidates: list[Lead]) -> list[Lead]:
 
     digest = "\n".join(
         f"[{i}] {l.kind} — {l.subject}{' (REDS)' if l.is_red else ''}: "
-        f"{_key_stat(l)} | ranks #{l.rank}/{l.total}"
+        f"{_key_stat(l)}" + (f" | ranks #{l.rank}/{l.total}" if l.total else "")
         for i, l in enumerate(candidates)
     )
     prompt = f"""You are the assignment editor for BachTalk, a Barstool-style baseball account.
-Here are today's candidate stories, each backed by real Baseball Savant data:
+Here are today's candidate stories. Most are backed by real Baseball Savant data;
+'article' entries are fresh FanGraphs / Baseball Savant pieces to react to.
 
 {digest}
 
 Rank them from MOST to least compelling for a punchy thread today. Favor:
 - extreme, surprising, or league-leading numbers
 - a clear "nobody's talking about this" narrative
+- a genuinely interesting article worth reacting to
 - variety (don't stack five of the same kind at the top)
 
 Return ONLY JSON: {{"ranked": [the [index] numbers, best first]}}"""

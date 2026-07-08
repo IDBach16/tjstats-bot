@@ -68,8 +68,54 @@ def _safe(name: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")
 
 
+def _render_source_card(lead: Lead):
+    """Render a clean 'worth a read' source card for an article reaction."""
+    import textwrap
+    try:
+        f = lead.facts
+        outlet = f.get("outlet", "")
+        author = f.get("author") or "staff"
+        title = f.get("title", lead.subject)
+
+        fig = plt.figure(figsize=(12, 6.75), dpi=100)
+        ax = fig.add_axes([0, 0, 1, 1]); ax.axis("off")
+        ax.set_xlim(0, 1); ax.set_ylim(0, 1)
+        fig.patch.set_facecolor("white")
+        ax.add_patch(FancyBboxPatch((0, 0), 0.018, 1, boxstyle="square,pad=0",
+                                    facecolor=GOLD, edgecolor="none"))
+
+        ax.text(0.05, 0.90, "WORTH A READ", color=GOLD, fontsize=15, fontweight="bold")
+        ax.text(0.965, 0.905, "BachTalk", color=GOLD, fontsize=17,
+                fontweight="bold", ha="right")
+
+        lines = textwrap.wrap(title, width=32)[:4]
+        y = 0.70
+        for line in lines:
+            ax.text(0.05, y, line, color=NAVY, fontsize=31, fontweight="bold")
+            y -= 0.12
+        ax.text(0.05, max(y - 0.02, 0.15), f"{outlet}  ·  {author}",
+                color=GRAY, fontsize=19, fontweight="bold")
+
+        ax.text(0.05, 0.045, f"BachTalk  ·  via {outlet}", color=GRAY, fontsize=12)
+
+        out = SCREENSHOTS_DIR / f"newsroom_article_{_safe(lead.subject)}.png"
+        fig.savefig(out, facecolor="white")
+        plt.close(fig)
+        log.info("rendered source card: %s", out.name)
+        return out
+    except Exception:
+        log.warning("source card render failed", exc_info=True)
+        try:
+            plt.close("all")
+        except Exception:
+            pass
+        return None
+
+
 def render_stat_card(fact_sheet: dict, lead: Lead):
     """Render the card and return its Path, or None on failure."""
+    if lead.kind == "article":
+        return _render_source_card(lead)
     try:
         marquee, marquee_label, rows = _spec(lead)
         rows = [r for r in rows if r[1] is not None]

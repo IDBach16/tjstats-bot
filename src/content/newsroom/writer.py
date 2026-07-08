@@ -74,7 +74,34 @@ def write_thread(fact_sheet: dict, persona: dict,
     if revision_notes:
         fix_block = ("\n\nA FACT-CHECKER REJECTED YOUR LAST DRAFT. Fix these and use ONLY "
                      "fact-sheet numbers:\n- " + "\n- ".join(revision_notes) + "\n")
-    prompt = f"""You are {persona['name']} for BachTalk. {persona['blurb']}
+
+    art = fact_sheet.get("article")
+    if fact_sheet.get("kind") == "article" and art:
+        prompt = f"""You are {persona['name']} for BachTalk. {persona['blurb']}
+
+React to this freshly published article with an X (Twitter) THREAD in your voice.{fix_block}
+
+ARTICLE (summarize and react — do NOT reproduce its wording):
+Outlet: {art.get('outlet')}
+Author: {art.get('author') or 'staff'}
+Headline: {art.get('title')}
+Summary: {art.get('summary')}
+
+FORMAT — return ONLY valid JSON, no markdown:
+{{"headline": "<a punchy blog-style headline>",
+  "tweets": ["<hook>", "<body>", "<body>", "<kicker>"]}}
+
+RULES
+- tweets[0] is the HOOK: lead with the single most interesting finding, in your voice.
+- Then 2-4 tweets that unpack the key insight in plain English and add YOUR take.
+- CREDIT the source by name at least once (e.g. "Per {art.get('outlet')}'s {art.get('author') or 'staff'}…"). We add the link separately, so don't paste a URL.
+- Use ONLY facts and numbers found in the summary above — invent nothing. If you're unsure of a specific number, speak generally.
+- Final tweet is a KICKER: a bold, original take (not a stat).
+- Each tweet must be UNDER {MAX_TWEET} characters. No hashtags (we add those).
+  Emojis okay but sparingly. Do NOT number the tweets. Do NOT mention an attached video/image.
+"""
+    else:
+        prompt = f"""You are {persona['name']} for BachTalk. {persona['blurb']}
 
 Write an X (Twitter) THREAD in your voice about this story.{fix_block}
 

@@ -214,7 +214,7 @@ def build_leads() -> dict[str, list[Lead]]:
     reds: set[int] = set()
     out: dict[str, list[Lead]] = {
         "overperformer": [], "underperformer": [],
-        "nasty_pitch": [], "bat_speed": [],
+        "nasty_pitch": [], "bat_speed": [], "article": [],
     }
     try:
         over, under = _hitter_expected_leads(reds)
@@ -229,6 +229,12 @@ def build_leads() -> dict[str, list[Lead]]:
         out["bat_speed"] = _bat_speed_leads(reds)
     except Exception:
         log.warning("bat-tracking feed failed", exc_info=True)
+    try:
+        # local import: articles imports Lead from this module (avoid a cycle)
+        from . import articles
+        out["article"] = articles.build_article_leads()
+    except Exception:
+        log.warning("article feed failed", exc_info=True)
     n = sum(len(v) for v in out.values())
     log.info("newsroom feeds: %d candidate leads across %d kinds", n,
              sum(1 for v in out.values() if v))

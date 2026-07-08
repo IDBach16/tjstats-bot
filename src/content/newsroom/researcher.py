@@ -49,7 +49,33 @@ def _sheet_lines(lead: Lead) -> list[str]:
     return []
 
 
+def _article_fact_sheet(lead: Lead) -> dict:
+    """Fact sheet for an 'article' lead: an attributed summary to react to."""
+    f = lead.facts
+    sheet = (
+        "REACTING TO A PUBLISHED ARTICLE — write your own take, do NOT copy its text.\n"
+        f"OUTLET: {f.get('outlet')}\n"
+        f"AUTHOR: {f.get('author') or 'staff'}\n"
+        f"HEADLINE: {f.get('title')}\n"
+        f"SUMMARY: {f.get('summary')}"
+    )
+    # numbers that actually appear in the summary — the copy desk holds the
+    # writer to these so it can't invent stats the article never stated.
+    allowed = set(re.findall(r"\d+\.?\d*", str(f.get("summary", ""))))
+    return {
+        "subject": lead.subject,
+        "kind": "article",
+        "is_pitcher": False,
+        "is_red": False,
+        "sheet": sheet,
+        "allowed_numbers": allowed,
+        "article": f,
+    }
+
+
 def build_fact_sheet(lead: Lead) -> dict:
+    if lead.kind == "article":
+        return _article_fact_sheet(lead)
     role = "pitcher" if lead.is_pitcher else "hitter"
     rank_line = (f"Ranks #{lead.rank} of {lead.total} qualified {role}s in this category "
                  f"({MLB_TAG})") if lead.total else ""

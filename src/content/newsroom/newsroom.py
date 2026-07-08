@@ -25,7 +25,8 @@ from . import feeds, researcher, social, personas, editor, graphics
 
 log = logging.getLogger(__name__)
 
-KIND_ROTATION = ["nasty_pitch", "overperformer", "bat_speed", "underperformer"]
+KIND_ROTATION = ["nasty_pitch", "overperformer", "bat_speed", "underperformer",
+                 "article"]
 MAX_CANDIDATES = 6  # bound how many clip lookups / write attempts per run
 
 
@@ -51,8 +52,10 @@ class NewsroomGenerator(ContentGenerator):
             if self._recently_covered(lead.subject):
                 log.info("newsroom: %s covered recently — next", lead.subject)
                 continue
-            clip = self._get_clip(lead)
-            if not clip:
+            # Article reactions lead with a source card, not game film, so they
+            # skip the clip requirement; every other kind must have a clip.
+            clip = None if lead.kind == "article" else self._get_clip(lead)
+            if lead.kind != "article" and not clip:
                 log.info("newsroom: no clip for %s (%s) — next", lead.subject, lead.kind)
                 continue
 
