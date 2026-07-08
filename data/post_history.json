@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-15T16:31:55.806701",
-      "generator": "reds_summary",
-      "tweet_id": "2055325314008723722",
-      "tags": [
-        "reds_summary",
-        "2026-05-14"
-      ]
-    },
-    {
       "date": "2026-05-15T16:32:54.535668",
       "generator": "hitter_analysis",
       "tweet_id": "2055325559962636356",
@@ -1834,6 +1825,16 @@
         "newsroom",
         "article",
         "2026 Mock Draft 1.0"
+      ]
+    },
+    {
+      "date": "2026-07-08T21:56:20.766273",
+      "generator": "newsroom",
+      "tweet_id": "2074975900811084014",
+      "tags": [
+        "newsroom",
+        "overperformer",
+        "Mickey Moniak"
       ]
     }
   ]
