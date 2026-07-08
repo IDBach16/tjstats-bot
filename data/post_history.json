@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-14T16:07:11.350497",
-      "generator": "reds_summary",
-      "tweet_id": "2054956699799228872",
-      "tags": [
-        "reds_summary",
-        "2026-05-13"
-      ]
-    },
-    {
       "date": "2026-05-14T17:55:02.937059",
       "generator": "biomechanics_101",
       "tweet_id": "2054983843547844952",
@@ -1831,6 +1822,16 @@
         "Tegan Kuhns",
         "Tennessee Volunteers",
         "NCAA"
+      ]
+    },
+    {
+      "date": "2026-07-08T18:12:57.015467",
+      "generator": "newsroom_article",
+      "tweet_id": "2074919681337790896",
+      "tags": [
+        "newsroom",
+        "article",
+        "Juan Soto\u2019s Hot Streaks Are Delightful"
       ]
     }
   ]
