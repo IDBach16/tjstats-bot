@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-13T22:58:36.128701",
-      "generator": "pitching_summary",
-      "tweet_id": "2054697818477223947",
-      "tags": [
-        "pitching_summary",
-        "Paul Skenes"
-      ]
-    },
-    {
       "date": "2026-05-14T16:07:11.350497",
       "generator": "reds_summary",
       "tweet_id": "2054956699799228872",
@@ -1829,6 +1820,17 @@
       "tags": [
         "pitching_summary",
         "Dylan Cease"
+      ]
+    },
+    {
+      "date": "2026-07-08T17:41:18.463242",
+      "generator": "draft_prospect",
+      "tweet_id": "2074911716828176711",
+      "tags": [
+        "draft_prospect",
+        "Tegan Kuhns",
+        "Tennessee Volunteers",
+        "NCAA"
       ]
     }
   ]
