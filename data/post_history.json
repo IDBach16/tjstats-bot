@@ -1,16 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-14T22:50:12.661423",
-      "generator": "milb_trad_pitching_summary",
-      "tweet_id": "2055058089032757358",
-      "tags": [
-        "milb_trad_pitching_summary",
-        "Khal Stephen",
-        "AA"
-      ]
-    },
-    {
       "date": "2026-05-15T15:58:25.961728",
       "generator": "hitter_analysis",
       "tweet_id": "2055316883306352779",
@@ -1832,6 +1822,17 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_brandon_marsh"
+      ]
+    },
+    {
+      "date": "2026-07-08T20:17:16.689332",
+      "generator": "draft_prospect",
+      "tweet_id": "2074950968643645702",
+      "tags": [
+        "draft_prospect",
+        "Logan Reddemann",
+        "UCLA Bruins",
+        "NCAA"
       ]
     }
   ]
