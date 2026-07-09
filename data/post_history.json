@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-16T14:49:35.792275",
-      "generator": "reds_summary",
-      "tweet_id": "2055661948381831238",
-      "tags": [
-        "reds_summary",
-        "2026-05-15"
-      ]
-    },
-    {
       "date": "2026-05-16T17:01:36.306891",
       "generator": "biomechanics_101",
       "tweet_id": "2055695169706434762",
@@ -1839,6 +1830,16 @@
         "Jack Radel",
         "Notre Dame Fighting Irish",
         "NCAA"
+      ]
+    },
+    {
+      "date": "2026-07-09T18:45:29.198052",
+      "generator": "newsroom_article",
+      "tweet_id": "2075290257185026417",
+      "tags": [
+        "newsroom",
+        "article",
+        "With No-Hit Bid, Dylan Cease Makes His Case for AL Cy Young"
       ]
     }
   ]
