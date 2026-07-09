@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-15T22:45:36.563845",
-      "generator": "pitching_summary",
-      "tweet_id": "2055419286664233242",
-      "tags": [
-        "pitching_summary",
-        "Chris Sale"
-      ]
-    },
-    {
       "date": "2026-05-16T14:49:35.792275",
       "generator": "reds_summary",
       "tweet_id": "2055661948381831238",
@@ -1836,6 +1827,17 @@
         "draft_prospect",
         "Ethan Kleinschmit",
         "Oregon State Beavers",
+        "NCAA"
+      ]
+    },
+    {
+      "date": "2026-07-09T18:00:05.587112",
+      "generator": "draft_prospect",
+      "tweet_id": "2075278832110604290",
+      "tags": [
+        "draft_prospect",
+        "Jack Radel",
+        "Notre Dame Fighting Irish",
         "NCAA"
       ]
     }
