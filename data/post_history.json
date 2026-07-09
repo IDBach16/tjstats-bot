@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-15T16:32:54.535668",
-      "generator": "hitter_analysis",
-      "tweet_id": "2055325559962636356",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_jake_mangum"
-      ]
-    },
-    {
       "date": "2026-05-15T17:42:44.812084",
       "generator": "biomechanics_101",
       "tweet_id": "2055343135543226695",
@@ -1835,6 +1826,15 @@
         "newsroom",
         "overperformer",
         "Mickey Moniak"
+      ]
+    },
+    {
+      "date": "2026-07-09T16:24:18.655734",
+      "generator": "reds_summary",
+      "tweet_id": "2075254728733192602",
+      "tags": [
+        "reds_summary",
+        "2026-07-08"
       ]
     }
   ]
