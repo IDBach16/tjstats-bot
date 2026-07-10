@@ -235,6 +235,12 @@ def build_leads() -> dict[str, list[Lead]]:
         out["article"] = articles.build_article_leads()
     except Exception:
         log.warning("article feed failed", exc_info=True)
+    try:
+        # advance scout: extra Savant leaderboards (hard_hitter/flamethrower/pitcher_luck)
+        from . import scout
+        out.update(scout.build_scout_leads(reds))
+    except Exception:
+        log.warning("scout feeds failed", exc_info=True)
     n = sum(len(v) for v in out.values())
     log.info("newsroom feeds: %d candidate leads across %d kinds", n,
              sum(1 for v in out.values() if v))

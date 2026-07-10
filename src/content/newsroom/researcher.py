@@ -58,6 +58,27 @@ def _sheet_lines(lead: Lead) -> list[str]:
             f"Blast rate: {_pct(f.get('blast_per_swing'))}%   |  squared-up rate: {_pct(f.get('squared_up_per_swing'))}%",
             f"Hard-swing rate: {_pct(f.get('hard_swing_rate'))}%   |  swing length: {_fmt(f.get('swing_length'))} ft",
         ]
+    if k == "hard_hitter":
+        return [
+            f"Average exit velocity: {_fmt(f.get('avg_hit_speed'))} mph   (league avg: {_fmt(f.get('league_ev'))} mph)",
+            f"Hardest hit: {_fmt(f.get('max_hit_speed'))} mph   |  longest batted ball: {_fmt(f.get('max_distance'))} ft",
+            f"Barrel rate: {_fmt(f.get('brl_percent'))}%   ({f.get('barrels')} barrels)   |  95+ mph rate: {_fmt(f.get('ev95percent'))}%",
+            f"Batted balls tracked: {f.get('attempts')}",
+        ]
+    if k == "flamethrower":
+        lines = [f"Average four-seam fastball: {_fmt(f.get('ff_avg_speed'))} mph   "
+                 f"(league-average four-seamer: {_fmt(f.get('league_ff'))} mph)"]
+        if f.get("si_avg_speed"):
+            lines.append(f"Sinker: {_fmt(f.get('si_avg_speed'))} mph")
+        return lines
+    if k == "pitcher_luck":
+        return [
+            f"ERA: {_fmt(f.get('era'))}   vs expected xERA: {_fmt(f.get('xera'))}   "
+            f"({'ERA flattering him — regression likely' if f.get('lucky') else 'ERA has been unkind — due to improve'})",
+            f"wOBA against: {_fmt(f.get('woba'))}   vs expected {_fmt(f.get('est_woba'))}",
+            f"AVG against: {_fmt(f.get('ba'))}   vs expected {_fmt(f.get('est_ba'))}",
+            f"Batters faced: {f.get('pa')}",
+        ]
     return []
 
 
