@@ -1,16 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-16T22:38:20.063815",
-      "generator": "milb_pitching_summary",
-      "tweet_id": "2055779873457574111",
-      "tags": [
-        "milb_pitching_summary",
-        "Kohl Drake",
-        "AAA"
-      ]
-    },
-    {
       "date": "2026-05-17T14:50:33.745427",
       "generator": "reds_summary",
       "tweet_id": "2056024579660034163",
@@ -1842,6 +1832,16 @@
         "newsroom",
         "article",
         "With No-Hit Bid, Dylan Cease Makes His Case for AL Cy Young"
+      ]
+    },
+    {
+      "date": "2026-07-10T15:36:21.641778",
+      "generator": "newsroom",
+      "tweet_id": "2075605050093973917",
+      "tags": [
+        "newsroom",
+        "bat_speed",
+        "Junior Caminero"
       ]
     }
   ]
