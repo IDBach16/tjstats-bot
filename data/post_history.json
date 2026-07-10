@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-17T22:44:31.855636",
-      "generator": "pitching_summary",
-      "tweet_id": "2056143838096572844",
-      "tags": [
-        "pitching_summary",
-        "Sonny Gray"
-      ]
-    },
-    {
       "date": "2026-05-18T16:44:28.297262",
       "generator": "reds_summary",
       "tweet_id": "2056415633361781135",
@@ -1844,6 +1835,16 @@
         "Ethan Norby",
         "East Carolina Pirates",
         "NCAA"
+      ]
+    },
+    {
+      "date": "2026-07-10T18:15:48.890332",
+      "generator": "newsroom",
+      "tweet_id": "2075645177994051948",
+      "tags": [
+        "newsroom",
+        "nasty_pitch",
+        "Jos\u00e9 Soriano"
       ]
     }
   ]
