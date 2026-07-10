@@ -1,14 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-18T16:45:32.428662",
-      "generator": "swing_plus_top10",
-      "tweet_id": "2056415902518698219",
-      "tags": [
-        "swing_plus_top10"
-      ]
-    },
-    {
       "date": "2026-05-18T17:22:31.470032",
       "generator": "biomechanics_101",
       "tweet_id": "2056425209821901199",
@@ -1845,6 +1837,17 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_owen_caissie"
+      ]
+    },
+    {
+      "date": "2026-07-10T20:13:20.599266",
+      "generator": "draft_prospect",
+      "tweet_id": "2075674753688379772",
+      "tags": [
+        "draft_prospect",
+        "Ruger Riojas",
+        "Texas Longhorns",
+        "NCAA"
       ]
     }
   ]
