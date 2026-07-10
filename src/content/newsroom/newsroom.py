@@ -33,9 +33,13 @@ MAX_CANDIDATES = 6  # bound how many clip lookups / write attempts per run
 class NewsroomGenerator(ContentGenerator):
     name = "newsroom"
 
-    # Subclasses set force_kind to dedicate the slot to one story kind (with a
-    # graceful fallback to the full board). None = rank the whole board.
+    # Subclasses set force_kind to dedicate the slot to one story kind. None =
+    # rank the whole board.
     force_kind: str | None = None
+    # If a forced kind finds nothing publishable, fall back to the full board so
+    # the slot never wastes. Subclasses can turn this off to stay single-kind
+    # (post nothing rather than something off-topic).
+    fallback_to_board: bool = True
 
     async def generate(self) -> PostContent:
         try:
@@ -59,7 +63,7 @@ class NewsroomGenerator(ContentGenerator):
         # Dedicated-slot fallback: a forced kind found nothing publishable, so
         # fall back to the full board rather than post nothing. (An explicit env
         # override is a test of one kind — don't fall back in that case.)
-        if only and not env_kind:
+        if only and not env_kind and self.fallback_to_board:
             log.info("newsroom: no publishable '%s' story — falling back to full board", only)
             post = self._run(self._candidates(leads_by_kind, None), seed)
             if post is not None:
@@ -117,7 +121,7 @@ class NewsroomGenerator(ContentGenerator):
             posts = json.loads(path.read_text()).get("posts", [])
             cutoff = datetime.utcnow() - timedelta(days=days)
             for entry in posts:
-                if entry.get("generator") != "newsroom":
+                if not str(entry.get("generator") or "").startswith("newsroom"):
                     continue
                 try:
                     when = datetime.fromisoformat(entry["date"])
@@ -162,8 +166,9 @@ class NewsroomGenerator(ContentGenerator):
 
 
 class NewsroomArticleGenerator(NewsroomGenerator):
-    """Dedicated article-reaction slot (a few days a week): prefer a fresh
-    FanGraphs / Baseball Savant article, but fall back to the full data board
-    if there's nothing worth reacting to that day, so the slot never wastes."""
+    """Dedicated daily article-reaction slot: react to a fresh FanGraphs /
+    Baseball Savant piece. If there's nothing worth reacting to that day, post
+    nothing (no data-thread filler) — the daily data newsroom covers that."""
     name = "newsroom_article"
     force_kind = "article"
+    fallback_to_board = False
