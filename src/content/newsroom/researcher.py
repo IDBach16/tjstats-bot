@@ -21,6 +21,18 @@ def _fmt(v) -> str:
     return str(v)
 
 
+def _pct(v) -> str:
+    """Format a 0-1 rate as a percent value, e.g. 0.204 -> '20.4' (the line
+    template appends the trailing % sign). Plain _fmt renders 0.900 as '.900',
+    which then reads as 0.9%, not 90% — and the copy desk rejects the mismatch."""
+    if v is None:
+        return "n/a"
+    try:
+        return f"{float(v) * 100:.1f}"
+    except (TypeError, ValueError):
+        return str(v)
+
+
 def _sheet_lines(lead: Lead) -> list[str]:
     f = lead.facts
     k = lead.kind
@@ -43,8 +55,8 @@ def _sheet_lines(lead: Lead) -> list[str]:
     if k == "bat_speed":
         return [
             f"Average bat speed: {_fmt(f.get('avg_bat_speed'))} mph   (league avg: {_fmt(f.get('league_bat_speed'))} mph)",
-            f"Blast rate: {_fmt(f.get('blast_per_swing'))}%   |  squared-up rate: {_fmt(f.get('squared_up_per_swing'))}%",
-            f"Hard-swing rate: {_fmt(f.get('hard_swing_rate'))}%   |  swing length: {_fmt(f.get('swing_length'))} ft",
+            f"Blast rate: {_pct(f.get('blast_per_swing'))}%   |  squared-up rate: {_pct(f.get('squared_up_per_swing'))}%",
+            f"Hard-swing rate: {_pct(f.get('hard_swing_rate'))}%   |  swing length: {_fmt(f.get('swing_length'))} ft",
         ]
     return []
 

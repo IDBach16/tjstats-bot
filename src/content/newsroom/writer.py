@@ -14,8 +14,14 @@ log = logging.getLogger(__name__)
 MAX_TWEET = 260  # leave headroom under X's 280
 
 
-def _complete(system: str, prompt: str, max_tokens: int = 900) -> str | None:
-    """Call Claude with the writer model; fall back to the cheap model on error."""
+def _complete(system: str, prompt: str, max_tokens: int = 3000) -> str | None:
+    """Call Claude with the writer model; fall back to the cheap model on error.
+
+    max_tokens must be generous: WRITER_MODEL (Sonnet 5) emits a *thinking* block
+    before the text block, so a tight budget (e.g. 900) gets consumed by thinking
+    and truncates before any text is emitted — the join below then finds no text
+    block and every thread silently falls back to the cheap model.
+    """
     try:
         import anthropic
     except ImportError:
