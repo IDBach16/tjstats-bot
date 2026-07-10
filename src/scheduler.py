@@ -63,8 +63,8 @@ from .content.draft_prospect import DraftProspectGenerator
 # Daily generators (run every day regardless of rotation)
 from .content.reds_summary import RedsSummaryGenerator
 
-# Newsroom — multi-agent Barstool-style article threads (Savant/FanGraphs)
-from .content.newsroom import NewsroomGenerator, NewsroomArticleGenerator
+# Newsroom — multi-agent player-analysis threads (Savant/FanGraphs data)
+from .content.newsroom import NewsroomGenerator
 
 log = logging.getLogger(__name__)
 
@@ -103,7 +103,6 @@ GENERATORS: dict[str, type[ContentGenerator]] = {
     "season_summary": SeasonSummaryGenerator,
     "hitter_analysis": HitterAnalysisGenerator,
     "newsroom": NewsroomGenerator,
-    "newsroom_article": NewsroomArticleGenerator,
     "draft_prospect": DraftProspectGenerator,
 }
 

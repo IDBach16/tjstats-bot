@@ -25,8 +25,11 @@ from . import feeds, researcher, social, personas, editor, graphics
 
 log = logging.getLogger(__name__)
 
-KIND_ROTATION = ["nasty_pitch", "overperformer", "bat_speed", "underperformer",
-                 "article"]
+# Player-analysis story kinds only (the Moniak/overperformer style). "article"
+# (react to a FanGraphs/Savant piece) is intentionally DISABLED — Ian prefers
+# original single-player threads over article link-backs. The article pipeline
+# still lives in articles.py; re-add "article" here to turn it back on.
+KIND_ROTATION = ["nasty_pitch", "overperformer", "bat_speed", "underperformer"]
 MAX_CANDIDATES = 6  # bound how many clip lookups / write attempts per run
 
 
