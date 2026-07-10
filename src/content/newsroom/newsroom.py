@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
 # original single-player threads over article link-backs. The article pipeline
 # still lives in articles.py; re-add "article" here to turn it back on.
 KIND_ROTATION = ["nasty_pitch", "overperformer", "bat_speed", "underperformer",
-                 "hard_hitter", "flamethrower", "pitcher_luck"]
+                 "hard_contact", "pitcher_stuff", "pitcher_luck"]
 MAX_CANDIDATES = 6  # bound how many clip lookups / write attempts per run
 
 

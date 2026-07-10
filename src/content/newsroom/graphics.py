@@ -31,7 +31,17 @@ _KIND_TAG = {
     "underperformer": "DUE FOR A BREAKOUT",
     "nasty_pitch": "NASTIEST PITCH",
     "bat_speed": "FASTEST BAT",
+    "hard_contact": "HARDEST CONTACT",
+    "pitcher_stuff": "NASTIEST ARSENAL",
+    # pitcher_luck's tag depends on direction — see _tag_for()
 }
+
+
+def _tag_for(lead: Lead) -> str:
+    """The gold eyebrow label for a card (pitcher_luck reads either direction)."""
+    if lead.kind == "pitcher_luck":
+        return "ERA REGRESSION WATCH" if lead.facts.get("lucky") else "DUE FOR BETTER LUCK"
+    return _KIND_TAG.get(lead.kind, "")
 
 
 def _f3(v) -> str:
@@ -60,6 +70,23 @@ def _spec(lead: Lead):
         return f"{f.get('avg_bat_speed')}", "mph average bat speed", [
             ("Bat speed", f.get("avg_bat_speed"), f.get("league_bat_speed"), lambda v: f"{v:.1f}"),
             ("Blast %", f.get("blast_per_swing"), None, lambda v: f"{v:.1f}"),
+        ]
+    if k == "hard_contact":
+        return f"{f.get('avg_hit_speed')}", "mph average exit velocity", [
+            ("Exit velo", f.get("avg_hit_speed"), f.get("league_ev"), lambda v: f"{v:.1f}"),
+            ("Barrel %", f.get("brl_percent"), None, lambda v: f"{v:.1f}"),
+            ("Hard-hit %", f.get("ev95percent"), None, lambda v: f"{v:.1f}"),
+        ]
+    if k == "pitcher_stuff":
+        return f"{f.get('stuff_plus')}", "Stuff+  (100 = MLB average)", [
+            ("Stuff+", f.get("stuff_plus"), f.get("league_stuff"), lambda v: f"{v:.0f}"),
+            ("Pitching+", f.get("pitching_plus"), None, lambda v: f"{v:.0f}"),
+            ("Location+", f.get("location_plus"), None, lambda v: f"{v:.0f}"),
+        ]
+    if k == "pitcher_luck":
+        return f"{f.get('xera')}", "expected ERA (xERA)", [
+            ("ERA", f.get("era"), None, lambda v: f"{v:.2f}"),
+            ("xERA", f.get("xera"), None, lambda v: f"{v:.2f}"),
         ]
     return "", "", []
 
@@ -128,7 +155,7 @@ def render_stat_card(fact_sheet: dict, lead: Lead):
         ax.add_patch(FancyBboxPatch((0, 0), 0.018, 1, boxstyle="square,pad=0",
                                     facecolor=GOLD, edgecolor="none"))
 
-        tag = _KIND_TAG.get(lead.kind, "")
+        tag = _tag_for(lead)
         ax.text(0.05, 0.90, tag, color=(RED if lead.is_red else GOLD),
                 fontsize=15, fontweight="bold")
         ax.text(0.05, 0.795, lead.subject, color=NAVY, fontsize=34, fontweight="bold")
@@ -165,7 +192,8 @@ def render_stat_card(fact_sheet: dict, lead: Lead):
                     va="center", fontweight="bold")
             y -= 0.105
 
-        ax.text(0.05, 0.045, f"BachTalk  ·  Data: Baseball Savant {MLB_SEASON}",
+        source = "Pitch Profiler" if lead.kind == "pitcher_stuff" else "Baseball Savant"
+        ax.text(0.05, 0.045, f"BachTalk  ·  Data: {source} {MLB_SEASON}",
                 color=GRAY, fontsize=12)
 
         out = SCREENSHOTS_DIR / f"newsroom_{_safe(lead.subject)}.png"

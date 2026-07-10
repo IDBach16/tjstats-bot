@@ -236,7 +236,7 @@ def build_leads() -> dict[str, list[Lead]]:
     except Exception:
         log.warning("article feed failed", exc_info=True)
     try:
-        # advance scout: extra Savant leaderboards (hard_hitter/flamethrower/pitcher_luck)
+        # advance scout: extra sources (hard_contact/pitcher_stuff/pitcher_luck)
         from . import scout
         out.update(scout.build_scout_leads(reds))
     except Exception:
