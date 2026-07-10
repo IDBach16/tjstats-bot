@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-18T16:44:28.297262",
-      "generator": "reds_summary",
-      "tweet_id": "2056415633361781135",
-      "tags": [
-        "reds_summary",
-        "2026-05-17"
-      ]
-    },
-    {
       "date": "2026-05-18T16:45:32.428662",
       "generator": "swing_plus_top10",
       "tweet_id": "2056415902518698219",
@@ -1845,6 +1836,15 @@
         "newsroom",
         "nasty_pitch",
         "Jos\u00e9 Soriano"
+      ]
+    },
+    {
+      "date": "2026-07-10T19:40:45.068383",
+      "generator": "hitter_analysis",
+      "tweet_id": "2075666552548933914",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_owen_caissie"
       ]
     }
   ]
