@@ -1,16 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-19T22:58:26.358751",
-      "generator": "milb_pitching_summary",
-      "tweet_id": "2056872097696092232",
-      "tags": [
-        "milb_pitching_summary",
-        "Mitch Bratt",
-        "AAA"
-      ]
-    },
-    {
       "date": "2026-05-20T16:47:42.001873",
       "generator": "reds_summary",
       "tweet_id": "2057141221827506467",
@@ -1852,6 +1842,17 @@
         "draft_prospect",
         "Jason DeCaro",
         "North Carolina Tar Heels",
+        "NCAA"
+      ]
+    },
+    {
+      "date": "2026-07-11T23:59:08.421131",
+      "generator": "draft_prospect",
+      "tweet_id": "2076093965405696355",
+      "tags": [
+        "draft_prospect",
+        "Tommy LaPour",
+        "Texas Christian Horned Frogs",
         "NCAA"
       ]
     }
