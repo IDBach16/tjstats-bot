@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-19T16:48:14.854080",
-      "generator": "hitter_analysis",
-      "tweet_id": "2056778971329556593",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_james_wood"
-      ]
-    },
-    {
       "date": "2026-05-19T17:32:00.788035",
       "generator": "biomechanics_101",
       "tweet_id": "2056789985492168797",
@@ -1849,6 +1840,17 @@
         "draft_prospect",
         "Brett Renfrow",
         "Virginia Tech Hokies",
+        "NCAA"
+      ]
+    },
+    {
+      "date": "2026-07-11T17:45:18.969823",
+      "generator": "draft_prospect",
+      "tweet_id": "2075999889289253338",
+      "tags": [
+        "draft_prospect",
+        "Ryan Lynch",
+        "North Carolina Tar Heels",
         "NCAA"
       ]
     }
