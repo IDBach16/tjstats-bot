@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-20T23:05:50.905234",
-      "generator": "pitching_summary",
-      "tweet_id": "2057236362554687685",
-      "tags": [
-        "pitching_summary",
-        "Logan Webb"
-      ]
-    },
-    {
       "date": "2026-05-21T16:36:26.576988",
       "generator": "reds_summary",
       "tweet_id": "2057500776793100505",
@@ -1858,6 +1849,15 @@
         "Duncan Marsten",
         "Wake Forest Demon Deacons",
         "NCAA"
+      ]
+    },
+    {
+      "date": "2026-07-12T19:13:28.201611",
+      "generator": "hitter_analysis",
+      "tweet_id": "2076384462829502520",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_kyle_stowers"
       ]
     }
   ]
