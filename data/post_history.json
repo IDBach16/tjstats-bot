@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-20T20:56:46.094837",
-      "generator": "explainer",
-      "tweet_id": "2057203901955506670",
-      "tags": [
-        "explainer",
-        "explainer_stuff_plus"
-      ]
-    },
-    {
       "date": "2026-05-20T23:05:50.905234",
       "generator": "pitching_summary",
       "tweet_id": "2057236362554687685",
@@ -1855,6 +1846,17 @@
         "draft_prospect",
         "Maxx Yehl",
         "West Virginia Mountaineers",
+        "NCAA"
+      ]
+    },
+    {
+      "date": "2026-07-12T17:47:58.231517",
+      "generator": "draft_prospect",
+      "tweet_id": "2076362945190101489",
+      "tags": [
+        "draft_prospect",
+        "Duncan Marsten",
+        "Wake Forest Demon Deacons",
         "NCAA"
       ]
     }
