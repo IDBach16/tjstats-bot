@@ -1,16 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-21T22:59:05.050264",
-      "generator": "milb_trad_pitching_summary",
-      "tweet_id": "2057597034979369066",
-      "tags": [
-        "milb_trad_pitching_summary",
-        "James Hicks",
-        "AA"
-      ]
-    },
-    {
       "date": "2026-05-22T16:17:01.963653",
       "generator": "reds_summary",
       "tweet_id": "2057858280337371141",
@@ -1860,6 +1850,17 @@
         "newsroom",
         "bat_speed",
         "Jordan Walker"
+      ]
+    },
+    {
+      "date": "2026-07-12T23:59:15.129402",
+      "generator": "draft_prospect",
+      "tweet_id": "2076456381633462681",
+      "tags": [
+        "draft_prospect",
+        "Taylor Rabe",
+        "Ole Miss Rebels",
+        "NCAA"
       ]
     }
   ]
