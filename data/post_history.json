@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-21T16:36:26.576988",
-      "generator": "reds_summary",
-      "tweet_id": "2057500776793100505",
-      "tags": [
-        "reds_summary",
-        "2026-05-20"
-      ]
-    },
-    {
       "date": "2026-05-21T17:25:47.717353",
       "generator": "biomechanics_101",
       "tweet_id": "2057513196735353179",
@@ -1858,6 +1849,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_kyle_stowers"
+      ]
+    },
+    {
+      "date": "2026-07-12T20:00:10.856459",
+      "generator": "hitter_analysis",
+      "tweet_id": "2076396218096525552",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_fernando_tatis_jr."
       ]
     }
   ]
