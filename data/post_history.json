@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-21T18:03:23.487300",
-      "generator": "biomechanics_101",
-      "tweet_id": "2057522658086904102",
-      "tags": [
-        "biomechanics_101",
-        "biomech_pelvis_vs_torso_timing"
-      ]
-    },
-    {
       "date": "2026-05-21T22:59:05.050264",
       "generator": "milb_trad_pitching_summary",
       "tweet_id": "2057597034979369066",
@@ -1859,6 +1850,16 @@
         "newsroom",
         "hard_contact",
         "James Wood"
+      ]
+    },
+    {
+      "date": "2026-07-12T21:37:16.578869",
+      "generator": "newsroom",
+      "tweet_id": "2076420653196997048",
+      "tags": [
+        "newsroom",
+        "bat_speed",
+        "Jordan Walker"
       ]
     }
   ]
