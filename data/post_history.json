@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-20T16:47:42.001873",
-      "generator": "reds_summary",
-      "tweet_id": "2057141221827506467",
-      "tags": [
-        "reds_summary",
-        "2026-05-19"
-      ]
-    },
-    {
       "date": "2026-05-20T17:47:47.828865",
       "generator": "biomechanics_101",
       "tweet_id": "2057156345845985336",
@@ -1854,6 +1845,15 @@
         "Tommy LaPour",
         "Texas Christian Horned Frogs",
         "NCAA"
+      ]
+    },
+    {
+      "date": "2026-07-12T14:49:13.915195",
+      "generator": "reds_summary",
+      "tweet_id": "2076317965004542224",
+      "tags": [
+        "reds_summary",
+        "2026-07-11"
       ]
     }
   ]
