@@ -74,6 +74,20 @@ on:
           - hitter_analysis
           - newsroom
           - draft_prospect
+      newsroom_kind:
+        description: 'Force a newsroom story kind (only when generator=newsroom; empty = auto-rank)'
+        required: false
+        default: ''
+        type: choice
+        options:
+          - ''
+          - nasty_pitch
+          - overperformer
+          - underperformer
+          - bat_speed
+          - hard_contact
+          - pitcher_stuff
+          - pitcher_luck
 
 permissions:
   contents: write
@@ -148,6 +162,7 @@ jobs:
           PITCH_PROFILER_API_KEY: ${{ secrets.PITCH_PROFILER_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           REDS_GAME_DATE: ${{ inputs.game_date }}
+          NEWSROOM_KIND: ${{ inputs.newsroom_kind }}
         run: |
           if [ "${{ steps.slot.outputs.catchup }}" = "true" ]; then
             # Catch-up: check post history and run any missed morning slots
