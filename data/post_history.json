@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-22T16:17:01.963653",
-      "generator": "reds_summary",
-      "tweet_id": "2057858280337371141",
-      "tags": [
-        "reds_summary",
-        "no_game"
-      ]
-    },
-    {
       "date": "2026-05-22T16:17:33.883739",
       "generator": "hitter_analysis",
       "tweet_id": "2057858413435158545",
@@ -1861,6 +1852,16 @@
         "Taylor Rabe",
         "Ole Miss Rebels",
         "NCAA"
+      ]
+    },
+    {
+      "date": "2026-07-13T12:25:10.752927",
+      "generator": "newsroom",
+      "tweet_id": "2076644101244727701",
+      "tags": [
+        "newsroom",
+        "pitcher_stuff",
+        "Eury P\u00e9rez"
       ]
     }
   ]
