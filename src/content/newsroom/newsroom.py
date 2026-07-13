@@ -85,11 +85,13 @@ class NewsroomGenerator(ContentGenerator):
             if self._recently_covered(lead.subject):
                 log.info("newsroom: %s covered recently — next", lead.subject)
                 continue
-            # Article reactions lead with a source card, not game film, so they
-            # skip the clip requirement; every other kind must have a clip.
-            clip = None if lead.kind == "article" else self._get_clip(lead)
-            if lead.kind != "article" and not clip:
-                log.info("newsroom: no clip for %s (%s) — next", lead.subject, lead.kind)
+            # Every newsroom thread MUST lead with real game film — no usable
+            # video clip, no post. Try the next candidate; publish nothing if
+            # none has one. Absolute rule, no per-kind exemption.
+            clip = self._get_clip(lead)
+            if not (clip and clip.exists()):
+                log.info("newsroom: no usable video for %s (%s) — next",
+                         lead.subject, lead.kind)
                 continue
 
             fact_sheet = researcher.build_fact_sheet(lead)
