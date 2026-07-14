@@ -1,16 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-23T20:01:22.816153",
-      "generator": "milb_pitcher_card",
-      "tweet_id": "2058277126848282742",
-      "tags": [
-        "milb_pitcher_card",
-        "Trenton Denholm",
-        "AAA"
-      ]
-    },
-    {
       "date": "2026-05-23T22:44:16.738680",
       "generator": "milb_pitching_summary",
       "tweet_id": "2058318097631633832",
@@ -1862,6 +1852,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_elly_de_la_cruz"
+      ]
+    },
+    {
+      "date": "2026-07-14T20:03:40.999365",
+      "generator": "hitter_analysis",
+      "tweet_id": "2077121875298369907",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_heliot_ramos"
       ]
     }
   ]
