@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-24T17:06:46.742466",
-      "generator": "biomechanics_101",
-      "tweet_id": "2058595574681866468",
-      "tags": [
-        "biomechanics_101",
-        "biomech_velo_vs_elbow_varus"
-      ]
-    },
-    {
       "date": "2026-05-24T22:48:26.421472",
       "generator": "pitching_summary",
       "tweet_id": "2058681534702297425",
@@ -1860,6 +1851,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_luke_raley"
+      ]
+    },
+    {
+      "date": "2026-07-15T20:00:36.966696",
+      "generator": "hitter_analysis",
+      "tweet_id": "2077483490686156836",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_jac_caglianone"
       ]
     }
   ]
