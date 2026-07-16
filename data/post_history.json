@@ -1,14 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-25T16:55:58.711029",
-      "generator": "swing_plus_top10",
-      "tweet_id": "2058955244441113021",
-      "tags": [
-        "swing_plus_top10"
-      ]
-    },
-    {
       "date": "2026-05-25T17:46:34.041851",
       "generator": "biomechanics_101",
       "tweet_id": "2058967975726923812",
@@ -1861,6 +1853,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_owen_caissie"
+      ]
+    },
+    {
+      "date": "2026-07-16T19:54:45.959602",
+      "generator": "hitter_analysis",
+      "tweet_id": "2077844406770581995",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_byron_buxton"
       ]
     }
   ]
