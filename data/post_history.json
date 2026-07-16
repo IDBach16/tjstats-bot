@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-24T22:48:26.421472",
-      "generator": "pitching_summary",
-      "tweet_id": "2058681534702297425",
-      "tags": [
-        "pitching_summary",
-        "Tarik Skubal"
-      ]
-    },
-    {
       "date": "2026-05-25T16:16:13.765339",
       "generator": "reds_summary",
       "tweet_id": "2058945241839726866",
@@ -1860,6 +1851,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_jac_caglianone"
+      ]
+    },
+    {
+      "date": "2026-07-16T15:27:24.631325",
+      "generator": "pitcher_card",
+      "tweet_id": "2077777101760168197",
+      "tags": [
+        "pitcher_card",
+        "Sonny Gray"
       ]
     }
   ]
