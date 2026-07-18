@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-27T16:58:44.741538",
-      "generator": "reds_summary",
-      "tweet_id": "2059680716720640467",
-      "tags": [
-        "reds_summary",
-        "2026-05-26"
-      ]
-    },
-    {
       "date": "2026-05-27T16:59:46.303383",
       "generator": "velo_distribution",
       "tweet_id": "2059680935713620170",
@@ -1860,6 +1851,15 @@
       "tags": [
         "pitcher_card",
         "Dylan Cease"
+      ]
+    },
+    {
+      "date": "2026-07-18T19:57:46.398414",
+      "generator": "hitter_analysis",
+      "tweet_id": "2078569939183587400",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_oneil_cruz"
       ]
     }
   ]
