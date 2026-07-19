@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-27T16:59:46.303383",
-      "generator": "velo_distribution",
-      "tweet_id": "2059680935713620170",
-      "tags": [
-        "velo_distribution",
-        "Blake Snell"
-      ]
-    },
-    {
       "date": "2026-05-27T17:48:55.251960",
       "generator": "biomechanics_101",
       "tweet_id": "2059693343706149174",
@@ -1860,6 +1851,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_oneil_cruz"
+      ]
+    },
+    {
+      "date": "2026-07-19T14:48:59.445489",
+      "generator": "reds_summary",
+      "tweet_id": "2078854619468329280",
+      "tags": [
+        "reds_summary",
+        "2026-07-18"
       ]
     }
   ]
