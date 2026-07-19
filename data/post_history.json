@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-27T18:29:44.679173",
-      "generator": "biomechanics_101",
-      "tweet_id": "2059703617402056977",
-      "tags": [
-        "biomechanics_101",
-        "biomech_arm_slot_distribution"
-      ]
-    },
-    {
       "date": "2026-05-27T20:57:49.902888",
       "generator": "explainer",
       "tweet_id": "2059740884535521518",
@@ -1860,6 +1851,15 @@
       "tags": [
         "pitching_summary",
         "Chris Sale"
+      ]
+    },
+    {
+      "date": "2026-07-19T19:13:48.509384",
+      "generator": "hitter_analysis",
+      "tweet_id": "2078921262957564048",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_jake_bauers"
       ]
     }
   ]
