@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-27T20:57:49.902888",
-      "generator": "explainer",
-      "tweet_id": "2059740884535521518",
-      "tags": [
-        "explainer",
-        "explainer_vaa"
-      ]
-    },
-    {
       "date": "2026-05-27T23:11:12.692841",
       "generator": "pitching_summary",
       "tweet_id": "2059774394432405754",
@@ -1860,6 +1851,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_jake_bauers"
+      ]
+    },
+    {
+      "date": "2026-07-19T20:01:20.749895",
+      "generator": "hitter_analysis",
+      "tweet_id": "2078933226010157193",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_josh_jung"
       ]
     }
   ]
