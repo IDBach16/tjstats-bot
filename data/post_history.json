@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-28T17:54:43.449149",
-      "generator": "biomechanics_101",
-      "tweet_id": "2060057191936032859",
-      "tags": [
-        "biomechanics_101",
-        "biomech_velo_vs_shoulder_ir_moment"
-      ]
-    },
-    {
       "date": "2026-05-28T18:39:03.865903",
       "generator": "biomechanics_101",
       "tweet_id": "2060068350668255341",
@@ -1860,6 +1851,16 @@
       "tags": [
         "reds_summary",
         "2026-07-19"
+      ]
+    },
+    {
+      "date": "2026-07-20T18:07:47.755207",
+      "generator": "newsroom",
+      "tweet_id": "2079267038552379428",
+      "tags": [
+        "newsroom",
+        "nasty_pitch",
+        "Chase Burns"
       ]
     }
   ]
