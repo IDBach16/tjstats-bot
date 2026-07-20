@@ -1,16 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-28T21:04:07.764418",
-      "generator": "milb_trad_pitching_summary",
-      "tweet_id": "2060104826768502983",
-      "tags": [
-        "milb_trad_pitching_summary",
-        "Jonathan Santucci",
-        "AA"
-      ]
-    },
-    {
       "date": "2026-05-28T23:08:24.756270",
       "generator": "milb_trad_pitching_summary",
       "tweet_id": "2060136095514309110",
@@ -1861,6 +1851,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_colt_keith"
+      ]
+    },
+    {
+      "date": "2026-07-20T20:15:49.171344",
+      "generator": "hitter_analysis",
+      "tweet_id": "2079299256263885246",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_fernando_tatis_jr."
       ]
     }
   ]
