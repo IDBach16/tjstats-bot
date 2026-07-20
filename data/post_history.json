@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-27T23:11:12.692841",
-      "generator": "pitching_summary",
-      "tweet_id": "2059774394432405754",
-      "tags": [
-        "pitching_summary",
-        "Chris Sale"
-      ]
-    },
-    {
       "date": "2026-05-28T17:32:53.461843",
       "generator": "biomechanics_101",
       "tweet_id": "2060051697582624849",
@@ -1860,6 +1851,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_josh_jung"
+      ]
+    },
+    {
+      "date": "2026-07-20T15:46:11.399455",
+      "generator": "pitching_summary",
+      "tweet_id": "2079231401187258453",
+      "tags": [
+        "pitching_summary",
+        "Roki Sasaki"
       ]
     }
   ]
