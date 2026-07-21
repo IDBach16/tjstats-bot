@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-29T21:05:39.686366",
-      "generator": "pitching_summary",
-      "tweet_id": "2060467596160352558",
-      "tags": [
-        "pitching_summary",
-        "Yoshinobu Yamamoto"
-      ]
-    },
-    {
       "date": "2026-05-29T23:04:58.911651",
       "generator": "pitching_summary",
       "tweet_id": "2060497658200908280",
@@ -1859,6 +1850,16 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_kyle_schwarber"
+      ]
+    },
+    {
+      "date": "2026-07-21T21:51:26.024363",
+      "generator": "newsroom",
+      "tweet_id": "2079685706646253727",
+      "tags": [
+        "newsroom",
+        "nasty_pitch",
+        "Fernando Cruz"
       ]
     }
   ]
