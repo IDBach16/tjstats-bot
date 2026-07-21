@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-29T17:28:37.406275",
-      "generator": "biomechanics_101",
-      "tweet_id": "2060413011383243006",
-      "tags": [
-        "biomechanics_101",
-        "biomech_pelvis_vs_torso_timing"
-      ]
-    },
-    {
       "date": "2026-05-29T17:58:48.656158",
       "generator": "biomechanics_101",
       "tweet_id": "2060420608371106273",
@@ -1859,6 +1850,15 @@
       "tags": [
         "reds_summary",
         "2026-07-20"
+      ]
+    },
+    {
+      "date": "2026-07-21T17:24:20.767641",
+      "generator": "pitcher_card",
+      "tweet_id": "2079618466613797234",
+      "tags": [
+        "pitcher_card",
+        "Framber Valdez"
       ]
     }
   ]
