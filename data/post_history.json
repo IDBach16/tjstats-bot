@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-29T18:37:42.737735",
-      "generator": "biomechanics_101",
-      "tweet_id": "2060430398023197077",
-      "tags": [
-        "biomechanics_101",
-        "biomech_torso_rotation_velo"
-      ]
-    },
-    {
       "date": "2026-05-29T21:05:39.686366",
       "generator": "pitching_summary",
       "tweet_id": "2060467596160352558",
@@ -1859,6 +1850,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_trent_grisham"
+      ]
+    },
+    {
+      "date": "2026-07-21T20:12:09.752139",
+      "generator": "hitter_analysis",
+      "tweet_id": "2079660724033573208",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_kyle_schwarber"
       ]
     }
   ]
