@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-05-29T23:04:58.911651",
-      "generator": "pitching_summary",
-      "tweet_id": "2060497658200908280",
-      "tags": [
-        "pitching_summary",
-        "Roki Sasaki"
-      ]
-    },
-    {
       "date": "2026-05-30T15:00:28.283057",
       "generator": "reds_summary",
       "tweet_id": "2060738115409498471",
@@ -1860,6 +1851,15 @@
         "newsroom",
         "nasty_pitch",
         "Fernando Cruz"
+      ]
+    },
+    {
+      "date": "2026-07-22T15:26:54.830033",
+      "generator": "pitching_summary",
+      "tweet_id": "2079951300972654657",
+      "tags": [
+        "pitching_summary",
+        "Logan Webb"
       ]
     }
   ]
