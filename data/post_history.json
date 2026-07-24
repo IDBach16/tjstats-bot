@@ -1,16 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-02T23:29:35.445073",
-      "generator": "milb_pitching_summary",
-      "tweet_id": "2061953342394302930",
-      "tags": [
-        "milb_pitching_summary",
-        "Misael Tamarez",
-        "AAA"
-      ]
-    },
-    {
       "date": "2026-06-03T18:20:40.191409",
       "generator": "hitter_analysis",
       "tweet_id": "2062238048570556716",
@@ -1858,6 +1848,15 @@
       "tags": [
         "reds_summary",
         "no_game"
+      ]
+    },
+    {
+      "date": "2026-07-24T19:37:24.997379",
+      "generator": "hitter_analysis",
+      "tweet_id": "2080739143626391930",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_jac_caglianone"
       ]
     }
   ]
