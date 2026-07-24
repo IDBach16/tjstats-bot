@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-03T18:20:40.191409",
-      "generator": "hitter_analysis",
-      "tweet_id": "2062238048570556716",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_owen_caissie"
-      ]
-    },
-    {
       "date": "2026-06-03T18:39:25.599249",
       "generator": "reds_summary",
       "tweet_id": "2062242768718602664",
@@ -1857,6 +1848,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_jac_caglianone"
+      ]
+    },
+    {
+      "date": "2026-07-24T20:09:37.758739",
+      "generator": "hitter_analysis",
+      "tweet_id": "2080747250263974052",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_mookie_betts"
       ]
     }
   ]
