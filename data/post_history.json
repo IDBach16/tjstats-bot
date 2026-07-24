@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-03T18:39:25.599249",
-      "generator": "reds_summary",
-      "tweet_id": "2062242768718602664",
-      "tags": [
-        "reds_summary",
-        "2026-06-02"
-      ]
-    },
-    {
       "date": "2026-06-03T18:40:36.760525",
       "generator": "pitching_summary",
       "tweet_id": "2062243036512317683",
@@ -1857,6 +1848,16 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_mookie_betts"
+      ]
+    },
+    {
+      "date": "2026-07-24T21:52:28.346898",
+      "generator": "newsroom",
+      "tweet_id": "2080773131711528970",
+      "tags": [
+        "newsroom",
+        "overperformer",
+        "Mickey Moniak"
       ]
     }
   ]
