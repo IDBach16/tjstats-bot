@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-03T21:41:09.428847",
-      "generator": "hitter_analysis",
-      "tweet_id": "2062288502675439907",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_spencer_torkelson"
-      ]
-    },
-    {
       "date": "2026-06-04T16:47:19.332166",
       "generator": "reds_summary",
       "tweet_id": "2062576944793919898",
@@ -1858,6 +1849,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_elly_de_la_cruz"
+      ]
+    },
+    {
+      "date": "2026-07-25T20:04:15.429620",
+      "generator": "hitter_analysis",
+      "tweet_id": "2081108285986595072",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_byron_buxton"
       ]
     }
   ]
