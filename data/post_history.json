@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-04T16:47:19.332166",
-      "generator": "reds_summary",
-      "tweet_id": "2062576944793919898",
-      "tags": [
-        "reds_summary",
-        "2026-06-03"
-      ]
-    },
-    {
       "date": "2026-06-04T16:48:22.599257",
       "generator": "pitcher_card",
       "tweet_id": "2062577188176797961",
@@ -1858,6 +1849,16 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_byron_buxton"
+      ]
+    },
+    {
+      "date": "2026-07-25T21:43:17.998417",
+      "generator": "newsroom",
+      "tweet_id": "2081133211271217210",
+      "tags": [
+        "newsroom",
+        "bat_speed",
+        "Junior Caminero"
       ]
     }
   ]
