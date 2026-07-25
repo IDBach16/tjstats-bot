@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-03T19:52:08.823773",
-      "generator": "hitter_analysis",
-      "tweet_id": "2062261069389627564",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_ke'bryan_hayes"
-      ]
-    },
-    {
       "date": "2026-06-03T21:41:09.428847",
       "generator": "hitter_analysis",
       "tweet_id": "2062288502675439907",
@@ -1858,6 +1849,15 @@
       "tags": [
         "reds_summary",
         "2026-07-24"
+      ]
+    },
+    {
+      "date": "2026-07-25T19:16:32.473699",
+      "generator": "hitter_analysis",
+      "tweet_id": "2081096277782147087",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_elly_de_la_cruz"
       ]
     }
   ]
