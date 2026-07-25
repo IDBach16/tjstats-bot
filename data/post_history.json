@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-03T18:40:36.760525",
-      "generator": "pitching_summary",
-      "tweet_id": "2062243036512317683",
-      "tags": [
-        "pitching_summary",
-        "Dylan Cease"
-      ]
-    },
-    {
       "date": "2026-06-03T19:52:08.823773",
       "generator": "hitter_analysis",
       "tweet_id": "2062261069389627564",
@@ -1858,6 +1849,15 @@
         "newsroom",
         "overperformer",
         "Mickey Moniak"
+      ]
+    },
+    {
+      "date": "2026-07-25T14:56:27.504983",
+      "generator": "reds_summary",
+      "tweet_id": "2081030825798213664",
+      "tags": [
+        "reds_summary",
+        "2026-07-24"
       ]
     }
   ]
