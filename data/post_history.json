@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-04T16:48:22.599257",
-      "generator": "pitcher_card",
-      "tweet_id": "2062577188176797961",
-      "tags": [
-        "pitcher_card",
-        "Seth Lugo"
-      ]
-    },
-    {
       "date": "2026-06-04T20:54:43.376055",
       "generator": "hitter_analysis",
       "tweet_id": "2062639205176738105",
@@ -1859,6 +1850,15 @@
         "newsroom",
         "bat_speed",
         "Junior Caminero"
+      ]
+    },
+    {
+      "date": "2026-07-26T14:57:35.016428",
+      "generator": "reds_summary",
+      "tweet_id": "2081393496934559913",
+      "tags": [
+        "reds_summary",
+        "2026-07-25"
       ]
     }
   ]
