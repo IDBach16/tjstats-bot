@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-05T20:45:26.545787",
-      "generator": "hitter_analysis",
-      "tweet_id": "2062999257452573178",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_byron_buxton"
-      ]
-    },
-    {
       "date": "2026-06-06T16:01:15.325913",
       "generator": "reds_summary",
       "tweet_id": "2063290127216959502",
@@ -1859,6 +1850,16 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_oneil_cruz"
+      ]
+    },
+    {
+      "date": "2026-07-26T21:45:55.707265",
+      "generator": "newsroom",
+      "tweet_id": "2081496260591149285",
+      "tags": [
+        "newsroom",
+        "nasty_pitch",
+        "Tarik Skubal"
       ]
     }
   ]
