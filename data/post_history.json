@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-05T16:27:26.081194",
-      "generator": "reds_summary",
-      "tweet_id": "2062934328271941760",
-      "tags": [
-        "reds_summary",
-        "no_game"
-      ]
-    },
-    {
       "date": "2026-06-05T16:27:51.993745",
       "generator": "pitching_summary",
       "tweet_id": "2062934417409290751",
@@ -1859,6 +1850,15 @@
       "tags": [
         "pitching_summary",
         "Hunter Brown"
+      ]
+    },
+    {
+      "date": "2026-07-26T19:19:59.268522",
+      "generator": "hitter_analysis",
+      "tweet_id": "2081459533223022642",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_jake_bauers"
       ]
     }
   ]
