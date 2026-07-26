@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-05T16:27:51.993745",
-      "generator": "pitching_summary",
-      "tweet_id": "2062934417409290751",
-      "tags": [
-        "pitching_summary",
-        "Framber Valdez"
-      ]
-    },
-    {
       "date": "2026-06-05T20:45:26.545787",
       "generator": "hitter_analysis",
       "tweet_id": "2062999257452573178",
@@ -1859,6 +1850,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_jake_bauers"
+      ]
+    },
+    {
+      "date": "2026-07-26T20:03:06.229034",
+      "generator": "hitter_analysis",
+      "tweet_id": "2081470383715484068",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_oneil_cruz"
       ]
     }
   ]
