@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-04T20:54:43.376055",
-      "generator": "hitter_analysis",
-      "tweet_id": "2062639205176738105",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_jac_caglianone"
-      ]
-    },
-    {
       "date": "2026-06-05T16:27:26.081194",
       "generator": "reds_summary",
       "tweet_id": "2062934328271941760",
@@ -1859,6 +1850,15 @@
       "tags": [
         "reds_summary",
         "2026-07-25"
+      ]
+    },
+    {
+      "date": "2026-07-26T15:52:04.260055",
+      "generator": "pitching_summary",
+      "tweet_id": "2081407161096401245",
+      "tags": [
+        "pitching_summary",
+        "Hunter Brown"
       ]
     }
   ]
