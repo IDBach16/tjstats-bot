@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-06T20:02:41.078882",
-      "generator": "hitter_analysis",
-      "tweet_id": "2063350885086887997",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_brandon_marsh"
-      ]
-    },
-    {
       "date": "2026-06-07T15:20:31.535328",
       "generator": "pitching_summary",
       "tweet_id": "2063642196059005317",
@@ -1860,6 +1851,15 @@
       "tags": [
         "pitching_summary",
         "Paul Skenes"
+      ]
+    },
+    {
+      "date": "2026-07-27T19:43:10.846416",
+      "generator": "hitter_analysis",
+      "tweet_id": "2081827757713916394",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_kyle_stowers"
       ]
     }
   ]
