@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-08T21:10:15.447171",
-      "generator": "hitter_analysis",
-      "tweet_id": "2064092665579274421",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_jackson_chourio"
-      ]
-    },
-    {
       "date": "2026-06-09T16:27:41.675606",
       "generator": "reds_summary",
       "tweet_id": "2064383944607543756",
@@ -1860,6 +1851,16 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_josh_jung"
+      ]
+    },
+    {
+      "date": "2026-07-28T21:54:16.306802",
+      "generator": "newsroom",
+      "tweet_id": "2082223135995412481",
+      "tags": [
+        "newsroom",
+        "overperformer",
+        "Jake McCarthy"
       ]
     }
   ]
