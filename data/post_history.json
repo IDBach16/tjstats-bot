@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-07T20:05:04.416573",
-      "generator": "hitter_analysis",
-      "tweet_id": "2063713874038153611",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_trent_grisham"
-      ]
-    },
-    {
       "date": "2026-06-08T17:19:20.858610",
       "generator": "reds_summary",
       "tweet_id": "2064034555481248142",
@@ -1860,6 +1851,15 @@
       "tags": [
         "pitcher_card",
         "Garrett Crochet"
+      ]
+    },
+    {
+      "date": "2026-07-28T16:27:04.998121",
+      "generator": "reds_summary",
+      "tweet_id": "2082140796002681279",
+      "tags": [
+        "reds_summary",
+        "2026-07-27"
       ]
     }
   ]
