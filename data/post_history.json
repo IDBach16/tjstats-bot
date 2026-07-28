@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-08T17:20:32.175573",
-      "generator": "pitching_summary",
-      "tweet_id": "2064034826210992541",
-      "tags": [
-        "pitching_summary",
-        "Zack Wheeler"
-      ]
-    },
-    {
       "date": "2026-06-08T21:10:15.447171",
       "generator": "hitter_analysis",
       "tweet_id": "2064092665579274421",
@@ -1860,6 +1851,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_casey_schmitt"
+      ]
+    },
+    {
+      "date": "2026-07-28T20:10:29.626412",
+      "generator": "hitter_analysis",
+      "tweet_id": "2082197019209134552",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_josh_jung"
       ]
     }
   ]
