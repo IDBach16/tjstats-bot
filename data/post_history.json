@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-10T16:56:00.707187",
-      "generator": "reds_summary",
-      "tweet_id": "2064753458671186062",
-      "tags": [
-        "reds_summary",
-        "2026-06-09"
-      ]
-    },
-    {
       "date": "2026-06-10T17:47:47.380891",
       "generator": "pitching_summary",
       "tweet_id": "2064766467606782435",
@@ -1861,6 +1852,15 @@
       "tags": [
         "reds_summary",
         "2026-07-28"
+      ]
+    },
+    {
+      "date": "2026-07-29T19:25:05.829763",
+      "generator": "hitter_analysis",
+      "tweet_id": "2082547982516326809",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_kyle_schwarber"
       ]
     }
   ]
