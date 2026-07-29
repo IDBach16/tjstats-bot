@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-09T16:27:41.675606",
-      "generator": "reds_summary",
-      "tweet_id": "2064383944607543756",
-      "tags": [
-        "reds_summary",
-        "2026-06-08"
-      ]
-    },
-    {
       "date": "2026-06-09T20:52:42.116297",
       "generator": "hitter_analysis",
       "tweet_id": "2064450635928572211",
@@ -1861,6 +1852,15 @@
         "newsroom",
         "overperformer",
         "Jake McCarthy"
+      ]
+    },
+    {
+      "date": "2026-07-29T15:45:30.358171",
+      "generator": "pitching_summary",
+      "tweet_id": "2082492679309381901",
+      "tags": [
+        "pitching_summary",
+        "Zack Wheeler"
       ]
     }
   ]
