@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-11T21:11:04.093199",
-      "generator": "hitter_analysis",
-      "tweet_id": "2065180033711554706",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_mookie_betts"
-      ]
-    },
-    {
       "date": "2026-06-12T16:39:18.971750",
       "generator": "reds_summary",
       "tweet_id": "2065474033332982249",
@@ -1861,6 +1852,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_owen_caissie"
+      ]
+    },
+    {
+      "date": "2026-07-30T20:10:40.020871",
+      "generator": "hitter_analysis",
+      "tweet_id": "2082921837550297459",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_heliot_ramos"
       ]
     }
   ]
