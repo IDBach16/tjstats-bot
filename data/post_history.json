@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-14T20:14:05.892029",
-      "generator": "hitter_analysis",
-      "tweet_id": "2066252860245823891",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_spencer_torkelson"
-      ]
-    },
-    {
       "date": "2026-06-15T18:22:21.377133",
       "generator": "reds_summary",
       "tweet_id": "2066587127496974476",
@@ -1862,6 +1853,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_jac_caglianone"
+      ]
+    },
+    {
+      "date": "2026-08-01T20:04:02.015582",
+      "generator": "hitter_analysis",
+      "tweet_id": "2083644944674140564",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_luke_raley"
       ]
     }
   ]
