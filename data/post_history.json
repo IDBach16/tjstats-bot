@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-14T16:16:39.424000",
-      "generator": "pitching_summary",
-      "tweet_id": "2066193085026238502",
-      "tags": [
-        "pitching_summary",
-        "Garrett Crochet"
-      ]
-    },
-    {
       "date": "2026-06-14T20:14:05.892029",
       "generator": "hitter_analysis",
       "tweet_id": "2066252860245823891",
@@ -1862,6 +1853,15 @@
       "tags": [
         "pitcher_card",
         "Framber Valdez"
+      ]
+    },
+    {
+      "date": "2026-08-01T19:17:34.101495",
+      "generator": "hitter_analysis",
+      "tweet_id": "2083633251558752302",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_jac_caglianone"
       ]
     }
   ]
