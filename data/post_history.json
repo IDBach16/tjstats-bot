@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-16T18:25:55.427997",
-      "generator": "reds_summary",
-      "tweet_id": "2066950413111177413",
-      "tags": [
-        "reds_summary",
-        "2026-06-15"
-      ]
-    },
-    {
       "date": "2026-06-16T19:39:54.231787",
       "generator": "hitter_analysis",
       "tweet_id": "2066969030830002680",
@@ -1862,6 +1853,15 @@
       "tags": [
         "pitching_summary",
         "Roki Sasaki"
+      ]
+    },
+    {
+      "date": "2026-08-03T19:45:38.258841",
+      "generator": "hitter_analysis",
+      "tweet_id": "2084365091240288596",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_byron_buxton"
       ]
     }
   ]
