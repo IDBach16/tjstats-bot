@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-17T20:59:56.257940",
-      "generator": "hitter_analysis",
-      "tweet_id": "2067351558023508305",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_brandon_marsh"
-      ]
-    },
-    {
       "date": "2026-06-18T16:57:41.993545",
       "generator": "reds_summary",
       "tweet_id": "2067652986394800517",
@@ -1862,6 +1853,15 @@
       "tags": [
         "pitching_summary",
         "Chris Sale"
+      ]
+    },
+    {
+      "date": "2026-08-05T16:25:19.855525",
+      "generator": "reds_summary",
+      "tweet_id": "2085039457955418411",
+      "tags": [
+        "reds_summary",
+        "2026-08-04"
       ]
     }
   ]
