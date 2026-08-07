@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-18T16:57:41.993545",
-      "generator": "reds_summary",
-      "tweet_id": "2067652986394800517",
-      "tags": [
-        "reds_summary",
-        "2026-06-17"
-      ]
-    },
-    {
       "date": "2026-06-18T21:24:48.248452",
       "generator": "hitter_analysis",
       "tweet_id": "2067720205485342814",
@@ -1862,6 +1853,15 @@
       "tags": [
         "reds_summary",
         "2026-08-04"
+      ]
+    },
+    {
+      "date": "2026-08-07T00:36:57.500148",
+      "generator": "reds_summary",
+      "tweet_id": "2085525568049823916",
+      "tags": [
+        "reds_summary",
+        "2026-08-06"
       ]
     }
   ]
