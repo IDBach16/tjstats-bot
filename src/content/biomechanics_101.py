@@ -156,27 +156,26 @@ Background: {topic['education']}
 Data Summary:
 {stats_text}
 
-Write a single passage (UNDER 275 chars) explaining WHY this matters for player development. What should a pitcher or pitching coach take away from this data? Reference specific numbers (percentiles, averages). Think like a pitching coordinator explaining this to their staff.
+Write a single short sentence (UNDER 120 chars) explaining WHY this matters for player development. Think like a pitching coordinator giving a quick takeaway to their staff.
 
 Rules:
 - Sound like a top-tier pitching development coach, not a professor
 - Do NOT use the word "elite" — find more creative descriptors
-- Reference specific data points from the stats
 - Do NOT use hashtags, emojis, or @ mentions
 - Do NOT use dashes or hyphens (use commas, periods, or other punctuation instead)
-- Keep it UNDER 275 characters
-- Do NOT suggest drills, exercises, or training cues — just explain the data and why it matters
+- Keep it UNDER 120 characters (strict limit)
+- Do NOT suggest drills, exercises, or training cues — just explain why it matters
 """
 
     try:
         message = client.messages.create(
             model="claude-haiku-4-5-20251001",
-            max_tokens=200,
+            max_tokens=80,
             messages=[{"role": "user", "content": prompt}],
         )
         text = message.content[0].text.strip()
-        if len(text) > 280:
-            text = text[:277] + "..."
+        if len(text) > 120:
+            text = text[:117] + "..."
         log.info("Generated biomech deep dive (%d chars): %s",
                  len(text), text[:80])
         return [text]
