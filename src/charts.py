@@ -3014,9 +3014,14 @@ def plot_traditional_pitcher_card(
         has_radar = league_avgs and len(league_avgs) >= 3
 
         if has_gamelog and has_radar:
-            # Split right panel: trend top, radar bottom
-            trend_ax = fig.add_axes([0.54, 0.40, 0.42, 0.28])
-            radar_ax = fig.add_axes([0.60, 0.05, 0.32, 0.32], polar=True)
+            # Split right panel: trend top, radar bottom.
+            # Both axes carry decorations that live OUTSIDE their rect — the
+            # trend's x-ticks/xlabel hang below it, and the radar's spoke
+            # labels plus its title sit above it. Sizing these to touch makes
+            # those decorations collide, so the two rects are deliberately
+            # left a gap rather than packed edge to edge.
+            trend_ax = fig.add_axes([0.54, 0.435, 0.42, 0.215])
+            radar_ax = fig.add_axes([0.60, 0.06, 0.32, 0.265], polar=True)
         elif has_gamelog:
             trend_ax = fig.add_axes([0.54, 0.10, 0.42, 0.55])
             radar_ax = None
@@ -3133,11 +3138,18 @@ def plot_traditional_pitcher_card(
                 radar_ax.spines["polar"].set_color(CARD_BORDER)
                 radar_ax.grid(color=CARD_BORDER, alpha=0.3)
                 radar_ax.set_title("vs League Avg", color=CARD_TEXT,
-                                   fontsize=10, fontweight="bold", pad=12)
+                                   fontsize=10, fontweight="bold", pad=8)
+                # Pinned to the card's bottom-right in FIGURE coords, clear of
+                # both the radar's spoke labels and the footer. An axes-relative
+                # bbox_to_anchor would land differently in the with-trend vs
+                # radar-only layouts (their rects differ), and an offset tuned
+                # for one pushes the legend off the figure in the other —
+                # which bbox_inches="tight" would absorb by widening the card.
                 radar_ax.legend(loc="lower right", fontsize=7,
                                 facecolor=CARD_SURFACE, edgecolor=CARD_BORDER,
                                 labelcolor=CARD_TEXT_MUTED,
-                                bbox_to_anchor=(1.3, -0.1))
+                                bbox_to_anchor=(0.965, 0.055),
+                                bbox_transform=fig.transFigure)
 
         # ── Fallback: no data for right panel ─────────────────────────
         if not has_gamelog and not has_radar:
