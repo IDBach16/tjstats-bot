@@ -46,6 +46,15 @@ CARD_BORDER = "#d0d7de"    # borders / track bars (was #30363d)
 CARD_TEXT = "#1f2328"      # primary text (was #f0f6fc)
 CARD_TEXT_MUTED = "#6e7781" # secondary text (was #8b949e)
 
+
+def ordinal(n) -> str:
+    """Format a percentile with the right suffix — 62nd, not 62th."""
+    n = int(round(float(n)))
+    # 11/12/13 take "th" despite ending in 1/2/3.
+    suffix = "th" if 11 <= abs(n) % 100 <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(abs(n) % 10, "th")
+    return f"{n}{suffix}"
+
+
 # Noise pitch types to filter
 _NOISE_PITCHES = {"PO", "IN", "EP", "AB", "AS", "UN", "XX", "NP", "SC"}
 
@@ -703,7 +712,7 @@ def plot_percentile_rankings(name: str, season_df: "pd.DataFrame",
                     fontsize=10, fontweight="bold", color=val_color, zorder=3)
 
             # Percentile rank (right)
-            ax.text(102, i, f"{pctile:.0f}th", ha="left", va="center",
+            ax.text(102, i, f"{ordinal(pctile)}", ha="left", va="center",
                     fontsize=11, fontweight="bold", color=color)
 
         ax.set_yticks(y_pos)
@@ -1247,7 +1256,7 @@ def plot_pitcher_card(
 
             # Percentile at far right
             left_ax.text(bar_x0 + bar_track_w + 0.03, y,
-                         f"{pct:.0f}th", fontsize=10, fontweight="bold",
+                         f"{ordinal(pct)}", fontsize=10, fontweight="bold",
                          color=color, va="center", ha="left")
 
         # ── Vertical divider ──────────────────────────────────────────
@@ -1685,7 +1694,7 @@ def plot_milb_pitcher_card(
                          color=val_color, va="center", ha=val_ha)
 
             left_ax.text(bar_x0 + bar_track_w + 0.03, y,
-                         f"{pct:.0f}th", fontsize=9, fontweight="bold",
+                         f"{ordinal(pct)}", fontsize=9, fontweight="bold",
                          color=color, va="center", ha="left")
 
         # ── Vertical divider ──────────────────────────────────────────
@@ -2253,7 +2262,7 @@ def plot_pitching_summary(
                 ax_pctile.text(
                     bar.get_width() + 1.5,
                     bar.get_y() + bar.get_height() / 2,
-                    f"{pct:.0f}th", va="center", ha="left",
+                    f"{ordinal(pct)}", va="center", ha="left",
                     fontsize=12, fontweight="bold", color=color,
                 )
         else:
@@ -2981,7 +2990,7 @@ def plot_traditional_pitcher_card(
                          color=val_color, va="center", ha=val_ha)
 
             left_ax.text(bar_x0 + bar_track_w + 0.03, y,
-                         f"{pct:.0f}th", fontsize=9, fontweight="bold",
+                         f"{ordinal(pct)}", fontsize=9, fontweight="bold",
                          color=color, va="center", ha="left")
 
         # ── Vertical divider ──────────────────────────────────────────
