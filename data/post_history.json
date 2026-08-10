@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-18T21:24:48.248452",
-      "generator": "hitter_analysis",
-      "tweet_id": "2067720205485342814",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_colt_keith"
-      ]
-    },
-    {
       "date": "2026-06-19T16:28:52.531918",
       "generator": "reds_summary",
       "tweet_id": "2068008120404631600",
@@ -1862,6 +1853,16 @@
       "tags": [
         "reds_summary",
         "2026-08-06"
+      ]
+    },
+    {
+      "date": "2026-08-10T21:30:19.604574",
+      "generator": "newsroom",
+      "tweet_id": "2086928152249430337",
+      "tags": [
+        "newsroom",
+        "nasty_pitch",
+        "Mason Miller"
       ]
     }
   ]
