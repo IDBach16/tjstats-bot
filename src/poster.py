@@ -18,6 +18,27 @@ from .config import (
 log = logging.getLogger(__name__)
 
 
+class QuotaExhausted(RuntimeError):
+    """X rejected the write because the API plan is out of posting credits (HTTP 402).
+
+    Retrying inside the same run cannot help — every further write fails the same
+    way — so callers should abandon the run rather than leave a half-posted thread.
+    """
+
+
+def _create_tweet(client: tweepy.Client, **kwargs):
+    """Wrapper around create_tweet that flags plan-level exhaustion distinctly."""
+    try:
+        return client.create_tweet(**kwargs)
+    except tweepy.HTTPException as exc:
+        if getattr(exc.response, "status_code", None) == 402:
+            raise QuotaExhausted(
+                "X API returned 402 Payment Required (credits depleted) — "
+                "the developer account is out of posting credits."
+            ) from exc
+        raise
+
+
 def _get_v1_api() -> tweepy.API:
     """OAuth 1.0a for media upload (v1.1 endpoint)."""
     auth = tweepy.OAuth1UserHandler(
@@ -40,7 +61,7 @@ def _get_v2_client() -> tweepy.Client:
 def post_text(text: str) -> str:
     """Post a text-only tweet. Returns the tweet ID."""
     client = _get_v2_client()
-    resp = client.create_tweet(text=text)
+    resp = _create_tweet(client, text=text)
     tweet_id = resp.data["id"]
     log.info("Posted text tweet %s", tweet_id)
     return tweet_id
@@ -55,7 +76,7 @@ def post_with_image(text: str, image_path: Path | str, alt_text: str = "") -> st
     log.info("Uploaded media %s (%s)", media.media_id, image_path)
 
     client = _get_v2_client()
-    resp = client.create_tweet(text=text, media_ids=[media.media_id])
+    resp = _create_tweet(client, text=text, media_ids=[media.media_id])
     tweet_id = resp.data["id"]
     log.info("Posted image tweet %s", tweet_id)
     return tweet_id
@@ -80,7 +101,7 @@ def post_reply(
     kwargs: dict = {"text": text, "in_reply_to_tweet_id": in_reply_to}
     if media_ids:
         kwargs["media_ids"] = media_ids
-    resp = client.create_tweet(**kwargs)
+    resp = _create_tweet(client, **kwargs)
     tweet_id = resp.data["id"]
     log.info("Posted reply tweet %s (in reply to %s)", tweet_id, in_reply_to)
     return tweet_id
@@ -96,7 +117,8 @@ def post_video_reply(in_reply_to: str, video_path: Path | str, text: str = "") -
     log.info("Uploaded video %s (%s)", media.media_id, video_path)
 
     client = _get_v2_client()
-    resp = client.create_tweet(
+    resp = _create_tweet(
+        client,
         text=text,
         media_ids=[media.media_id],
         in_reply_to_tweet_id=in_reply_to,
@@ -116,7 +138,7 @@ def post_with_video(text: str, video_path: Path | str) -> str:
     log.info("Uploaded video %s (%s)", media.media_id, video_path)
 
     client = _get_v2_client()
-    resp = client.create_tweet(text=text, media_ids=[media.media_id])
+    resp = _create_tweet(client, text=text, media_ids=[media.media_id])
     tweet_id = resp.data["id"]
     log.info("Posted video tweet %s", tweet_id)
     return tweet_id

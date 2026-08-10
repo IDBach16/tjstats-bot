@@ -116,7 +116,12 @@ async def _generate_and_post(generator) -> None:
     else:
         tweet_id = poster.post_text(content.text)
 
-    record_post(generator.name, tweet_id, content.tags)
+    if DRY_RUN:
+        # Recording here would poison the de-dup history (e.g. newsroom's 14-day
+        # "recently covered" check) with players that were never actually posted.
+        log.info("[DRY RUN] Not recording post history")
+    else:
+        record_post(generator.name, tweet_id, content.tags)
     log.info("Done — tweet %s", tweet_id)
 
     # Handle reply chain (walks nested .reply links for threads)
@@ -137,6 +142,11 @@ async def _generate_and_post(generator) -> None:
                 )
                 log.info("Posted reply — tweet %s", rid)
                 reply_to_id = rid
+            except poster.QuotaExhausted:
+                # Every further write fails the same way; a standalone retry would
+                # only strand a thread fragment on the timeline.
+                log.error("Out of X posting credits — abandoning the rest of the thread")
+                raise
             except Exception:
                 log.warning("Reply failed, posting as standalone tweet", exc_info=True)
                 rid = poster.post_text(reply.text)
@@ -185,6 +195,9 @@ async def _generate_and_post(generator) -> None:
                     )
                 log.info("Posted thread reply #%d — tweet %s", i + 1, rid)
                 reply_to_id = rid  # chain replies
+            except poster.QuotaExhausted:
+                log.error("Out of X posting credits — abandoning thread after reply #%d", i)
+                raise
             except Exception:
                 log.warning("Thread reply #%d failed", i + 1, exc_info=True)
 
@@ -213,7 +226,14 @@ def main() -> None:
     args = parser.parse_args()
     DRY_RUN = args.dry_run
 
-    asyncio.run(run_post(args.slot, args.generator))
+    try:
+        asyncio.run(run_post(args.slot, args.generator))
+    except poster.QuotaExhausted as exc:
+        # Not a bug in the bot — the X developer account needs credits topped up.
+        # Report it in one readable line instead of a stack trace nobody can act on.
+        log.error("%s Nothing further will post until the plan is topped up at "
+                  "https://developer.x.com — see the 'Usage' tab.", exc)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
