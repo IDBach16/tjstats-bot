@@ -187,7 +187,7 @@ def _build_best_pitch_card(row, pitcher_name, pitch_name_display, game_date):
 
 def _find_savant_video(pitcher_id, pitch_type, game_pk):
     """Find a Savant video for a specific pitch type from a specific game."""
-    from ..video_clips import _download_mp4
+    from ..video_clips import _download_mp4, extract_mp4_url
     try:
         pbp = requests.get(
             f"https://statsapi.mlb.com/api/v1/game/{game_pk}/playByPlay", timeout=15
@@ -205,11 +205,11 @@ def _find_savant_video(pitcher_id, pitch_type, game_pk):
                     # Get video
                     surl = f"https://baseballsavant.mlb.com/sporty-videos?playId={play_id}"
                     resp = requests.get(surl, timeout=10)
-                    mp4s = re.findall(r'https?://sporty-clips\.mlb\.com/[^\s"<>]+\.mp4', resp.text)
-                    if mp4s:
+                    mp4_url = extract_mp4_url(resp.text)
+                    if mp4_url:
                         clip_path = SCREENSHOTS_DIR.parent / "data" / "clips" / f"best_pitch_{pitcher_id}.mp4"
                         clip_path.parent.mkdir(parents=True, exist_ok=True)
-                        if _download_mp4(mp4s[0], clip_path):
+                        if _download_mp4(mp4_url, clip_path):
                             return clip_path
                     break
             break

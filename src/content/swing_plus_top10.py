@@ -26,7 +26,7 @@ from PIL import Image as PILImage, ImageDraw
 
 from .base import ContentGenerator, PostContent
 from ..config import SCREENSHOTS_DIR, MLB_SEASON, DEFAULT_HASHTAGS
-from ..video_clips import _download_mp4
+from ..video_clips import _download_mp4, extract_mp4_url
 
 log = logging.getLogger(__name__)
 
@@ -400,17 +400,15 @@ def _get_savant_video(player_id, player_name):
                             continue
                         surl = f"https://baseballsavant.mlb.com/sporty-videos?playId={play_id}"
                         sr = requests.get(surl, timeout=10)
-                        mp4s = re.findall(
-                            r'https?://sporty-clips\.mlb\.com/[^\s"<>]+\.mp4', sr.text
-                        )
-                        if mp4s:
+                        mp4_url = extract_mp4_url(sr.text)
+                        if mp4_url:
                             safe = player_name.replace(" ", "_").lower()
                             clip_path = (
                                 SCREENSHOTS_DIR.parent / "data" / "clips"
                                 / f"swing_{safe}_{pid}.mp4"
                             )
                             clip_path.parent.mkdir(parents=True, exist_ok=True)
-                            if _download_mp4(mp4s[0], clip_path):
+                            if _download_mp4(mp4_url, clip_path):
                                 log.info("Got %s video: %s from game %s", player_name, pbp_event, game_pk)
                                 return clip_path
                         break  # only try last playEvent per at-bat

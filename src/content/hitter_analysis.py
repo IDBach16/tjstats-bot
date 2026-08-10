@@ -18,9 +18,9 @@ import requests
 
 from .base import ContentGenerator, PostContent
 from ..config import SCREENSHOTS_DIR, CLIPS_DIR, MLB_SEASON, DEFAULT_HASHTAGS
-from ..video_clips import _download_mp4
+from ..video_clips import _download_mp4, extract_mp4_url
 from .swing_plus_top10 import _compute_swing_plus, FEATURES, SWING_PLUS_SD
-from ..charts import plot_hitter_card
+from ..charts import plot_hitter_card, ordinal
 
 log = logging.getLogger(__name__)
 
@@ -157,12 +157,10 @@ def _get_hitter_videos(player_id: int, player_name: str, max_clips: int = 3):
 
                         surl = f"https://baseballsavant.mlb.com/sporty-videos?playId={play_id}"
                         sr = requests.get(surl, timeout=10)
-                        mp4s = re.findall(
-                            r'https?://sporty-clips\.mlb\.com/[^\s"<>]+\.mp4', sr.text
-                        )
-                        if mp4s:
+                        mp4_url = extract_mp4_url(sr.text)
+                        if mp4_url:
                             clip_path = CLIPS_DIR / f"analysis_{safe_name}_{label}.mp4"
-                            if _download_mp4(mp4s[0], clip_path):
+                            if _download_mp4(mp4_url, clip_path):
                                 clips[label] = (clip_path, ev_speed, la)
                                 log.info("Got %s %s video: EV=%.1f LA=%.1f",
                                          player_name, label, ev_speed, la)
@@ -228,55 +226,55 @@ def _build_analysis_tweets(row: pd.Series, swing_path: pd.DataFrame | None,
         # Contact-over-power profile (like Hayes)
         sq_pct = sq_up * 100 if sq_up <= 1 else sq_up
         tweets.append(
-            f"{sq_pct:.0f}% squared up ({sq_up_pct}th pctl), "
+            f"{sq_pct:.0f}% squared up ({ordinal(sq_up_pct)} pctl), "
             f"{hip * 100 if hip <= 1 else hip:.0f}% hit into play. "
             f"Elite bat-to-ball. That's not the issue."
         )
         tweets.append(
-            f"{brl:.1f}% barrel rate ({brl_pct}th pctl). "
-            f"{hard_sw * 100 if hard_sw <= 1 else hard_sw:.1f}% hard swing rate ({hard_sw_pct}th pctl). "
+            f"{brl:.1f}% barrel rate ({ordinal(brl_pct)} pctl). "
+            f"{hard_sw * 100 if hard_sw <= 1 else hard_sw:.1f}% hard swing rate ({ordinal(hard_sw_pct)} pctl). "
             f"Contact without damage."
         )
         if flat_swing and not np.isnan(aa) and not np.isnan(tilt):
             tweets.append(
-                f"{aa:.0f}° attack angle ({aa_pct}th pctl), "
-                f"{tilt:.0f}° swing tilt ({tilt_pct}th pctl). "
+                f"{aa:.0f}° attack angle ({ordinal(aa_pct)} pctl), "
+                f"{tilt:.0f}° swing tilt ({ordinal(tilt_pct)} pctl). "
                 f"Bat is too flat — needs more loft to barrel up."
             )
         else:
             tweets.append(
-                f"Bat speed {bat_spd:.1f} mph ({bat_spd_pct}th pctl). "
-                f"Swing length {sw_len:.1f} ft ({sw_len_pct}th pctl). "
+                f"Bat speed {bat_spd:.1f} mph ({ordinal(bat_spd_pct)} pctl). "
+                f"Swing length {sw_len:.1f} ft ({ordinal(sw_len_pct)} pctl). "
                 f"Needs more intent to generate damage."
             )
     elif high_power and low_contact:
         # Power-over-contact profile
         tweets.append(
-            f"Bat speed {bat_spd:.1f} mph ({bat_spd_pct}th pctl). "
-            f"{brl:.1f}% barrel rate ({brl_pct}th pctl). "
+            f"Bat speed {bat_spd:.1f} mph ({ordinal(bat_spd_pct)} pctl). "
+            f"{brl:.1f}% barrel rate ({ordinal(brl_pct)} pctl). "
             f"The power is elite."
         )
         sq_pct = sq_up * 100 if sq_up <= 1 else sq_up
         tweets.append(
-            f"{sq_pct:.0f}% squared up ({sq_up_pct}th pctl). "
+            f"{sq_pct:.0f}% squared up ({ordinal(sq_up_pct)} pctl). "
             f"{int(swords)} swords. "
             f"Bat-to-ball needs work — too many whiffs."
         )
         tweets.append(
-            f"Swing length {sw_len:.1f} ft ({sw_len_pct}th pctl). "
+            f"Swing length {sw_len:.1f} ft ({ordinal(sw_len_pct)} pctl). "
             f"A shorter path to the ball could improve contact without losing power."
         )
     elif high_power and high_contact:
         # Elite profile
         sq_pct = sq_up * 100 if sq_up <= 1 else sq_up
         tweets.append(
-            f"Bat speed {bat_spd:.1f} mph ({bat_spd_pct}th pctl). "
-            f"{brl:.1f}% barrels ({brl_pct}th pctl). "
+            f"Bat speed {bat_spd:.1f} mph ({ordinal(bat_spd_pct)} pctl). "
+            f"{brl:.1f}% barrels ({ordinal(brl_pct)} pctl). "
             f"Elite damage output."
         )
         tweets.append(
-            f"{sq_pct:.0f}% squared up ({sq_up_pct}th pctl). "
-            f"{hip * 100 if hip <= 1 else hip:.0f}% hit into play ({hip_pct}th pctl). "
+            f"{sq_pct:.0f}% squared up ({ordinal(sq_up_pct)} pctl). "
+            f"{hip * 100 if hip <= 1 else hip:.0f}% hit into play ({ordinal(hip_pct)} pctl). "
             f"Contact + power = the full package."
         )
         if not np.isnan(aa) and not np.isnan(tilt):
@@ -292,20 +290,20 @@ def _build_analysis_tweets(row: pd.Series, swing_path: pd.DataFrame | None,
     else:
         # Generic analysis
         tweets.append(
-            f"Bat speed {bat_spd:.1f} mph ({bat_spd_pct}th pctl). "
-            f"{brl:.1f}% barrels ({brl_pct}th pctl). "
-            f"Swing length {sw_len:.1f} ft ({sw_len_pct}th pctl)."
+            f"Bat speed {bat_spd:.1f} mph ({ordinal(bat_spd_pct)} pctl). "
+            f"{brl:.1f}% barrels ({ordinal(brl_pct)} pctl). "
+            f"Swing length {sw_len:.1f} ft ({ordinal(sw_len_pct)} pctl)."
         )
         sq_pct = sq_up * 100 if sq_up <= 1 else sq_up
         tweets.append(
-            f"{sq_pct:.0f}% squared up ({sq_up_pct}th pctl). "
-            f"{hard_sw * 100 if hard_sw <= 1 else hard_sw:.1f}% hard swing ({hard_sw_pct}th pctl). "
-            f"{hip * 100 if hip <= 1 else hip:.0f}% hit into play ({hip_pct}th pctl)."
+            f"{sq_pct:.0f}% squared up ({ordinal(sq_up_pct)} pctl). "
+            f"{hard_sw * 100 if hard_sw <= 1 else hard_sw:.1f}% hard swing ({ordinal(hard_sw_pct)} pctl). "
+            f"{hip * 100 if hip <= 1 else hip:.0f}% hit into play ({ordinal(hip_pct)} pctl)."
         )
         if not np.isnan(aa) and not np.isnan(tilt):
             tweets.append(
-                f"{aa:.0f}° attack angle ({aa_pct}th pctl). "
-                f"{tilt:.0f}° swing tilt ({tilt_pct}th pctl). "
+                f"{aa:.0f}° attack angle ({ordinal(aa_pct)} pctl). "
+                f"{tilt:.0f}° swing tilt ({ordinal(tilt_pct)} pctl). "
                 f"xwOBA {xwoba:.3f}."
             )
         else:

@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import html
 import logging
+import re
 import time
+import urllib.parse
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -32,6 +35,28 @@ _PITCH_TYPE_MAP = {
 }
 
 MAX_CLIP_SIZE_MB = 50
+
+# sporty-videos serves the mp4 URL inside HTML, so the base64 padding ("==")
+# arrives escaped — sometimes doubly, as "&#x3D;&%23x3D;". Left as-is the URL
+# 404s, which silently killed every clip fetch.
+_MP4_IN_HTML = re.compile(r'https?://sporty-clips\.mlb\.com/[^\s"\'<>]+?\.mp4')
+
+
+def _normalize_media_url(url: str) -> str:
+    """Undo the URL-/HTML-escaping Savant applies to embedded mp4 links."""
+    prev = None
+    while prev != url:
+        prev = url
+        url = html.unescape(urllib.parse.unquote(url))
+    return url
+
+
+def extract_mp4_url(page_html: str) -> str | None:
+    """Pull the first sporty-clips mp4 URL out of a sporty-videos page."""
+    match = _MP4_IN_HTML.search(page_html)
+    if not match:
+        return None
+    return _normalize_media_url(match.group(0))
 
 
 def _fetch_statcast(pitcher_id: int, start: date, end: date):
@@ -236,6 +261,7 @@ def _pick_best_mp4(media_playback: dict) -> str | None:
 
 def _download_mp4(url: str, output_path: Path) -> bool:
     """Stream-download an MP4 file. Returns True on success."""
+    url = _normalize_media_url(url)
     try:
         with requests.get(url, stream=True, timeout=30) as resp:
             resp.raise_for_status()
@@ -377,10 +403,8 @@ def get_game_strikeout_clip(game_pk: int, pitcher_id: int, pitcher_name: str) ->
             pass
         # Fallback: parse mp4 URL from HTML response
         if not mp4_url:
-            import re
-            mp4_matches = re.findall(r'(https?://[^\s"\']+\.mp4[^\s"\']*)', resp.text)
-            if mp4_matches:
-                mp4_url = mp4_matches[0]
+            mp4_url = extract_mp4_url(resp.text)
+            if mp4_url:
                 log.info("Extracted mp4 URL from HTML for playId=%s", target_play_id)
     except Exception:
         log.warning("Failed to fetch sporty-videos for playId=%s", target_play_id,
