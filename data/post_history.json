@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-20T16:10:41.336656",
-      "generator": "reds_summary",
-      "tweet_id": "2068365931001110591",
-      "tags": [
-        "reds_summary",
-        "2026-06-19"
-      ]
-    },
-    {
       "date": "2026-06-20T16:11:27.621471",
       "generator": "pitcher_card",
       "tweet_id": "2068366105257673137",
@@ -1863,6 +1854,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_kyle_stowers"
+      ]
+    },
+    {
+      "date": "2026-08-11T19:53:17.548161",
+      "generator": "hitter_analysis",
+      "tweet_id": "2087266120537706576",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_jackson_chourio"
       ]
     }
   ]
