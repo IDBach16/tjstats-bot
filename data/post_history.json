@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-19T16:29:22.307278",
-      "generator": "pitching_summary",
-      "tweet_id": "2068008211672625323",
-      "tags": [
-        "pitching_summary",
-        "Yoshinobu Yamamoto"
-      ]
-    },
-    {
       "date": "2026-06-19T20:23:33.164141",
       "generator": "hitter_analysis",
       "tweet_id": "2068067178897891518",
@@ -1863,6 +1854,15 @@
       "tags": [
         "reds_summary",
         "no_game"
+      ]
+    },
+    {
+      "date": "2026-08-11T15:46:23.711983",
+      "generator": "pitcher_card",
+      "tweet_id": "2087203965905904122",
+      "tags": [
+        "pitcher_card",
+        "Logan Webb"
       ]
     }
   ]
