@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-22T18:14:13.694736",
-      "generator": "reds_summary",
-      "tweet_id": "2069121796830310826",
-      "tags": [
-        "reds_summary",
-        "2026-06-21"
-      ]
-    },
-    {
       "date": "2026-06-22T18:15:13.828161",
       "generator": "pitching_summary",
       "tweet_id": "2069122026355200260",
@@ -1864,6 +1855,16 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_jake_bauers"
+      ]
+    },
+    {
+      "date": "2026-08-12T21:33:03.933663",
+      "generator": "newsroom",
+      "tweet_id": "2087653617234776421",
+      "tags": [
+        "newsroom",
+        "overperformer",
+        "Mickey Moniak"
       ]
     }
   ]
