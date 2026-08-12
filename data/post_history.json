@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-20T20:10:16.329861",
-      "generator": "hitter_analysis",
-      "tweet_id": "2068426224687620505",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_jackson_chourio"
-      ]
-    },
-    {
       "date": "2026-06-21T15:47:14.445844",
       "generator": "pitching_summary",
       "tweet_id": "2068722386472403139",
@@ -1864,6 +1855,15 @@
         "newsroom",
         "bat_speed",
         "Junior Caminero"
+      ]
+    },
+    {
+      "date": "2026-08-12T14:52:11.752662",
+      "generator": "reds_summary",
+      "tweet_id": "2087552734723543223",
+      "tags": [
+        "reds_summary",
+        "2026-08-11"
       ]
     }
   ]
