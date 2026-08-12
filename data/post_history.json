@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-21T20:20:02.911225",
-      "generator": "hitter_analysis",
-      "tweet_id": "2068791072738639920",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_edouard_julien"
-      ]
-    },
-    {
       "date": "2026-06-22T18:14:13.694736",
       "generator": "reds_summary",
       "tweet_id": "2069121796830310826",
@@ -1864,6 +1855,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_trent_grisham"
+      ]
+    },
+    {
+      "date": "2026-08-12T19:55:05.819568",
+      "generator": "hitter_analysis",
+      "tweet_id": "2087628962235032030",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_jake_bauers"
       ]
     }
   ]
