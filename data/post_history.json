@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-21T15:47:14.445844",
-      "generator": "pitching_summary",
-      "tweet_id": "2068722386472403139",
-      "tags": [
-        "pitching_summary",
-        "Dylan Cease"
-      ]
-    },
-    {
       "date": "2026-06-21T16:24:46.996901",
       "generator": "reds_summary",
       "tweet_id": "2068731866262204434",
@@ -1864,6 +1855,15 @@
       "tags": [
         "reds_summary",
         "2026-08-11"
+      ]
+    },
+    {
+      "date": "2026-08-12T16:59:05.596636",
+      "generator": "pitching_summary",
+      "tweet_id": "2087584630148935750",
+      "tags": [
+        "pitching_summary",
+        "Yoshinobu Yamamoto"
       ]
     }
   ]
