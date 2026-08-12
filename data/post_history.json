@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-21T16:24:46.996901",
-      "generator": "reds_summary",
-      "tweet_id": "2068731866262204434",
-      "tags": [
-        "reds_summary",
-        "2026-06-20"
-      ]
-    },
-    {
       "date": "2026-06-21T20:20:02.911225",
       "generator": "hitter_analysis",
       "tweet_id": "2068791072738639920",
@@ -1864,6 +1855,15 @@
       "tags": [
         "pitching_summary",
         "Yoshinobu Yamamoto"
+      ]
+    },
+    {
+      "date": "2026-08-12T19:07:54.354603",
+      "generator": "hitter_analysis",
+      "tweet_id": "2087617086306521498",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_trent_grisham"
       ]
     }
   ]
