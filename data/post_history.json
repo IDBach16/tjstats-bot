@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-23T16:23:38.172817",
-      "generator": "reds_summary",
-      "tweet_id": "2069456353093915125",
-      "tags": [
-        "reds_summary",
-        "2026-06-22"
-      ]
-    },
-    {
       "date": "2026-06-23T16:24:55.934046",
       "generator": "pitcher_card",
       "tweet_id": "2069456651770277895",
@@ -1865,6 +1856,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_owen_caissie"
+      ]
+    },
+    {
+      "date": "2026-08-13T19:50:19.137853",
+      "generator": "hitter_analysis",
+      "tweet_id": "2087990147719557579",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_francisco_alvarez"
       ]
     }
   ]
