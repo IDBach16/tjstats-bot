@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-22T21:27:58.733391",
-      "generator": "hitter_analysis",
-      "tweet_id": "2069170555769503953",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_elly_de_la_cruz"
-      ]
-    },
-    {
       "date": "2026-06-23T16:23:38.172817",
       "generator": "reds_summary",
       "tweet_id": "2069456353093915125",
@@ -1865,6 +1856,15 @@
       "tags": [
         "pitcher_card",
         "Seth Lugo"
+      ]
+    },
+    {
+      "date": "2026-08-13T19:08:45.111611",
+      "generator": "hitter_analysis",
+      "tweet_id": "2087979687041527874",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_owen_caissie"
       ]
     }
   ]
