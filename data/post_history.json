@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-23T16:24:55.934046",
-      "generator": "pitcher_card",
-      "tweet_id": "2069456651770277895",
-      "tags": [
-        "pitcher_card",
-        "Framber Valdez"
-      ]
-    },
-    {
       "date": "2026-06-23T20:58:45.118151",
       "generator": "hitter_analysis",
       "tweet_id": "2069525588562604296",
@@ -1865,6 +1856,16 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_francisco_alvarez"
+      ]
+    },
+    {
+      "date": "2026-08-13T21:33:13.162229",
+      "generator": "newsroom",
+      "tweet_id": "2088016043801518140",
+      "tags": [
+        "newsroom",
+        "underperformer",
+        "Will Smith"
       ]
     }
   ]
