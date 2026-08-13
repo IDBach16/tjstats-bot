@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-22T18:15:13.828161",
-      "generator": "pitching_summary",
-      "tweet_id": "2069122026355200260",
-      "tags": [
-        "pitching_summary",
-        "Seth Lugo"
-      ]
-    },
-    {
       "date": "2026-06-22T19:32:56.307399",
       "generator": "hitter_analysis",
       "tweet_id": "2069141604724547672",
@@ -1865,6 +1856,15 @@
         "newsroom",
         "overperformer",
         "Mickey Moniak"
+      ]
+    },
+    {
+      "date": "2026-08-13T14:51:44.780335",
+      "generator": "reds_summary",
+      "tweet_id": "2087915009481335282",
+      "tags": [
+        "reds_summary",
+        "2026-08-12"
       ]
     }
   ]
