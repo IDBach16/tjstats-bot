@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-24T16:10:43.014619",
-      "generator": "reds_summary",
-      "tweet_id": "2069815489967112562",
-      "tags": [
-        "reds_summary",
-        "2026-06-23"
-      ]
-    },
-    {
       "date": "2026-06-24T16:58:32.696563",
       "generator": "pitching_summary",
       "tweet_id": "2069827492714844383",
@@ -1866,6 +1857,15 @@
       "tags": [
         "reds_summary",
         "2026-08-13"
+      ]
+    },
+    {
+      "date": "2026-08-14T15:39:41.013432",
+      "generator": "pitching_summary",
+      "tweet_id": "2088289439596564570",
+      "tags": [
+        "pitching_summary",
+        "Cole Ragans"
       ]
     }
   ]
