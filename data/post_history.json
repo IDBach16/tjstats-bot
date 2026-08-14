@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-25T16:17:28.213825",
-      "generator": "reds_summary",
-      "tweet_id": "2070179576802632076",
-      "tags": [
-        "reds_summary",
-        "2026-06-24"
-      ]
-    },
-    {
       "date": "2026-06-25T18:13:15.454638",
       "generator": "pitcher_card",
       "tweet_id": "2070208673771929827",
@@ -1866,6 +1857,16 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_luis_garc\u00eda_jr."
+      ]
+    },
+    {
+      "date": "2026-08-14T21:14:02.098033",
+      "generator": "newsroom",
+      "tweet_id": "2088373603796467935",
+      "tags": [
+        "newsroom",
+        "nasty_pitch",
+        "Chase Burns"
       ]
     }
   ]
