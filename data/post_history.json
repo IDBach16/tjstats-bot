@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-24T16:58:32.696563",
-      "generator": "pitching_summary",
-      "tweet_id": "2069827492714844383",
-      "tags": [
-        "pitching_summary",
-        "Paul Skenes"
-      ]
-    },
-    {
       "date": "2026-06-24T20:26:20.424019",
       "generator": "hitter_analysis",
       "tweet_id": "2069879819693658417",
@@ -1866,6 +1857,15 @@
       "tags": [
         "pitching_summary",
         "Cole Ragans"
+      ]
+    },
+    {
+      "date": "2026-08-14T19:01:23.415920",
+      "generator": "hitter_analysis",
+      "tweet_id": "2088340222224261277",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_mookie_betts"
       ]
     }
   ]
