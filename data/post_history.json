@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-26T16:08:15.971746",
-      "generator": "reds_summary",
-      "tweet_id": "2070539649416831093",
-      "tags": [
-        "reds_summary",
-        "no_game"
-      ]
-    },
-    {
       "date": "2026-06-26T16:08:44.919516",
       "generator": "pitching_summary",
       "tweet_id": "2070539749253902691",
@@ -1867,6 +1858,16 @@
       "tags": [
         "pitcher_card",
         "Hunter Brown"
+      ]
+    },
+    {
+      "date": "2026-08-15T18:37:32.281055",
+      "generator": "newsroom",
+      "tweet_id": "2088696607864668390",
+      "tags": [
+        "newsroom",
+        "nasty_pitch",
+        "Fernando Cruz"
       ]
     }
   ]
