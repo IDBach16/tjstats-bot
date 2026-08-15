@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-25T18:13:15.454638",
-      "generator": "pitcher_card",
-      "tweet_id": "2070208673771929827",
-      "tags": [
-        "pitcher_card",
-        "Hunter Brown"
-      ]
-    },
-    {
       "date": "2026-06-25T20:51:50.723705",
       "generator": "hitter_analysis",
       "tweet_id": "2070248626249736517",
@@ -1867,6 +1858,15 @@
         "newsroom",
         "nasty_pitch",
         "Chase Burns"
+      ]
+    },
+    {
+      "date": "2026-08-15T14:14:22.729131",
+      "generator": "reds_summary",
+      "tweet_id": "2088630381499346953",
+      "tags": [
+        "reds_summary",
+        "2026-08-14"
       ]
     }
   ]
