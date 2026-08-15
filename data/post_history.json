@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-25T20:51:50.723705",
-      "generator": "hitter_analysis",
-      "tweet_id": "2070248626249736517",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_spencer_torkelson"
-      ]
-    },
-    {
       "date": "2026-06-26T16:08:15.971746",
       "generator": "reds_summary",
       "tweet_id": "2070539649416831093",
@@ -1867,6 +1858,15 @@
       "tags": [
         "reds_summary",
         "2026-08-14"
+      ]
+    },
+    {
+      "date": "2026-08-15T15:08:57.197693",
+      "generator": "pitcher_card",
+      "tweet_id": "2088644032079581185",
+      "tags": [
+        "pitcher_card",
+        "Hunter Brown"
       ]
     }
   ]
