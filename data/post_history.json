@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-26T16:08:44.919516",
-      "generator": "pitching_summary",
-      "tweet_id": "2070539749253902691",
-      "tags": [
-        "pitching_summary",
-        "Logan Webb"
-      ]
-    },
-    {
       "date": "2026-06-26T20:25:58.864863",
       "generator": "hitter_analysis",
       "tweet_id": "2070604505121780180",
@@ -1868,6 +1859,15 @@
         "newsroom",
         "nasty_pitch",
         "Fernando Cruz"
+      ]
+    },
+    {
+      "date": "2026-08-15T19:13:55.221734",
+      "generator": "hitter_analysis",
+      "tweet_id": "2088705763560837516",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_luke_raley"
       ]
     }
   ]
