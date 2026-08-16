@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-26T20:25:58.864863",
-      "generator": "hitter_analysis",
-      "tweet_id": "2070604505121780180",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_luke_raley"
-      ]
-    },
-    {
       "date": "2026-06-27T15:09:44.292263",
       "generator": "pitcher_card",
       "tweet_id": "2070887275349909616",
@@ -1868,6 +1859,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_luke_raley"
+      ]
+    },
+    {
+      "date": "2026-08-16T14:15:21.132141",
+      "generator": "reds_summary",
+      "tweet_id": "2088993014337425596",
+      "tags": [
+        "reds_summary",
+        "2026-08-15"
       ]
     }
   ]
