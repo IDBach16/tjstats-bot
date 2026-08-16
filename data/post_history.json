@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-27T20:02:47.570305",
-      "generator": "hitter_analysis",
-      "tweet_id": "2070961057342890449",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_byron_buxton"
-      ]
-    },
-    {
       "date": "2026-06-28T15:13:40.432609",
       "generator": "pitching_summary",
       "tweet_id": "2071250665859584157",
@@ -1869,6 +1860,15 @@
         "newsroom",
         "pitcher_stuff",
         "Eury P\u00e9rez"
+      ]
+    },
+    {
+      "date": "2026-08-16T19:12:54.344377",
+      "generator": "hitter_analysis",
+      "tweet_id": "2089067896106602871",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_brandon_marsh"
       ]
     }
   ]
