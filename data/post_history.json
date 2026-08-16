@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-27T17:14:19.633324",
-      "generator": "reds_summary",
-      "tweet_id": "2070918661578096823",
-      "tags": [
-        "reds_summary",
-        "2026-06-26"
-      ]
-    },
-    {
       "date": "2026-06-27T20:02:47.570305",
       "generator": "hitter_analysis",
       "tweet_id": "2070961057342890449",
@@ -1868,6 +1859,16 @@
       "tags": [
         "pitching_summary",
         "Zack Wheeler"
+      ]
+    },
+    {
+      "date": "2026-08-16T18:36:07.551399",
+      "generator": "newsroom",
+      "tweet_id": "2089058640321810523",
+      "tags": [
+        "newsroom",
+        "pitcher_stuff",
+        "Eury P\u00e9rez"
       ]
     }
   ]
