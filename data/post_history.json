@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-28T15:13:40.432609",
-      "generator": "pitching_summary",
-      "tweet_id": "2071250665859584157",
-      "tags": [
-        "pitching_summary",
-        "Tarik Skubal"
-      ]
-    },
-    {
       "date": "2026-06-28T16:02:00.559137",
       "generator": "reds_summary",
       "tweet_id": "2071262850207850818",
@@ -1869,6 +1860,16 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_brandon_marsh"
+      ]
+    },
+    {
+      "date": "2026-08-16T21:09:05.039020",
+      "generator": "newsroom",
+      "tweet_id": "2089097133618270316",
+      "tags": [
+        "newsroom",
+        "underperformer",
+        "Edmundo Sosa"
       ]
     }
   ]
