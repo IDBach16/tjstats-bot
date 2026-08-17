@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-28T16:02:00.559137",
-      "generator": "reds_summary",
-      "tweet_id": "2071262850207850818",
-      "tags": [
-        "reds_summary",
-        "2026-06-27"
-      ]
-    },
-    {
       "date": "2026-06-28T20:05:00.153328",
       "generator": "hitter_analysis",
       "tweet_id": "2071324001100571083",
@@ -1870,6 +1861,15 @@
         "newsroom",
         "underperformer",
         "Edmundo Sosa"
+      ]
+    },
+    {
+      "date": "2026-08-17T14:19:36.900795",
+      "generator": "reds_summary",
+      "tweet_id": "2089356474984407401",
+      "tags": [
+        "reds_summary",
+        "2026-08-16"
       ]
     }
   ]
