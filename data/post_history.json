@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-29T16:50:44.489541",
-      "generator": "reds_summary",
-      "tweet_id": "2071637501337370781",
-      "tags": [
-        "reds_summary",
-        "2026-06-28"
-      ]
-    },
-    {
       "date": "2026-06-29T20:46:11.121014",
       "generator": "hitter_analysis",
       "tweet_id": "2071696753192046645",
@@ -1870,6 +1861,15 @@
       "tags": [
         "pitching_summary",
         "Paul Skenes"
+      ]
+    },
+    {
+      "date": "2026-08-17T19:19:59.068776",
+      "generator": "hitter_analysis",
+      "tweet_id": "2089432065292763544",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_byron_buxton"
       ]
     }
   ]
