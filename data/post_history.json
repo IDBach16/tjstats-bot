@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-28T20:05:00.153328",
-      "generator": "hitter_analysis",
-      "tweet_id": "2071324001100571083",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_brandon_marsh"
-      ]
-    },
-    {
       "date": "2026-06-29T16:50:44.489541",
       "generator": "reds_summary",
       "tweet_id": "2071637501337370781",
@@ -1870,6 +1861,15 @@
       "tags": [
         "reds_summary",
         "2026-08-16"
+      ]
+    },
+    {
+      "date": "2026-08-17T15:13:33.175183",
+      "generator": "pitching_summary",
+      "tweet_id": "2089370021864853679",
+      "tags": [
+        "pitching_summary",
+        "Paul Skenes"
       ]
     }
   ]
