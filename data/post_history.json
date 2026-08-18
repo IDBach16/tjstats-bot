@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-30T16:18:30.917576",
-      "generator": "reds_summary",
-      "tweet_id": "2071991779310682439",
-      "tags": [
-        "reds_summary",
-        "2026-06-29"
-      ]
-    },
-    {
       "date": "2026-06-30T20:50:04.280733",
       "generator": "hitter_analysis",
       "tweet_id": "2072060118938644946",
@@ -1870,6 +1861,15 @@
       "tags": [
         "reds_summary",
         "2026-08-17"
+      ]
+    },
+    {
+      "date": "2026-08-18T15:19:00.201550",
+      "generator": "pitcher_card",
+      "tweet_id": "2089733753094496502",
+      "tags": [
+        "pitcher_card",
+        "Sonny Gray"
       ]
     }
   ]
