@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-29T20:46:11.121014",
-      "generator": "hitter_analysis",
-      "tweet_id": "2071696753192046645",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_james_wood"
-      ]
-    },
-    {
       "date": "2026-06-30T16:18:30.917576",
       "generator": "reds_summary",
       "tweet_id": "2071991779310682439",
@@ -1870,6 +1861,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_byron_buxton"
+      ]
+    },
+    {
+      "date": "2026-08-18T14:24:25.019644",
+      "generator": "reds_summary",
+      "tweet_id": "2089720070972768738",
+      "tags": [
+        "reds_summary",
+        "2026-08-17"
       ]
     }
   ]
