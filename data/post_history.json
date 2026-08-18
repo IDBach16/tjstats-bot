@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-06-30T20:50:04.280733",
-      "generator": "hitter_analysis",
-      "tweet_id": "2072060118938644946",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_francisco_alvarez"
-      ]
-    },
-    {
       "date": "2026-07-01T16:19:30.025403",
       "generator": "reds_summary",
       "tweet_id": "2072354415567315125",
@@ -1870,6 +1861,15 @@
       "tags": [
         "pitcher_card",
         "Sonny Gray"
+      ]
+    },
+    {
+      "date": "2026-08-18T19:21:32.501058",
+      "generator": "hitter_analysis",
+      "tweet_id": "2089794844986114119",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_kyle_stowers"
       ]
     }
   ]
