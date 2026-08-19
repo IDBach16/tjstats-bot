@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-01T20:44:59.834449",
-      "generator": "hitter_analysis",
-      "tweet_id": "2072421229751845244",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_jackson_chourio"
-      ]
-    },
-    {
       "date": "2026-07-02T16:01:26.685214",
       "generator": "reds_summary",
       "tweet_id": "2072712259483107331",
@@ -1870,6 +1861,15 @@
       "tags": [
         "pitching_summary",
         "Garrett Crochet"
+      ]
+    },
+    {
+      "date": "2026-08-19T19:25:21.205204",
+      "generator": "hitter_analysis",
+      "tweet_id": "2090158192248647892",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_jackson_chourio"
       ]
     }
   ]
