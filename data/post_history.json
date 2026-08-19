@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-01T16:19:30.025403",
-      "generator": "reds_summary",
-      "tweet_id": "2072354415567315125",
-      "tags": [
-        "reds_summary",
-        "2026-06-30"
-      ]
-    },
-    {
       "date": "2026-07-01T16:20:17.968728",
       "generator": "pitching_summary",
       "tweet_id": "2072354596685775376",
@@ -1870,6 +1861,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_kyle_stowers"
+      ]
+    },
+    {
+      "date": "2026-08-19T14:25:00.676103",
+      "generator": "reds_summary",
+      "tweet_id": "2090082608289812563",
+      "tags": [
+        "reds_summary",
+        "2026-08-18"
       ]
     }
   ]
