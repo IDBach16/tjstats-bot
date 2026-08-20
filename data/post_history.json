@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-02T16:01:26.685214",
-      "generator": "reds_summary",
-      "tweet_id": "2072712259483107331",
-      "tags": [
-        "reds_summary",
-        "2026-07-01"
-      ]
-    },
-    {
       "date": "2026-07-02T16:31:50.144234",
       "generator": "pitcher_card",
       "tweet_id": "2072719882269983071",
@@ -1870,6 +1861,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_jackson_chourio"
+      ]
+    },
+    {
+      "date": "2026-08-20T14:27:08.587732",
+      "generator": "reds_summary",
+      "tweet_id": "2090445533106278902",
+      "tags": [
+        "reds_summary",
+        "2026-08-19"
       ]
     }
   ]
