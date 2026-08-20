@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-03T16:18:05.535676",
-      "generator": "reds_summary",
-      "tweet_id": "2073078836552446141",
-      "tags": [
-        "reds_summary",
-        "2026-07-02"
-      ]
-    },
-    {
       "date": "2026-07-03T16:19:19.163557",
       "generator": "pitching_summary",
       "tweet_id": "2073079065502752780",
@@ -1871,6 +1862,15 @@
         "newsroom",
         "nasty_pitch",
         "Andr\u00e9s Mu\u00f1oz"
+      ]
+    },
+    {
+      "date": "2026-08-20T19:22:37.583107",
+      "generator": "hitter_analysis",
+      "tweet_id": "2090519892235805107",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_trent_grisham"
       ]
     }
   ]
