@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-02T16:31:50.144234",
-      "generator": "pitcher_card",
-      "tweet_id": "2072719882269983071",
-      "tags": [
-        "pitcher_card",
-        "Garrett Crochet"
-      ]
-    },
-    {
       "date": "2026-07-02T20:13:52.621532",
       "generator": "hitter_analysis",
       "tweet_id": "2072775786202022225",
@@ -1870,6 +1861,15 @@
       "tags": [
         "reds_summary",
         "2026-08-19"
+      ]
+    },
+    {
+      "date": "2026-08-20T16:38:03.169784",
+      "generator": "pitcher_card",
+      "tweet_id": "2090478453992673645",
+      "tags": [
+        "pitcher_card",
+        "Tarik Skubal"
       ]
     }
   ]
