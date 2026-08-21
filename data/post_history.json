@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-04T14:59:29.144837",
-      "generator": "reds_summary",
-      "tweet_id": "2073421441240854762",
-      "tags": [
-        "reds_summary",
-        "2026-07-03"
-      ]
-    },
-    {
       "date": "2026-07-04T20:03:44.464947",
       "generator": "hitter_analysis",
       "tweet_id": "2073498011188248680",
@@ -1871,6 +1862,15 @@
       "tags": [
         "pitching_summary",
         "Dylan Cease"
+      ]
+    },
+    {
+      "date": "2026-08-21T19:18:43.120275",
+      "generator": "hitter_analysis",
+      "tweet_id": "2090881298357477814",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_owen_caissie"
       ]
     }
   ]
