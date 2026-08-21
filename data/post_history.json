@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-03T16:19:19.163557",
-      "generator": "pitching_summary",
-      "tweet_id": "2073079065502752780",
-      "tags": [
-        "pitching_summary",
-        "Chris Sale"
-      ]
-    },
-    {
       "date": "2026-07-03T20:08:35.511722",
       "generator": "hitter_analysis",
       "tweet_id": "2073136844011929935",
@@ -1871,6 +1862,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_trent_grisham"
+      ]
+    },
+    {
+      "date": "2026-08-21T14:26:09.112755",
+      "generator": "reds_summary",
+      "tweet_id": "2090807671448301825",
+      "tags": [
+        "reds_summary",
+        "2026-08-20"
       ]
     }
   ]
