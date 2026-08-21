@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-03T20:08:35.511722",
-      "generator": "hitter_analysis",
-      "tweet_id": "2073136844011929935",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_mookie_betts"
-      ]
-    },
-    {
       "date": "2026-07-04T14:59:29.144837",
       "generator": "reds_summary",
       "tweet_id": "2073421441240854762",
@@ -1871,6 +1862,15 @@
       "tags": [
         "reds_summary",
         "2026-08-20"
+      ]
+    },
+    {
+      "date": "2026-08-21T16:37:53.288650",
+      "generator": "pitching_summary",
+      "tweet_id": "2090840803153420652",
+      "tags": [
+        "pitching_summary",
+        "Dylan Cease"
       ]
     }
   ]
