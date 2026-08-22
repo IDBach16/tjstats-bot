@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-04T20:03:44.464947",
-      "generator": "hitter_analysis",
-      "tweet_id": "2073498011188248680",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_heliot_ramos"
-      ]
-    },
-    {
       "date": "2026-07-05T15:58:01.608544",
       "generator": "pitching_summary",
       "tweet_id": "2073798529554829414",
@@ -1871,6 +1862,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_owen_caissie"
+      ]
+    },
+    {
+      "date": "2026-08-22T14:13:31.316616",
+      "generator": "reds_summary",
+      "tweet_id": "2091166880811655268",
+      "tags": [
+        "reds_summary",
+        "2026-08-21"
       ]
     }
   ]
