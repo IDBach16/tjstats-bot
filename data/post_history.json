@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-06T17:32:49.138920",
-      "generator": "reds_summary",
-      "tweet_id": "2074184806016106720",
-      "tags": [
-        "reds_summary",
-        "2026-07-05"
-      ]
-    },
-    {
       "date": "2026-07-06T17:33:18.483435",
       "generator": "pitching_summary",
       "tweet_id": "2074184928120668582",
@@ -1871,6 +1862,16 @@
       "tags": [
         "pitching_summary",
         "Ryan Helsley"
+      ]
+    },
+    {
+      "date": "2026-08-23T18:37:02.806357",
+      "generator": "newsroom",
+      "tweet_id": "2091595587124859339",
+      "tags": [
+        "newsroom",
+        "underperformer",
+        "Ke'Bryan Hayes"
       ]
     }
   ]
