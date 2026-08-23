@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-05T20:05:43.381294",
-      "generator": "hitter_analysis",
-      "tweet_id": "2073860897534062684",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_fernando_tatis_jr."
-      ]
-    },
-    {
       "date": "2026-07-06T17:32:49.138920",
       "generator": "reds_summary",
       "tweet_id": "2074184806016106720",
@@ -1871,6 +1862,15 @@
       "tags": [
         "reds_summary",
         "2026-08-22"
+      ]
+    },
+    {
+      "date": "2026-08-23T15:09:42.536625",
+      "generator": "pitching_summary",
+      "tweet_id": "2091543374402597099",
+      "tags": [
+        "pitching_summary",
+        "Ryan Helsley"
       ]
     }
   ]
