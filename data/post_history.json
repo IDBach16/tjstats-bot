@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-06T17:33:18.483435",
-      "generator": "pitching_summary",
-      "tweet_id": "2074184928120668582",
-      "tags": [
-        "pitching_summary",
-        "Roki Sasaki"
-      ]
-    },
-    {
       "date": "2026-07-06T17:47:46.593113",
       "generator": "newsroom",
       "tweet_id": "2074188570395316503",
@@ -1872,6 +1863,15 @@
         "newsroom",
         "underperformer",
         "Ke'Bryan Hayes"
+      ]
+    },
+    {
+      "date": "2026-08-23T19:14:22.076590",
+      "generator": "hitter_analysis",
+      "tweet_id": "2091604978997588392",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_mookie_betts"
       ]
     }
   ]
