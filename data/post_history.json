@@ -1,16 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-06T17:47:46.593113",
-      "generator": "newsroom",
-      "tweet_id": "2074188570395316503",
-      "tags": [
-        "newsroom",
-        "nasty_pitch",
-        "Chase Burns"
-      ]
-    },
-    {
       "date": "2026-07-06T18:04:01.402202",
       "generator": "newsroom",
       "tweet_id": "2074192659145445788",
@@ -1872,6 +1862,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_mookie_betts"
+      ]
+    },
+    {
+      "date": "2026-08-24T14:33:30.446299",
+      "generator": "reds_summary",
+      "tweet_id": "2091896686163739072",
+      "tags": [
+        "reds_summary",
+        "2026-08-23"
       ]
     }
   ]
