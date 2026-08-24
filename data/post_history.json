@@ -1,16 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-06T18:04:01.402202",
-      "generator": "newsroom",
-      "tweet_id": "2074192659145445788",
-      "tags": [
-        "newsroom",
-        "underperformer",
-        "Matt McLain"
-      ]
-    },
-    {
       "date": "2026-07-06T20:55:09.586210",
       "generator": "hitter_analysis",
       "tweet_id": "2074235726682804268",
@@ -1871,6 +1861,15 @@
       "tags": [
         "reds_summary",
         "2026-08-23"
+      ]
+    },
+    {
+      "date": "2026-08-24T16:40:32.574814",
+      "generator": "pitching_summary",
+      "tweet_id": "2091928654557192602",
+      "tags": [
+        "pitching_summary",
+        "Roki Sasaki"
       ]
     }
   ]
