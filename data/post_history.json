@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-06T20:55:09.586210",
-      "generator": "hitter_analysis",
-      "tweet_id": "2074235726682804268",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_owen_caissie"
-      ]
-    },
-    {
       "date": "2026-07-06T22:06:54.283849",
       "generator": "newsroom",
       "tweet_id": "2074253782171763063",
@@ -1870,6 +1861,15 @@
       "tags": [
         "pitching_summary",
         "Roki Sasaki"
+      ]
+    },
+    {
+      "date": "2026-08-24T19:20:59.849277",
+      "generator": "hitter_analysis",
+      "tweet_id": "2091969035231543706",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_tyler_stephenson"
       ]
     }
   ]
