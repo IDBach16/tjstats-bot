@@ -1,16 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-06T22:06:54.283849",
-      "generator": "newsroom",
-      "tweet_id": "2074253782171763063",
-      "tags": [
-        "newsroom",
-        "underperformer",
-        "Will Smith"
-      ]
-    },
-    {
       "date": "2026-07-07T14:56:37.187092",
       "generator": "draft_prospect",
       "tweet_id": "2074507884319424966",
@@ -1870,6 +1860,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_tyler_stephenson"
+      ]
+    },
+    {
+      "date": "2026-08-25T14:36:24.630531",
+      "generator": "reds_summary",
+      "tweet_id": "2092259804378992705",
+      "tags": [
+        "reds_summary",
+        "2026-08-24"
       ]
     }
   ]
