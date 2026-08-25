@@ -1,17 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-07T15:40:33.241240",
-      "generator": "draft_prospect",
-      "tweet_id": "2074518940366127326",
-      "tags": [
-        "draft_prospect",
-        "Cole Carlon",
-        "Arizona State Sun Devils",
-        "NCAA"
-      ]
-    },
-    {
       "date": "2026-07-07T16:19:47.204468",
       "generator": "reds_summary",
       "tweet_id": "2074528815276052975",
@@ -1867,6 +1856,16 @@
       "tags": [
         "pitcher_card",
         "Logan Webb"
+      ]
+    },
+    {
+      "date": "2026-08-25T18:47:10.093430",
+      "generator": "newsroom",
+      "tweet_id": "2092322909901537318",
+      "tags": [
+        "newsroom",
+        "nasty_pitch",
+        "Mason Miller"
       ]
     }
   ]
