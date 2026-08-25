@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-07T16:19:47.204468",
-      "generator": "reds_summary",
-      "tweet_id": "2074528815276052975",
-      "tags": [
-        "reds_summary",
-        "no_game"
-      ]
-    },
-    {
       "date": "2026-07-07T16:20:14.152728",
       "generator": "pitcher_card",
       "tweet_id": "2074528903343767854",
@@ -1866,6 +1857,15 @@
         "newsroom",
         "nasty_pitch",
         "Mason Miller"
+      ]
+    },
+    {
+      "date": "2026-08-25T19:22:16.074124",
+      "generator": "hitter_analysis",
+      "tweet_id": "2092331742971716048",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_luke_raley"
       ]
     }
   ]
