@@ -1,17 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-07T14:56:37.187092",
-      "generator": "draft_prospect",
-      "tweet_id": "2074507884319424966",
-      "tags": [
-        "draft_prospect",
-        "Noah Scott",
-        "Oregon State Beavers",
-        "NCAA"
-      ]
-    },
-    {
       "date": "2026-07-07T15:40:33.241240",
       "generator": "draft_prospect",
       "tweet_id": "2074518940366127326",
@@ -1869,6 +1858,15 @@
       "tags": [
         "reds_summary",
         "2026-08-24"
+      ]
+    },
+    {
+      "date": "2026-08-25T15:30:38.539513",
+      "generator": "pitcher_card",
+      "tweet_id": "2092273429965684998",
+      "tags": [
+        "pitcher_card",
+        "Logan Webb"
       ]
     }
   ]
