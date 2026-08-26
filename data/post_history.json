@@ -1,17 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-07T18:54:03.581022",
-      "generator": "draft_prospect",
-      "tweet_id": "2074567637363765381",
-      "tags": [
-        "draft_prospect",
-        "Cole Carlon",
-        "Arizona State Sun Devils",
-        "NCAA"
-      ]
-    },
-    {
       "date": "2026-07-07T19:26:00.508749",
       "generator": "draft_prospect",
       "tweet_id": "2074575677844562134",
@@ -1862,6 +1851,16 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_jac_caglianone"
+      ]
+    },
+    {
+      "date": "2026-08-26T21:25:39.926904",
+      "generator": "newsroom",
+      "tweet_id": "2092725185019285760",
+      "tags": [
+        "newsroom",
+        "bat_speed",
+        "Junior Caminero"
       ]
     }
   ]
