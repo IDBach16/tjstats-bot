@@ -1,17 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-07T18:03:36.716522",
-      "generator": "draft_prospect",
-      "tweet_id": "2074554942208307571",
-      "tags": [
-        "draft_prospect",
-        "Cole Carlon",
-        "Arizona State Sun Devils",
-        "NCAA"
-      ]
-    },
-    {
       "date": "2026-07-07T18:54:03.581022",
       "generator": "draft_prospect",
       "tweet_id": "2074567637363765381",
@@ -1864,6 +1853,15 @@
       "tags": [
         "pitching_summary",
         "Framber Valdez"
+      ]
+    },
+    {
+      "date": "2026-08-26T19:53:58.289099",
+      "generator": "hitter_analysis",
+      "tweet_id": "2092702108902465752",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_jac_caglianone"
       ]
     }
   ]
