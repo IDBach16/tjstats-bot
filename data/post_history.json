@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-07T16:20:14.152728",
-      "generator": "pitcher_card",
-      "tweet_id": "2074528903343767854",
-      "tags": [
-        "pitcher_card",
-        "Sonny Gray"
-      ]
-    },
-    {
       "date": "2026-07-07T17:04:02.157184",
       "generator": "draft_prospect",
       "tweet_id": "2074539949622472860",
@@ -1866,6 +1857,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_luke_raley"
+      ]
+    },
+    {
+      "date": "2026-08-26T14:36:21.420660",
+      "generator": "reds_summary",
+      "tweet_id": "2092622178978324981",
+      "tags": [
+        "reds_summary",
+        "2026-08-25"
       ]
     }
   ]
