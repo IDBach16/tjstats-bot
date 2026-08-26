@@ -1,17 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-07T17:04:02.157184",
-      "generator": "draft_prospect",
-      "tweet_id": "2074539949622472860",
-      "tags": [
-        "draft_prospect",
-        "Cole Carlon",
-        "Arizona State Sun Devils",
-        "NCAA"
-      ]
-    },
-    {
       "date": "2026-07-07T18:03:36.716522",
       "generator": "draft_prospect",
       "tweet_id": "2074554942208307571",
@@ -1866,6 +1855,15 @@
       "tags": [
         "reds_summary",
         "2026-08-25"
+      ]
+    },
+    {
+      "date": "2026-08-26T16:49:42.533340",
+      "generator": "pitching_summary",
+      "tweet_id": "2092655716028780867",
+      "tags": [
+        "pitching_summary",
+        "Framber Valdez"
       ]
     }
   ]
