@@ -1,17 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-07T19:26:00.508749",
-      "generator": "draft_prospect",
-      "tweet_id": "2074575677844562134",
-      "tags": [
-        "draft_prospect",
-        "Cade Townsend",
-        "Ole Miss Rebels",
-        "NCAA"
-      ]
-    },
-    {
       "date": "2026-07-07T21:37:50.088511",
       "generator": "newsroom",
       "tweet_id": "2074608854395183367",
@@ -1861,6 +1850,15 @@
         "newsroom",
         "bat_speed",
         "Junior Caminero"
+      ]
+    },
+    {
+      "date": "2026-08-27T00:19:29.032271",
+      "generator": "reds_summary",
+      "tweet_id": "2092768927596085706",
+      "tags": [
+        "reds_summary",
+        "2026-08-26"
       ]
     }
   ]
