@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-08T00:00:13.158899",
-      "generator": "reds_summary",
-      "tweet_id": "2074644686929613199",
-      "tags": [
-        "reds_summary",
-        "no_game"
-      ]
-    },
-    {
       "date": "2026-07-08T13:03:37.430162",
       "generator": "newsroom_article",
       "tweet_id": "2074841836674339260",
@@ -1858,6 +1849,16 @@
       "tags": [
         "reds_summary",
         "no_game"
+      ]
+    },
+    {
+      "date": "2026-08-28T23:19:46.197008",
+      "generator": "newsroom",
+      "tweet_id": "2093478676033663163",
+      "tags": [
+        "newsroom",
+        "overperformer",
+        "Mickey Moniak"
       ]
     }
   ]
