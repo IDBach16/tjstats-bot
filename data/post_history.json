@@ -1,16 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-08T13:03:37.430162",
-      "generator": "newsroom_article",
-      "tweet_id": "2074841836674339260",
-      "tags": [
-        "newsroom",
-        "article",
-        "Juan Soto\u2019s Hot Streaks Are Delightful"
-      ]
-    },
-    {
       "date": "2026-07-08T15:58:36.442504",
       "generator": "pitching_summary",
       "tweet_id": "2074885851587240254",
@@ -1859,6 +1849,15 @@
         "newsroom",
         "overperformer",
         "Mickey Moniak"
+      ]
+    },
+    {
+      "date": "2026-08-29T00:29:12.177953",
+      "generator": "reds_summary",
+      "tweet_id": "2093496149294371209",
+      "tags": [
+        "reds_summary",
+        "2026-08-28"
       ]
     }
   ]
