@@ -1,16 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-08T21:18:20.605904",
-      "generator": "newsroom",
-      "tweet_id": "2074966337051631990",
-      "tags": [
-        "newsroom",
-        "article",
-        "2026 Mock Draft 1.0"
-      ]
-    },
-    {
       "date": "2026-07-08T21:56:20.766273",
       "generator": "newsroom",
       "tweet_id": "2074975900811084014",
@@ -1853,6 +1843,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_brandon_marsh"
+      ]
+    },
+    {
+      "date": "2026-08-29T20:45:23.709759",
+      "generator": "hitter_analysis",
+      "tweet_id": "2093802213940314193",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_kyle_stowers"
       ]
     }
   ]
