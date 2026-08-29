@@ -1,16 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-08T21:56:20.766273",
-      "generator": "newsroom",
-      "tweet_id": "2074975900811084014",
-      "tags": [
-        "newsroom",
-        "overperformer",
-        "Mickey Moniak"
-      ]
-    },
-    {
       "date": "2026-07-09T16:24:18.655734",
       "generator": "reds_summary",
       "tweet_id": "2075254728733192602",
@@ -1852,6 +1842,16 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_kyle_stowers"
+      ]
+    },
+    {
+      "date": "2026-08-29T21:22:45.709818",
+      "generator": "newsroom",
+      "tweet_id": "2093811617993769080",
+      "tags": [
+        "newsroom",
+        "nasty_pitch",
+        "Fernando Cruz"
       ]
     }
   ]
