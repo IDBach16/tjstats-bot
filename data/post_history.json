@@ -1,17 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-08T20:17:16.689332",
-      "generator": "draft_prospect",
-      "tweet_id": "2074950968643645702",
-      "tags": [
-        "draft_prospect",
-        "Logan Reddemann",
-        "UCLA Bruins",
-        "NCAA"
-      ]
-    },
-    {
       "date": "2026-07-08T21:18:20.605904",
       "generator": "newsroom",
       "tweet_id": "2074966337051631990",
@@ -1855,6 +1844,15 @@
       "tags": [
         "pitcher_card",
         "Yoshinobu Yamamoto"
+      ]
+    },
+    {
+      "date": "2026-08-29T19:17:28.622211",
+      "generator": "hitter_analysis",
+      "tweet_id": "2093780088798228672",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_brandon_marsh"
       ]
     }
   ]
