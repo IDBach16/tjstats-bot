@@ -1,16 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-08T18:12:57.015467",
-      "generator": "newsroom_article",
-      "tweet_id": "2074919681337790896",
-      "tags": [
-        "newsroom",
-        "article",
-        "Juan Soto\u2019s Hot Streaks Are Delightful"
-      ]
-    },
-    {
       "date": "2026-07-08T19:19:47.924715",
       "generator": "hitter_analysis",
       "tweet_id": "2074936504217203074",
@@ -1853,6 +1843,15 @@
       "date": "2026-08-29T01:57:31.607092",
       "generator": "reds_summary",
       "tweet_id": "2093518376043770089",
+      "tags": [
+        "reds_summary",
+        "2026-08-28"
+      ]
+    },
+    {
+      "date": "2026-08-29T02:57:31.789374",
+      "generator": "reds_summary",
+      "tweet_id": "2093533477102903611",
       "tags": [
         "reds_summary",
         "2026-08-28"
