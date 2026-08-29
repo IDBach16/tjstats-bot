@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-08T15:58:36.442504",
-      "generator": "pitching_summary",
-      "tweet_id": "2074885851587240254",
-      "tags": [
-        "pitching_summary",
-        "Dylan Cease"
-      ]
-    },
-    {
       "date": "2026-07-08T17:41:18.463242",
       "generator": "draft_prospect",
       "tweet_id": "2074911716828176711",
@@ -1855,6 +1846,15 @@
       "date": "2026-08-29T00:29:12.177953",
       "generator": "reds_summary",
       "tweet_id": "2093496149294371209",
+      "tags": [
+        "reds_summary",
+        "2026-08-28"
+      ]
+    },
+    {
+      "date": "2026-08-29T01:36:25.935761",
+      "generator": "reds_summary",
+      "tweet_id": "2093513068181586284",
       "tags": [
         "reds_summary",
         "2026-08-28"
