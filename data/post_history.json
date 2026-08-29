@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-09T16:24:18.655734",
-      "generator": "reds_summary",
-      "tweet_id": "2075254728733192602",
-      "tags": [
-        "reds_summary",
-        "2026-07-08"
-      ]
-    },
-    {
       "date": "2026-07-09T17:11:24.416190",
       "generator": "draft_prospect",
       "tweet_id": "2075266580083089413",
@@ -1852,6 +1843,16 @@
         "newsroom",
         "nasty_pitch",
         "Fernando Cruz"
+      ]
+    },
+    {
+      "date": "2026-08-29T22:52:00.187635",
+      "generator": "newsroom",
+      "tweet_id": "2093834075748364537",
+      "tags": [
+        "newsroom",
+        "nasty_pitch",
+        "Chase Burns"
       ]
     }
   ]
