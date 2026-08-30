@@ -1,28 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-09T17:11:24.416190",
-      "generator": "draft_prospect",
-      "tweet_id": "2075266580083089413",
-      "tags": [
-        "draft_prospect",
-        "Ethan Kleinschmit",
-        "Oregon State Beavers",
-        "NCAA"
-      ]
-    },
-    {
-      "date": "2026-07-09T18:00:05.587112",
-      "generator": "draft_prospect",
-      "tweet_id": "2075278832110604290",
-      "tags": [
-        "draft_prospect",
-        "Jack Radel",
-        "Notre Dame Fighting Irish",
-        "NCAA"
-      ]
-    },
-    {
       "date": "2026-07-09T18:45:29.198052",
       "generator": "newsroom_article",
       "tweet_id": "2075290257185026417",
@@ -1853,6 +1831,24 @@
         "newsroom",
         "nasty_pitch",
         "Chase Burns"
+      ]
+    },
+    {
+      "date": "2026-08-30T17:52:26.372049",
+      "generator": "reds_summary",
+      "tweet_id": "2094121076313960456",
+      "tags": [
+        "reds_summary",
+        "2026-08-29"
+      ]
+    },
+    {
+      "date": "2026-08-30T17:53:57.707920",
+      "generator": "pitching_summary",
+      "tweet_id": "2094121373253906636",
+      "tags": [
+        "pitching_summary",
+        "Hunter Brown"
       ]
     }
   ]
