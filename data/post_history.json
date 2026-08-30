@@ -1,16 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-09T18:45:29.198052",
-      "generator": "newsroom_article",
-      "tweet_id": "2075290257185026417",
-      "tags": [
-        "newsroom",
-        "article",
-        "With No-Hit Bid, Dylan Cease Makes His Case for AL Cy Young"
-      ]
-    },
-    {
       "date": "2026-07-09T20:42:41.634487",
       "generator": "draft_prospect",
       "tweet_id": "2075319751794909375",
@@ -1849,6 +1839,15 @@
       "tags": [
         "pitching_summary",
         "Hunter Brown"
+      ]
+    },
+    {
+      "date": "2026-08-30T19:09:27.903897",
+      "generator": "hitter_analysis",
+      "tweet_id": "2094140460419932664",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_owen_caissie"
       ]
     }
   ]
