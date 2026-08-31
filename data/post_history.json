@@ -1,16 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-10T15:36:21.641778",
-      "generator": "newsroom",
-      "tweet_id": "2075605050093973917",
-      "tags": [
-        "newsroom",
-        "bat_speed",
-        "Junior Caminero"
-      ]
-    },
-    {
       "date": "2026-07-10T16:16:13.116745",
       "generator": "reds_summary",
       "tweet_id": "2075615080268407049",
@@ -1845,6 +1835,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_heliot_ramos"
+      ]
+    },
+    {
+      "date": "2026-08-31T20:26:27.960325",
+      "generator": "hitter_analysis",
+      "tweet_id": "2094522225411957054",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_oneil_cruz"
       ]
     }
   ]
