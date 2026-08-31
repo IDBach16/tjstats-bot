@@ -1,16 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-09T21:36:49.275437",
-      "generator": "newsroom",
-      "tweet_id": "2075333374986608990",
-      "tags": [
-        "newsroom",
-        "article",
-        "With No-Hit Bid, Dylan Cease Makes His Case for AL Cy Young"
-      ]
-    },
-    {
       "date": "2026-07-10T15:36:21.641778",
       "generator": "newsroom",
       "tweet_id": "2075605050093973917",
@@ -1846,6 +1836,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_trent_grisham"
+      ]
+    },
+    {
+      "date": "2026-08-31T19:46:25.865073",
+      "generator": "hitter_analysis",
+      "tweet_id": "2094512150882460088",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_heliot_ramos"
       ]
     }
   ]
