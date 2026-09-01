@@ -1,17 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-10T17:50:30.487160",
-      "generator": "draft_prospect",
-      "tweet_id": "2075638807995510877",
-      "tags": [
-        "draft_prospect",
-        "Ethan Norby",
-        "East Carolina Pirates",
-        "NCAA"
-      ]
-    },
-    {
       "date": "2026-07-10T18:15:48.890332",
       "generator": "newsroom",
       "tweet_id": "2075645177994051948",
@@ -1844,6 +1833,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_mookie_betts"
+      ]
+    },
+    {
+      "date": "2026-09-01T20:51:36.878895",
+      "generator": "hitter_analysis",
+      "tweet_id": "2094890942591357146",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_jackson_chourio"
       ]
     }
   ]
