@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-10T16:17:03.728165",
-      "generator": "pitching_summary",
-      "tweet_id": "2075615262494052633",
-      "tags": [
-        "pitching_summary",
-        "Framber Valdez"
-      ]
-    },
-    {
       "date": "2026-07-10T17:50:30.487160",
       "generator": "draft_prospect",
       "tweet_id": "2075638807995510877",
@@ -1844,6 +1835,15 @@
       "tags": [
         "reds_summary",
         "2026-08-31"
+      ]
+    },
+    {
+      "date": "2026-09-01T19:16:49.178005",
+      "generator": "hitter_analysis",
+      "tweet_id": "2094867086757502982",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_mookie_betts"
       ]
     }
   ]
