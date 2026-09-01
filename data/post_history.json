@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-10T16:16:13.116745",
-      "generator": "reds_summary",
-      "tweet_id": "2075615080268407049",
-      "tags": [
-        "reds_summary",
-        "2026-07-09"
-      ]
-    },
-    {
       "date": "2026-07-10T16:17:03.728165",
       "generator": "pitching_summary",
       "tweet_id": "2075615262494052633",
@@ -1844,6 +1835,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_oneil_cruz"
+      ]
+    },
+    {
+      "date": "2026-09-01T17:32:33.300816",
+      "generator": "reds_summary",
+      "tweet_id": "2094840847892398571",
+      "tags": [
+        "reds_summary",
+        "2026-08-31"
       ]
     }
   ]
