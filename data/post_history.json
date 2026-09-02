@@ -1,17 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-10T20:13:20.599266",
-      "generator": "draft_prospect",
-      "tweet_id": "2075674753688379772",
-      "tags": [
-        "draft_prospect",
-        "Ruger Riojas",
-        "Texas Longhorns",
-        "NCAA"
-      ]
-    },
-    {
       "date": "2026-07-11T14:45:05.318259",
       "generator": "reds_summary",
       "tweet_id": "2075954534627602468",
@@ -1841,6 +1830,15 @@
       "tags": [
         "pitching_summary",
         "Paul Skenes"
+      ]
+    },
+    {
+      "date": "2026-09-02T19:17:17.344549",
+      "generator": "hitter_analysis",
+      "tweet_id": "2095229592663465994",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_tyler_stephenson"
       ]
     }
   ]
