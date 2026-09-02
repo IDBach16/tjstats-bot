@@ -1,25 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-10T18:15:48.890332",
-      "generator": "newsroom",
-      "tweet_id": "2075645177994051948",
-      "tags": [
-        "newsroom",
-        "nasty_pitch",
-        "Jos\u00e9 Soriano"
-      ]
-    },
-    {
-      "date": "2026-07-10T19:40:45.068383",
-      "generator": "hitter_analysis",
-      "tweet_id": "2075666552548933914",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_owen_caissie"
-      ]
-    },
-    {
       "date": "2026-07-10T20:13:20.599266",
       "generator": "draft_prospect",
       "tweet_id": "2075674753688379772",
@@ -1842,6 +1823,24 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_jackson_chourio"
+      ]
+    },
+    {
+      "date": "2026-09-02T17:32:12.571457",
+      "generator": "reds_summary",
+      "tweet_id": "2095203148063187436",
+      "tags": [
+        "reds_summary",
+        "2026-09-01"
+      ]
+    },
+    {
+      "date": "2026-09-02T17:33:23.012673",
+      "generator": "pitching_summary",
+      "tweet_id": "2095203405220270315",
+      "tags": [
+        "pitching_summary",
+        "Paul Skenes"
       ]
     }
   ]
