@@ -1,17 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-11T17:45:18.969823",
-      "generator": "draft_prospect",
-      "tweet_id": "2075999889289253338",
-      "tags": [
-        "draft_prospect",
-        "Ryan Lynch",
-        "North Carolina Tar Heels",
-        "NCAA"
-      ]
-    },
-    {
       "date": "2026-07-11T19:12:36.079621",
       "generator": "hitter_analysis",
       "tweet_id": "2076021856352776244",
@@ -1838,6 +1827,15 @@
         "newsroom",
         "pitcher_stuff",
         "Eury P\u00e9rez"
+      ]
+    },
+    {
+      "date": "2026-09-03T19:11:32.512105",
+      "generator": "hitter_analysis",
+      "tweet_id": "2095590534106489220",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_josh_jung"
       ]
     }
   ]
