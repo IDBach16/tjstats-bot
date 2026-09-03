@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-11T15:41:58.021476",
-      "generator": "pitcher_card",
-      "tweet_id": "2075968828497129814",
-      "tags": [
-        "pitcher_card",
-        "Cole Ragans"
-      ]
-    },
-    {
       "date": "2026-07-11T17:02:06.775367",
       "generator": "draft_prospect",
       "tweet_id": "2075989017154539635",
@@ -1839,6 +1830,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_colt_keith"
+      ]
+    },
+    {
+      "date": "2026-09-03T17:24:40.094249",
+      "generator": "reds_summary",
+      "tweet_id": "2095563638845452458",
+      "tags": [
+        "reds_summary",
+        "2026-09-02"
       ]
     }
   ]
