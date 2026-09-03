@@ -1,17 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-11T17:02:06.775367",
-      "generator": "draft_prospect",
-      "tweet_id": "2075989017154539635",
-      "tags": [
-        "draft_prospect",
-        "Brett Renfrow",
-        "Virginia Tech Hokies",
-        "NCAA"
-      ]
-    },
-    {
       "date": "2026-07-11T17:45:18.969823",
       "generator": "draft_prospect",
       "tweet_id": "2075999889289253338",
@@ -1839,6 +1828,16 @@
       "tags": [
         "reds_summary",
         "2026-09-02"
+      ]
+    },
+    {
+      "date": "2026-09-03T18:09:42.454301",
+      "generator": "newsroom",
+      "tweet_id": "2095574973590958167",
+      "tags": [
+        "newsroom",
+        "pitcher_stuff",
+        "Eury P\u00e9rez"
       ]
     }
   ]
