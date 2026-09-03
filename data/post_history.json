@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-11T19:12:36.079621",
-      "generator": "hitter_analysis",
-      "tweet_id": "2076021856352776244",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_spencer_torkelson"
-      ]
-    },
-    {
       "date": "2026-07-11T19:58:09.589955",
       "generator": "hitter_analysis",
       "tweet_id": "2076033321356943672",
@@ -1836,6 +1827,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_josh_jung"
+      ]
+    },
+    {
+      "date": "2026-09-03T20:48:06.130420",
+      "generator": "hitter_analysis",
+      "tweet_id": "2095614834540696058",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_casey_schmitt"
       ]
     }
   ]
