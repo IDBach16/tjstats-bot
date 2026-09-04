@@ -1,17 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-11T23:59:08.421131",
-      "generator": "draft_prospect",
-      "tweet_id": "2076093965405696355",
-      "tags": [
-        "draft_prospect",
-        "Tommy LaPour",
-        "Texas Christian Horned Frogs",
-        "NCAA"
-      ]
-    },
-    {
       "date": "2026-07-12T14:49:13.915195",
       "generator": "reds_summary",
       "tweet_id": "2076317965004542224",
@@ -1834,6 +1823,15 @@
       "tags": [
         "pitching_summary",
         "Tarik Skubal"
+      ]
+    },
+    {
+      "date": "2026-09-04T20:35:34.780216",
+      "generator": "hitter_analysis",
+      "tweet_id": "2095974071171518947",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_jac_caglianone"
       ]
     }
   ]
