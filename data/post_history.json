@@ -1,17 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-12T17:03:06.052327",
-      "generator": "draft_prospect",
-      "tweet_id": "2076351653142462920",
-      "tags": [
-        "draft_prospect",
-        "Maxx Yehl",
-        "West Virginia Mountaineers",
-        "NCAA"
-      ]
-    },
-    {
       "date": "2026-07-12T17:47:58.231517",
       "generator": "draft_prospect",
       "tweet_id": "2076362945190101489",
@@ -1832,6 +1821,15 @@
       "tags": [
         "pitcher_card",
         "Chris Sale"
+      ]
+    },
+    {
+      "date": "2026-09-05T20:10:21.232694",
+      "generator": "hitter_analysis",
+      "tweet_id": "2096330110353732072",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_francisco_alvarez"
       ]
     }
   ]
