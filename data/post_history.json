@@ -1,17 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-12T17:47:58.231517",
-      "generator": "draft_prospect",
-      "tweet_id": "2076362945190101489",
-      "tags": [
-        "draft_prospect",
-        "Duncan Marsten",
-        "Wake Forest Demon Deacons",
-        "NCAA"
-      ]
-    },
-    {
       "date": "2026-07-12T19:13:28.201611",
       "generator": "hitter_analysis",
       "tweet_id": "2076384462829502520",
@@ -1830,6 +1819,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_francisco_alvarez"
+      ]
+    },
+    {
+      "date": "2026-09-05T20:47:51.480932",
+      "generator": "hitter_analysis",
+      "tweet_id": "2096339549018616092",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_adley_rutschman"
       ]
     }
   ]
