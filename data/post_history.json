@@ -1,17 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-12T23:59:15.129402",
-      "generator": "draft_prospect",
-      "tweet_id": "2076456381633462681",
-      "tags": [
-        "draft_prospect",
-        "Taylor Rabe",
-        "Ole Miss Rebels",
-        "NCAA"
-      ]
-    },
-    {
       "date": "2026-07-13T12:25:10.752927",
       "generator": "newsroom",
       "tweet_id": "2076644101244727701",
@@ -1827,6 +1816,16 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_corey_seager"
+      ]
+    },
+    {
+      "date": "2026-09-06T22:29:49.039802",
+      "generator": "newsroom",
+      "tweet_id": "2096727595954188558",
+      "tags": [
+        "newsroom",
+        "underperformer",
+        "Ke'Bryan Hayes"
       ]
     }
   ]
