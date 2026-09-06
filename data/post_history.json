@@ -1,16 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-12T21:37:16.578869",
-      "generator": "newsroom",
-      "tweet_id": "2076420653196997048",
-      "tags": [
-        "newsroom",
-        "bat_speed",
-        "Jordan Walker"
-      ]
-    },
-    {
       "date": "2026-07-12T23:59:15.129402",
       "generator": "draft_prospect",
       "tweet_id": "2076456381633462681",
@@ -1828,6 +1818,15 @@
         "newsroom",
         "overperformer",
         "Esteury Ruiz"
+      ]
+    },
+    {
+      "date": "2026-09-06T20:55:25.530234",
+      "generator": "hitter_analysis",
+      "tweet_id": "2096703840963764318",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_corey_seager"
       ]
     }
   ]
