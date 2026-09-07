@@ -1,16 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-13T12:25:10.752927",
-      "generator": "newsroom",
-      "tweet_id": "2076644101244727701",
-      "tags": [
-        "newsroom",
-        "pitcher_stuff",
-        "Eury P\u00e9rez"
-      ]
-    },
-    {
       "date": "2026-07-13T16:23:19.690071",
       "generator": "reds_summary",
       "tweet_id": "2076704033117741292",
@@ -1826,6 +1816,15 @@
         "newsroom",
         "underperformer",
         "Ke'Bryan Hayes"
+      ]
+    },
+    {
+      "date": "2026-09-07T19:42:03.241902",
+      "generator": "hitter_analysis",
+      "tweet_id": "2097047764647751942",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_kyle_stowers"
       ]
     }
   ]
