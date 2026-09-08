@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-13T20:06:36.085066",
-      "generator": "hitter_analysis",
-      "tweet_id": "2076760221742146046",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_brandon_marsh"
-      ]
-    },
-    {
       "date": "2026-07-14T16:06:18.399860",
       "generator": "reds_summary",
       "tweet_id": "2077062137906634848",
@@ -1825,6 +1816,15 @@
       "tags": [
         "pitcher_card",
         "Roki Sasaki"
+      ]
+    },
+    {
+      "date": "2026-09-08T19:19:54.166857",
+      "generator": "hitter_analysis",
+      "tweet_id": "2097404577834471486",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_fernando_tatis_jr."
       ]
     }
   ]
