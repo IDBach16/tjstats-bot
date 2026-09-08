@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-14T16:06:43.761166",
-      "generator": "pitcher_card",
-      "tweet_id": "2077062218617700464",
-      "tags": [
-        "pitcher_card",
-        "Paul Skenes"
-      ]
-    },
-    {
       "date": "2026-07-14T19:28:12.445977",
       "generator": "hitter_analysis",
       "tweet_id": "2077112947286176186",
@@ -1825,6 +1816,16 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_owen_caissie"
+      ]
+    },
+    {
+      "date": "2026-09-08T21:31:35.905532",
+      "generator": "newsroom",
+      "tweet_id": "2097437720184250694",
+      "tags": [
+        "newsroom",
+        "nasty_pitch",
+        "Mason Miller"
       ]
     }
   ]
