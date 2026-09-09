@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-15T19:20:05.476682",
-      "generator": "hitter_analysis",
-      "tweet_id": "2077473292357644781",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_luke_raley"
-      ]
-    },
-    {
       "date": "2026-07-15T20:00:36.966696",
       "generator": "hitter_analysis",
       "tweet_id": "2077483490686156836",
@@ -1826,6 +1817,16 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_mookie_betts"
+      ]
+    },
+    {
+      "date": "2026-09-09T22:49:47.922573",
+      "generator": "newsroom",
+      "tweet_id": "2097819787980046583",
+      "tags": [
+        "newsroom",
+        "bat_speed",
+        "Junior Caminero"
       ]
     }
   ]
