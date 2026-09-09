@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-15T16:11:43.229903",
-      "generator": "reds_summary",
-      "tweet_id": "2077425888203845842",
-      "tags": [
-        "reds_summary",
-        "no_game"
-      ]
-    },
-    {
       "date": "2026-07-15T19:20:05.476682",
       "generator": "hitter_analysis",
       "tweet_id": "2077473292357644781",
@@ -1826,6 +1817,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_heliot_ramos"
+      ]
+    },
+    {
+      "date": "2026-09-09T20:46:08.368812",
+      "generator": "hitter_analysis",
+      "tweet_id": "2097788667884372280",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_mookie_betts"
       ]
     }
   ]
