@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-15T15:20:07.465288",
-      "generator": "pitching_summary",
-      "tweet_id": "2077412876428484918",
-      "tags": [
-        "pitching_summary",
-        "Tarik Skubal"
-      ]
-    },
-    {
       "date": "2026-07-15T16:11:43.229903",
       "generator": "reds_summary",
       "tweet_id": "2077425888203845842",
@@ -1826,6 +1817,15 @@
       "tags": [
         "pitching_summary",
         "Logan Webb"
+      ]
+    },
+    {
+      "date": "2026-09-09T19:09:10.435159",
+      "generator": "hitter_analysis",
+      "tweet_id": "2097764265629216879",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_heliot_ramos"
       ]
     }
   ]
