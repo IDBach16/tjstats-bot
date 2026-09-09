@@ -1,24 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-14T19:28:12.445977",
-      "generator": "hitter_analysis",
-      "tweet_id": "2077112947286176186",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_elly_de_la_cruz"
-      ]
-    },
-    {
-      "date": "2026-07-14T20:03:40.999365",
-      "generator": "hitter_analysis",
-      "tweet_id": "2077121875298369907",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_heliot_ramos"
-      ]
-    },
-    {
       "date": "2026-07-15T15:20:07.465288",
       "generator": "pitching_summary",
       "tweet_id": "2077412876428484918",
@@ -1826,6 +1808,24 @@
         "newsroom",
         "nasty_pitch",
         "Mason Miller"
+      ]
+    },
+    {
+      "date": "2026-09-09T17:27:24.411564",
+      "generator": "reds_summary",
+      "tweet_id": "2097738655272149436",
+      "tags": [
+        "reds_summary",
+        "2026-09-08"
+      ]
+    },
+    {
+      "date": "2026-09-09T17:28:18.520294",
+      "generator": "pitching_summary",
+      "tweet_id": "2097738859555741955",
+      "tags": [
+        "pitching_summary",
+        "Logan Webb"
       ]
     }
   ]
