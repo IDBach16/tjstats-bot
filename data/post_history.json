@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-16T16:07:40.298234",
-      "generator": "reds_summary",
-      "tweet_id": "2077787257021382778",
-      "tags": [
-        "reds_summary",
-        "no_game"
-      ]
-    },
-    {
       "date": "2026-07-16T19:21:16.521906",
       "generator": "hitter_analysis",
       "tweet_id": "2077835978417340926",
@@ -1827,6 +1818,15 @@
       "tags": [
         "pitcher_card",
         "Seth Lugo"
+      ]
+    },
+    {
+      "date": "2026-09-10T19:01:02.594943",
+      "generator": "hitter_analysis",
+      "tweet_id": "2098124607526154306",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_trent_grisham"
       ]
     }
   ]
