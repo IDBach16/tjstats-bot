@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-16T19:54:45.959602",
-      "generator": "hitter_analysis",
-      "tweet_id": "2077844406770581995",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_byron_buxton"
-      ]
-    },
-    {
       "date": "2026-07-17T15:07:08.401170",
       "generator": "pitching_summary",
       "tweet_id": "2078134376148115739",
@@ -1827,6 +1818,16 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_tyler_stephenson"
+      ]
+    },
+    {
+      "date": "2026-09-10T22:50:33.920005",
+      "generator": "newsroom",
+      "tweet_id": "2098182368846921742",
+      "tags": [
+        "newsroom",
+        "overperformer",
+        "Alika Williams"
       ]
     }
   ]
