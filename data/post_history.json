@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-16T19:21:16.521906",
-      "generator": "hitter_analysis",
-      "tweet_id": "2077835978417340926",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_owen_caissie"
-      ]
-    },
-    {
       "date": "2026-07-16T19:54:45.959602",
       "generator": "hitter_analysis",
       "tweet_id": "2077844406770581995",
@@ -1827,6 +1818,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_trent_grisham"
+      ]
+    },
+    {
+      "date": "2026-09-10T20:41:14.307640",
+      "generator": "hitter_analysis",
+      "tweet_id": "2098149821676708084",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_tyler_stephenson"
       ]
     }
   ]
