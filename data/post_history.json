@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-17T19:57:20.713118",
-      "generator": "hitter_analysis",
-      "tweet_id": "2078207443272696082",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_mookie_betts"
-      ]
-    },
-    {
       "date": "2026-07-18T14:45:33.760740",
       "generator": "reds_summary",
       "tweet_id": "2078491368880845099",
@@ -1828,6 +1819,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_colt_keith"
+      ]
+    },
+    {
+      "date": "2026-09-11T20:46:09.227114",
+      "generator": "hitter_analysis",
+      "tweet_id": "2098513447138767289",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_josh_jung"
       ]
     }
   ]
