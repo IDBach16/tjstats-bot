@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-17T19:18:51.636124",
-      "generator": "hitter_analysis",
-      "tweet_id": "2078197758717296832",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_spencer_torkelson"
-      ]
-    },
-    {
       "date": "2026-07-17T19:57:20.713118",
       "generator": "hitter_analysis",
       "tweet_id": "2078207443272696082",
@@ -1828,6 +1819,15 @@
       "tags": [
         "pitching_summary",
         "Garrett Crochet"
+      ]
+    },
+    {
+      "date": "2026-09-11T19:02:55.936489",
+      "generator": "hitter_analysis",
+      "tweet_id": "2098487470711316570",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_colt_keith"
       ]
     }
   ]
