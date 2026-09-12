@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-18T19:57:46.398414",
-      "generator": "hitter_analysis",
-      "tweet_id": "2078569939183587400",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_oneil_cruz"
-      ]
-    },
-    {
       "date": "2026-07-19T14:48:59.445489",
       "generator": "reds_summary",
       "tweet_id": "2078854619468329280",
@@ -1828,6 +1819,16 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_jackson_chourio"
+      ]
+    },
+    {
+      "date": "2026-09-12T22:41:25.786678",
+      "generator": "newsroom",
+      "tweet_id": "2098904845436727325",
+      "tags": [
+        "newsroom",
+        "nasty_pitch",
+        "Fernando Cruz"
       ]
     }
   ]
