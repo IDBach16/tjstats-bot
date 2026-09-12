@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-18T15:41:57.988057",
-      "generator": "pitcher_card",
-      "tweet_id": "2078505542369292565",
-      "tags": [
-        "pitcher_card",
-        "Dylan Cease"
-      ]
-    },
-    {
       "date": "2026-07-18T19:57:46.398414",
       "generator": "hitter_analysis",
       "tweet_id": "2078569939183587400",
@@ -1828,6 +1819,15 @@
       "tags": [
         "reds_summary",
         "2026-09-11"
+      ]
+    },
+    {
+      "date": "2026-09-12T20:24:03.646620",
+      "generator": "hitter_analysis",
+      "tweet_id": "",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_jackson_chourio"
       ]
     }
   ]
