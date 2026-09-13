@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-19T20:01:20.749895",
-      "generator": "hitter_analysis",
-      "tweet_id": "2078933226010157193",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_josh_jung"
-      ]
-    },
-    {
       "date": "2026-07-20T15:46:11.399455",
       "generator": "pitching_summary",
       "tweet_id": "2079231401187258453",
@@ -1830,6 +1821,15 @@
         "newsroom",
         "nasty_pitch",
         "Chase Burns"
+      ]
+    },
+    {
+      "date": "2026-09-13T20:34:45.366712",
+      "generator": "hitter_analysis",
+      "tweet_id": "2099235354645856598",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_jac_caglianone"
       ]
     }
   ]
