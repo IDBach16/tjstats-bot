@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-19T19:13:48.509384",
-      "generator": "hitter_analysis",
-      "tweet_id": "2078921262957564048",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_jake_bauers"
-      ]
-    },
-    {
       "date": "2026-07-19T20:01:20.749895",
       "generator": "hitter_analysis",
       "tweet_id": "2078933226010157193",
@@ -1829,6 +1820,16 @@
       "tags": [
         "pitching_summary",
         "Sonny Gray"
+      ]
+    },
+    {
+      "date": "2026-09-13T18:37:29.687376",
+      "generator": "newsroom",
+      "tweet_id": "2099205845066371510",
+      "tags": [
+        "newsroom",
+        "nasty_pitch",
+        "Chase Burns"
       ]
     }
   ]
