@@ -1,24 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-19T14:48:59.445489",
-      "generator": "reds_summary",
-      "tweet_id": "2078854619468329280",
-      "tags": [
-        "reds_summary",
-        "2026-07-18"
-      ]
-    },
-    {
-      "date": "2026-07-19T15:43:26.469253",
-      "generator": "pitching_summary",
-      "tweet_id": "2078868258761941211",
-      "tags": [
-        "pitching_summary",
-        "Chris Sale"
-      ]
-    },
-    {
       "date": "2026-07-19T19:13:48.509384",
       "generator": "hitter_analysis",
       "tweet_id": "2078921262957564048",
@@ -1829,6 +1811,24 @@
         "newsroom",
         "nasty_pitch",
         "Fernando Cruz"
+      ]
+    },
+    {
+      "date": "2026-09-13T17:09:40.536638",
+      "generator": "reds_summary",
+      "tweet_id": "2099183744376623548",
+      "tags": [
+        "reds_summary",
+        "2026-09-12"
+      ]
+    },
+    {
+      "date": "2026-09-13T17:11:24.991322",
+      "generator": "pitching_summary",
+      "tweet_id": "2099184086547902883",
+      "tags": [
+        "pitching_summary",
+        "Sonny Gray"
       ]
     }
   ]
