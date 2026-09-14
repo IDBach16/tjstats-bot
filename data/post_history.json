@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-20T15:46:11.399455",
-      "generator": "pitching_summary",
-      "tweet_id": "2079231401187258453",
-      "tags": [
-        "pitching_summary",
-        "Roki Sasaki"
-      ]
-    },
-    {
       "date": "2026-07-20T16:19:05.726465",
       "generator": "reds_summary",
       "tweet_id": "2079239683029234000",
@@ -1830,6 +1821,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_jac_caglianone"
+      ]
+    },
+    {
+      "date": "2026-09-14T19:38:53.548261",
+      "generator": "hitter_analysis",
+      "tweet_id": "2099583683753623569",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_munetaka_murakami"
       ]
     }
   ]
