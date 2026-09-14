@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-20T16:19:05.726465",
-      "generator": "reds_summary",
-      "tweet_id": "2079239683029234000",
-      "tags": [
-        "reds_summary",
-        "2026-07-19"
-      ]
-    },
-    {
       "date": "2026-07-20T18:07:47.755207",
       "generator": "newsroom",
       "tweet_id": "2079267038552379428",
@@ -1830,6 +1821,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_munetaka_murakami"
+      ]
+    },
+    {
+      "date": "2026-09-14T20:12:28.603941",
+      "generator": "hitter_analysis",
+      "tweet_id": "2099592135330635958",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_elly_de_la_cruz"
       ]
     }
   ]
