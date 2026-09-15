@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-20T20:15:49.171344",
-      "generator": "hitter_analysis",
-      "tweet_id": "2079299256263885246",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_fernando_tatis_jr."
-      ]
-    },
-    {
       "date": "2026-07-21T16:12:35.009888",
       "generator": "reds_summary",
       "tweet_id": "2079600431882445263",
@@ -1829,6 +1820,15 @@
       "tags": [
         "pitcher_card",
         "Hunter Brown"
+      ]
+    },
+    {
+      "date": "2026-09-15T19:02:37.509469",
+      "generator": "hitter_analysis",
+      "tweet_id": "2099936944927179089",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_kyle_stowers"
       ]
     }
   ]
