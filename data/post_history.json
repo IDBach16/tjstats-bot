@@ -1,16 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-20T18:07:47.755207",
-      "generator": "newsroom",
-      "tweet_id": "2079267038552379428",
-      "tags": [
-        "newsroom",
-        "nasty_pitch",
-        "Chase Burns"
-      ]
-    },
-    {
       "date": "2026-07-20T19:50:12.388397",
       "generator": "hitter_analysis",
       "tweet_id": "2079292810381988205",
@@ -1830,6 +1820,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_elly_de_la_cruz"
+      ]
+    },
+    {
+      "date": "2026-09-15T14:06:24.263375",
+      "generator": "reds_summary",
+      "tweet_id": "2099862398509477944",
+      "tags": [
+        "reds_summary",
+        "2026-09-14"
       ]
     }
   ]
