@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-21T17:24:20.767641",
-      "generator": "pitcher_card",
-      "tweet_id": "2079618466613797234",
-      "tags": [
-        "pitcher_card",
-        "Framber Valdez"
-      ]
-    },
-    {
       "date": "2026-07-21T19:39:38.900842",
       "generator": "hitter_analysis",
       "tweet_id": "2079652541642727440",
@@ -1829,6 +1820,15 @@
       "tags": [
         "reds_summary",
         "2026-09-15"
+      ]
+    },
+    {
+      "date": "2026-09-16T15:02:22.206918",
+      "generator": "pitching_summary",
+      "tweet_id": "2100238837620625482",
+      "tags": [
+        "pitching_summary",
+        "Yoshinobu Yamamoto"
       ]
     }
   ]
