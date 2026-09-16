@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-21T19:39:38.900842",
-      "generator": "hitter_analysis",
-      "tweet_id": "2079652541642727440",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_trent_grisham"
-      ]
-    },
-    {
       "date": "2026-07-21T20:12:09.752139",
       "generator": "hitter_analysis",
       "tweet_id": "2079660724033573208",
@@ -1829,6 +1820,15 @@
       "tags": [
         "pitching_summary",
         "Yoshinobu Yamamoto"
+      ]
+    },
+    {
+      "date": "2026-09-16T19:02:46.241503",
+      "generator": "hitter_analysis",
+      "tweet_id": "2100299369375551659",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_william_contreras"
       ]
     }
   ]
