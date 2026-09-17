@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-21T20:12:09.752139",
-      "generator": "hitter_analysis",
-      "tweet_id": "2079660724033573208",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_kyle_schwarber"
-      ]
-    },
-    {
       "date": "2026-07-21T21:51:26.024363",
       "generator": "newsroom",
       "tweet_id": "2079685706646253727",
@@ -1829,6 +1820,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_william_contreras"
+      ]
+    },
+    {
+      "date": "2026-09-17T14:06:56.597505",
+      "generator": "reds_summary",
+      "tweet_id": "2100587309632479256",
+      "tags": [
+        "reds_summary",
+        "2026-09-16"
       ]
     }
   ]
