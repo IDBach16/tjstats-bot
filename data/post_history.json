@@ -1,16 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-21T21:51:26.024363",
-      "generator": "newsroom",
-      "tweet_id": "2079685706646253727",
-      "tags": [
-        "newsroom",
-        "nasty_pitch",
-        "Fernando Cruz"
-      ]
-    },
-    {
       "date": "2026-07-22T15:26:54.830033",
       "generator": "pitching_summary",
       "tweet_id": "2079951300972654657",
@@ -1829,6 +1819,15 @@
       "tags": [
         "reds_summary",
         "2026-09-16"
+      ]
+    },
+    {
+      "date": "2026-09-17T16:17:39.255876",
+      "generator": "pitcher_card",
+      "tweet_id": "2100620164588859402",
+      "tags": [
+        "pitcher_card",
+        "Ryan Helsley"
       ]
     }
   ]
