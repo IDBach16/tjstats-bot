@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-22T15:26:54.830033",
-      "generator": "pitching_summary",
-      "tweet_id": "2079951300972654657",
-      "tags": [
-        "pitching_summary",
-        "Logan Webb"
-      ]
-    },
-    {
       "date": "2026-07-22T16:12:04.214516",
       "generator": "reds_summary",
       "tweet_id": "2079962690748117049",
@@ -1828,6 +1819,15 @@
       "tags": [
         "pitcher_card",
         "Ryan Helsley"
+      ]
+    },
+    {
+      "date": "2026-09-17T19:02:41.379847",
+      "generator": "hitter_analysis",
+      "tweet_id": "2100661736739135860",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_owen_caissie"
       ]
     }
   ]
