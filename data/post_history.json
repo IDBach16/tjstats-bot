@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-22T19:29:05.789812",
-      "generator": "hitter_analysis",
-      "tweet_id": "2080012274094461036",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_brandon_marsh"
-      ]
-    },
-    {
       "date": "2026-07-22T20:05:54.702960",
       "generator": "hitter_analysis",
       "tweet_id": "2080021538770657326",
@@ -1828,6 +1819,15 @@
       "tags": [
         "reds_summary",
         "2026-09-17"
+      ]
+    },
+    {
+      "date": "2026-09-18T16:15:05.338022",
+      "generator": "pitching_summary",
+      "tweet_id": "2100981923447193997",
+      "tags": [
+        "pitching_summary",
+        "Framber Valdez"
       ]
     }
   ]
