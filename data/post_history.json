@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-22T20:05:54.702960",
-      "generator": "hitter_analysis",
-      "tweet_id": "2080021538770657326",
-      "tags": [
-        "hitter_analysis",
-        "hitter_analysis_heliot_ramos"
-      ]
-    },
-    {
       "date": "2026-07-22T21:55:39.231747",
       "generator": "newsroom",
       "tweet_id": "2080049156618371362",
@@ -1828,6 +1819,15 @@
       "tags": [
         "pitching_summary",
         "Framber Valdez"
+      ]
+    },
+    {
+      "date": "2026-09-18T19:03:09.640451",
+      "generator": "hitter_analysis",
+      "tweet_id": "2101024243085353049",
+      "tags": [
+        "hitter_analysis",
+        "hitter_analysis_mookie_betts"
       ]
     }
   ]
