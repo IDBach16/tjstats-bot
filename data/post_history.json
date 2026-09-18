@@ -1,15 +1,6 @@
 {
   "posts": [
     {
-      "date": "2026-07-22T16:12:04.214516",
-      "generator": "reds_summary",
-      "tweet_id": "2079962690748117049",
-      "tags": [
-        "reds_summary",
-        "2026-07-21"
-      ]
-    },
-    {
       "date": "2026-07-22T19:29:05.789812",
       "generator": "hitter_analysis",
       "tweet_id": "2080012274094461036",
@@ -1828,6 +1819,15 @@
       "tags": [
         "hitter_analysis",
         "hitter_analysis_owen_caissie"
+      ]
+    },
+    {
+      "date": "2026-09-18T14:05:57.841580",
+      "generator": "reds_summary",
+      "tweet_id": "2100949451128848631",
+      "tags": [
+        "reds_summary",
+        "2026-09-17"
       ]
     }
   ]
