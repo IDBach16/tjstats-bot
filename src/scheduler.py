@@ -106,40 +106,40 @@ GENERATORS: dict[str, type[ContentGenerator]] = {
     "draft_prospect": DraftProspectGenerator,
 }
 
-# Daily generators — these run every day in addition to the rotation schedule
-DAILY_GENERATORS: list[type[ContentGenerator]] = [
-    RedsSummaryGenerator,
-]
+# Daily generators — these run every day in addition to the rotation schedule.
+# EMPTY since 2026-09-18: the Reds summary came out when their season ended.
+# RedsSummaryGenerator stays in GENERATORS for manual --generator runs, so it can
+# be put back by adding it here and restoring the 14:00 UTC cron.
+DAILY_GENERATORS: list[type[ContentGenerator]] = []
 
-# Daily lineup — trimmed 2026-06-03 to 3 posts/day:
-#   1. Reds Summary  — every morning (DAILY_GENERATORS, runs in the 'daily' slot)
-#   2. Pitching card — 'screenshot' slot (gens[0]); alternates the season Pitching
-#                      Summary (Mon/Wed/Fri/Sun) and the game Pitcher Card (Tue/Thu/Sat)
-#   3. Hitter Analysis — 'text' slot (gens[1])
-# Every other generator stays in GENERATORS for manual --generator runs but is
-# no longer scheduled. Monday=0 … Sunday=6.
+# Daily lineup — cut to 2 posts/day on 2026-09-18 (Ian):
+#   1. Pitching Summary — 'screenshot' slot (gens[0]), every day
+#   2. Hitter Analysis  — 'text' slot (gens[1]), every day
+#
+# What came out, and why, so none of it looks like an accident:
+#   * Reds Summary  — their season ended.
+#   * Pitcher Card  — the screenshot slot used to alternate the season Pitching
+#                     Summary (Mon/Wed/Fri/Sun) with the single-game Pitcher Card
+#                     (Tue/Thu/Sat). Ian wants the season card every day.
+#   * Newsroom      — both daily BachTalk threads, 18:00 and 21:00 UTC.
+#
+# Every one of them stays in GENERATORS for manual --generator runs; nothing was
+# deleted. The workflow's crons were cut to match (14:00 / 18:00 / 21:00 removed),
+# because a cron with nothing to run still spends an Actions minute.
+# Monday=0 … Sunday=6.
 SCHEDULE: dict[int, tuple[type[ContentGenerator], ...]] = {
-    0: (PitchingSummaryGenerator, HitterAnalysisGenerator),  # Mon — Pitching Summary + Hitter Analysis
-    1: (PitcherCardGenerator,     HitterAnalysisGenerator),  # Tue — Pitcher Card + Hitter Analysis
-    2: (PitchingSummaryGenerator, HitterAnalysisGenerator),  # Wed — Pitching Summary + Hitter Analysis
-    3: (PitcherCardGenerator,     HitterAnalysisGenerator),  # Thu — Pitcher Card + Hitter Analysis
-    4: (PitchingSummaryGenerator, HitterAnalysisGenerator),  # Fri — Pitching Summary + Hitter Analysis
-    5: (PitcherCardGenerator,     HitterAnalysisGenerator),  # Sat — Pitcher Card + Hitter Analysis
-    6: (PitchingSummaryGenerator, HitterAnalysisGenerator),  # Sun — Pitching Summary + Hitter Analysis
+    d: (PitchingSummaryGenerator, HitterAnalysisGenerator) for d in range(7)
 }
 
 
 def get_generators_for_today() -> list[ContentGenerator]:
-    """Return today's rotation generators (2: pitching card + hitter analysis).
-
-    The daily Reds summary runs separately via DAILY_GENERATORS, for 3 posts/day.
-    """
+    """Return today's rotation generators: Pitching Summary + Hitter Analysis."""
     dow = date.today().weekday()
     return [cls() for cls in SCHEDULE[dow]]
 
 
 def get_daily_generators() -> list[ContentGenerator]:
-    """Return daily generators that run every day (e.g. Reds summary)."""
+    """Daily generators, if any. Empty since the Reds summary came out."""
     return [cls() for cls in DAILY_GENERATORS]
 
 

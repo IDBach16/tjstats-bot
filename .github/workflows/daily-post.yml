@@ -3,21 +3,17 @@ name: Daily Baseball Post
 
 on:
   schedule:
-    # Trimmed 2026-06-03 to 3 posts/day: Reds summary + 1 pitching card + hitter analysis
-    # 9 AM EST (UTC-5) = 14:00 UTC — Reds daily summary (yesterday's game)
-    - cron: '0 14 * * *'
-    # 10 AM EST (UTC-5) = 15:00 UTC — pitching card (season Pitching Summary / game Pitcher Card)
+    # Cut to 2 posts/day on 2026-09-18. Removed: 14:00 (Reds summary — their
+    # season ended), 18:00 and 21:00 (both BachTalk newsroom threads). A cron
+    # with nothing to run still costs an Actions minute and shows up as a green
+    # run that posted nothing, so the crons go with the schedule.
+    #
+    # 10 AM EST (UTC-5) = 15:00 UTC — Pitching Summary card
     - cron: '0 15 * * *'
-    # 11 AM EST (UTC-5) = 16:00 UTC — catch-up: run any missed morning slots
+    # 11 AM EST (UTC-5) = 16:00 UTC — catch-up: re-run either morning slot if it missed
     - cron: '0 16 * * *'
-    # 2 PM EST (UTC-5) = 19:00 UTC — Hitter Analysis (text slot)
+    # 2 PM EST (UTC-5) = 19:00 UTC — Hitter Analysis (Swing+ card)
     - cron: '0 19 * * *'
-    # 5 PM EST (UTC-5) = 21:00 UTC — BachTalk newsroom thread (daily)
-    - cron: '0 21 * * *'
-    # 18:00 UTC daily — second player-analysis newsroom thread (overperformer /
-    # nasty-pitch / bat-speed / underperformer; dedup keeps it a different
-    # player than the 21:00 thread).
-    - cron: '0 18 * * *'
   workflow_dispatch:
     inputs:
       slot:
@@ -118,35 +114,19 @@ jobs:
             echo "catchup=" >> $GITHUB_OUTPUT
           else
             HOUR=$(date -u +%H)
-            if [ "$HOUR" -ge 21 ]; then
-              # 5 PM EST (21:00 UTC) — BachTalk newsroom thread (daily via cron)
-              echo "slot=" >> $GITHUB_OUTPUT
-              echo "generator=newsroom" >> $GITHUB_OUTPUT
-              echo "catchup=" >> $GITHUB_OUTPUT
-            elif [ "$HOUR" -ge 19 ]; then
+            if [ "$HOUR" -ge 19 ]; then
               # 2 PM EST (19:00 UTC) — Hitter Analysis (text slot)
               echo "slot=text" >> $GITHUB_OUTPUT
               echo "generator=" >> $GITHUB_OUTPUT
-              echo "catchup=" >> $GITHUB_OUTPUT
-            elif [ "$HOUR" -ge 18 ]; then
-              # 18:00 UTC (daily) — second player-analysis newsroom thread
-              # (dedup keeps it a different player than the 21:00 thread).
-              echo "slot=" >> $GITHUB_OUTPUT
-              echo "generator=newsroom" >> $GITHUB_OUTPUT
               echo "catchup=" >> $GITHUB_OUTPUT
             elif [ "$HOUR" -ge 16 ]; then
               # 11 AM EST (16:00 UTC) — catch-up window
               echo "slot=catchup" >> $GITHUB_OUTPUT
               echo "generator=" >> $GITHUB_OUTPUT
               echo "catchup=true" >> $GITHUB_OUTPUT
-            elif [ "$HOUR" -ge 15 ]; then
-              # 10 AM EST (15:00 UTC) — pitching card
-              echo "slot=screenshot" >> $GITHUB_OUTPUT
-              echo "generator=" >> $GITHUB_OUTPUT
-              echo "catchup=" >> $GITHUB_OUTPUT
             else
-              # 9 AM EST (14:00 UTC) — Reds daily summary
-              echo "slot=daily" >> $GITHUB_OUTPUT
+              # 10 AM EST (15:00 UTC) — Pitching Summary card
+              echo "slot=screenshot" >> $GITHUB_OUTPUT
               echo "generator=" >> $GITHUB_OUTPUT
               echo "catchup=" >> $GITHUB_OUTPUT
             fi
@@ -176,9 +156,12 @@ jobs:
           today_gens = {p['generator'] for p in today_posts}
           print(f'Posts today: {len(today_posts)} — generators: {today_gens}')
           missed = []
-          if 'reds_summary' not in today_gens:
-              missed.append('daily')
-          if not today_gens & {'pitching_summary', 'pitcher_card'}:
+          # ONLY the screenshot slot. This window is 16:00 UTC and the text slot
+          # does not run until 19:00, so checking for hitter_analysis here would
+          # report it missing every single day and post it three hours early.
+          # 'daily' is gone with the Reds summary. pitcher_card is unscheduled
+          # now, so a manual run of one must not suppress the real catch-up.
+          if 'pitching_summary' not in today_gens:
               missed.append('screenshot')
           print(f'Missed slots: {missed}')
           with open('missed_slots.txt', 'w') as f:

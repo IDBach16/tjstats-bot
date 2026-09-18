@@ -1,7 +1,9 @@
 """Configuration: env vars, app catalog, constants."""
 
 import os
-from datetime import datetime
+from datetime import datetime  # noqa: F401 -- unused while MLB_SEASON is
+# pinned, but the commented restore line below needs it. Keeping it makes
+# putting the auto-detect back a one-line change.
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -33,9 +35,27 @@ PITCH_PROFILER_BASE = (
 MLB_API_BASE = "https://statsapi.mlb.com/api/v1"
 
 # ── Season ─────────────────────────────────────────────────────────────
-# MLB regular season starts late March
-_now = datetime.now()
-_default_season = _now.year if (_now.month > 3 or (_now.month == 3 and _now.day >= 20)) else _now.year - 1
+# PINNED TO 2026 (Ian, 2026-09-18). Both scheduled cards read full-season data,
+# and a completed season is the right thing to post through the winter.
+#
+# ⚠ THIS DOES NOT ROLL OVER BY ITSELF. Set it to 2027 once that season has real
+# sample -- a few weeks in, not on opening day. Until someone changes it the bot
+# will keep posting 2026 cards forever, which is the deliberate trade: silently
+# stale beats silently empty.
+#
+# What it used to do, and why that was the problem: the line below flipped the
+# season on 20 March, about a week before opening day. For that week
+# get_season_pitchers(2027) returns nothing (Pitching Summary logs a warning and
+# posts nothing, which is harmless) and Savant's swing-path board returns a
+# handful of swings (Hitter Analysis computes Swing+ off almost no data and
+# posts a card that looks real). Posting a bad card is worse than posting none.
+#
+#   _now = datetime.now()
+#   _default_season = _now.year if (_now.month > 3 or (_now.month == 3 and _now.day >= 20)) else _now.year - 1
+#
+# The env override is kept, so a one-off run can still target another season:
+#   MLB_SEASON=2025 python -m src.main --generator pitching_summary
+_default_season = 2026
 MLB_SEASON = int(os.environ.get("MLB_SEASON", _default_season))
 
 # ── TJStats Hugging Face Spaces catalog ────────────────────────────────
