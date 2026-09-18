@@ -44,7 +44,7 @@ def _candidate_pitchers(season_df) -> list[dict]:
         df = df[df["pitches_thrown"] >= MIN_PITCHES]
         df = df.sort_values("pitches_thrown", ascending=False)
 
-    posted = recent_generator_tags("pitching_summary", index=1, lookback=200)
+    posted = recent_generator_tags("pitching_summary", index=1)
     out: list[dict] = []
     for _, r in df.iterrows():
         nm = str(r[name_col]).strip()

@@ -57,7 +57,7 @@ def _posted_names() -> set[str]:
     only one format would quietly re-feature everyone from the other era.
     """
     from ..scheduler import recent_generator_tags
-    raw = recent_generator_tags("hitter_analysis", index=1, lookback=200)
+    raw = recent_generator_tags("hitter_analysis", index=1)
     out: set[str] = set()
     for tag in raw:
         out.add(tag)

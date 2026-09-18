@@ -70,6 +70,22 @@ log = logging.getLogger(__name__)
 
 HISTORY_PATH = DATA_DIR / "post_history.json"
 
+# How many posts to keep. THIS IS THE REAL CEILING ON DE-DUPLICATION -- a
+# generator cannot avoid repeating someone it can no longer see.
+#
+# It was 200. At the old ~3.4 posts/day that was 58 days of memory, which is how
+# Mookie Betts got posted seven times between July and September: the pool had
+# hundreds of hitters in it, but the bot could only remember the last two months.
+#
+# Sizing it: at 2 posts/day, 1000 entries is ~500 days. The pools are 245
+# qualified hitters and ~186 unposted qualified pitchers, so each generator can
+# work all the way through its field -- twice over -- before the oldest entry
+# falls off. Cost is about 225 KB of JSON, committed by the workflow each run.
+#
+# If the schedule speeds up again, raise this: the number that matters is
+# ENTRIES / POSTS-PER-DAY >= the days it takes to exhaust the pool.
+HISTORY_LIMIT = 1000
+
 # Registry of all generators by name (for --generator CLI flag)
 GENERATORS: dict[str, type[ContentGenerator]] = {
     "pitcher_spotlight": PitcherSpotlightGenerator,
@@ -167,8 +183,7 @@ def record_post(
         "tweet_id": tweet_id,
         "tags": tags,
     })
-    # Keep last 200 entries
-    history["posts"] = history["posts"][-200:]
+    history["posts"] = history["posts"][-HISTORY_LIMIT:]
     _save_history(history)
     log.info("Recorded post %s from %s", tweet_id, generator_name)
 
@@ -184,7 +199,7 @@ def was_recently_posted(tag: str, lookback: int = 7) -> bool:
 
 
 def recent_generator_tags(
-    generator_name: str, index: int = 1, lookback: int = 200
+    generator_name: str, index: int = 1, lookback: int = HISTORY_LIMIT
 ) -> set[str]:
     """Return the tag values at position ``index`` for recent posts from a
     given generator — e.g. every featured player name (tags[1]) the
