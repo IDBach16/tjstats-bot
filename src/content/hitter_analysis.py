@@ -49,6 +49,23 @@ def _percentile(series: pd.Series, value: float) -> int:
     return int((series < value).mean() * 100)
 
 
+def _posted_names() -> set[str]:
+    """Every hitter this generator has already featured, both tag formats.
+
+    History written before 2026-09-18 carries a slug at index 1
+    ("hitter_analysis_kyle_stowers"); newer entries carry "Kyle Stowers". Reading
+    only one format would quietly re-feature everyone from the other era.
+    """
+    from ..scheduler import recent_generator_tags
+    raw = recent_generator_tags("hitter_analysis", index=1, lookback=200)
+    out: set[str] = set()
+    for tag in raw:
+        out.add(tag)
+        if tag.startswith("hitter_analysis_"):
+            out.add(tag[len("hitter_analysis_"):].replace("_", " ").title())
+    return out
+
+
 def _pick_hitter(df: pd.DataFrame) -> pd.Series | None:
     """Pick an interesting hitter to analyze.
 
@@ -56,10 +73,14 @@ def _pick_hitter(df: pd.DataFrame) -> pd.Series | None:
     high swing+ but low xwOBA (underperforming) or low swing+ but high
     xwOBA (overperforming). Also avoid repeating recently analyzed hitters.
     """
-    from ..scheduler import was_recently_posted
-
+    # _posted_names, not was_recently_posted: the latter's `lookback` counts
+    # POSTS across every generator, so it drifts with the schedule -- at the old
+    # 5 posts/day, lookback=30 covered six days; at 2/day it covers fifteen.
+    # This asks the real question: who has THIS generator already featured.
     if df.empty:
         return None
+
+    posted = _posted_names()
 
     # Calculate gap between swing+ prediction and actual xwOBA
     xwoba_mean = df["xwOBA"].mean()
@@ -70,22 +91,22 @@ def _pick_hitter(df: pd.DataFrame) -> pd.Series | None:
     df["xwoba_plus"] = 100 + ((df["xwOBA"] - xwoba_mean) / xwoba_std) * SWING_PLUS_SD
     df["gap"] = abs(df["swing_plus"] - df["xwoba_plus"])
 
-    # Sort by gap (most interesting discrepancies first)
-    candidates = df.nlargest(30, "gap")
-
-    for _, row in candidates.iterrows():
-        name = row.get("name_fg", "")
-        tag = f"hitter_analysis_{name.replace(' ', '_').lower()}"
-        if not was_recently_posted(tag, lookback=30):
+    # Sort by gap (most interesting discrepancies first). Widened from 30 to 60:
+    # posting daily works through a 30-deep board in a month, and the gap ranking
+    # is a preference, not a cliff -- #45 is still an interesting hitter.
+    for _, row in df.nlargest(60, "gap").iterrows():
+        if row.get("name_fg", "") not in posted:
             return row
 
-    # Fallback: pick highest swing+ not recently posted
-    for _, row in df.nlargest(20, "swing_plus").iterrows():
-        name = row.get("name_fg", "")
-        tag = f"hitter_analysis_{name.replace(' ', '_').lower()}"
-        if not was_recently_posted(tag, lookback=30):
+    # Nobody in the gap board is new. Widen to the whole qualified pool before
+    # giving up, ordered by Swing+ so the fallback still picks someone worth a card.
+    for _, row in df.nlargest(len(df), "swing_plus").iterrows():
+        if row.get("name_fg", "") not in posted:
             return row
 
+    # Genuinely everyone has been featured. Repeat the best swing rather than
+    # post nothing -- but say so, because it means the pool needs widening.
+    log.info("Every qualified hitter has been featured; repeating the top Swing+")
     return df.nlargest(1, "swing_plus").iloc[0]
 
 
@@ -409,11 +430,15 @@ class HitterAnalysisGenerator(ContentGenerator):
                 tags=["hitter_analysis", name],
             ))
 
-        tag = f"hitter_analysis_{name.replace(' ', '_').lower()}"
+        # The PLAIN NAME at index 1, matching pitching_summary. This used to be a
+        # slug ("hitter_analysis_kyle_stowers") while the replies carried the
+        # plain name -- and only the main post's tags are recorded, so the
+        # de-dup had to know about the slug form. _posted_names() still reads
+        # the old entries; new ones are consistent.
         return PostContent(
             text=header_text,
             image_path=header_image,
             alt_text=f"{name} {MLB_SEASON} batting percentiles",
-            tags=["hitter_analysis", tag],
+            tags=["hitter_analysis", name],
             replies=replies,
         )

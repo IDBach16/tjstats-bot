@@ -15,6 +15,50 @@ from ..video_clips import get_pitcher_clip
 log = logging.getLogger(__name__)
 
 
+# A pitcher needs enough work for the card's rate stats to mean anything. 250 is
+# the same floor the scout board uses for stuff_plus.
+MIN_PITCHES = 250
+
+
+def _candidate_pitchers(season_df) -> list[dict]:
+    """Qualified pitchers this generator has NOT featured, most work first.
+
+    Ordered by pitches thrown so the biggest sample goes first -- a card on a
+    pitcher with 260 pitches is thinner than one on a pitcher with 2,600, and if
+    the first choice fails to render we would rather fall to the next-biggest
+    than to a random arm.
+    """
+    from ..scheduler import recent_generator_tags
+
+    if season_df is None or season_df.empty:
+        return []
+    cols = set(season_df.columns)
+    name_col = "pitcher_name" if "pitcher_name" in cols else (
+        "player_name" if "player_name" in cols else None)
+    if not name_col or "pitcher_id" not in cols:
+        log.warning("Season board is missing name/id columns; falling back to the watchlist")
+        return []
+
+    df = season_df
+    if "pitches_thrown" in cols:
+        df = df[df["pitches_thrown"] >= MIN_PITCHES]
+        df = df.sort_values("pitches_thrown", ascending=False)
+
+    posted = recent_generator_tags("pitching_summary", index=1, lookback=200)
+    out: list[dict] = []
+    for _, r in df.iterrows():
+        nm = str(r[name_col]).strip()
+        if not nm or nm in posted:
+            continue
+        out.append({"name": nm, "id": int(r["pitcher_id"]),
+                    "team": (str(r["team"]).strip() if "team" in cols and r.get("team") else None)})
+    if not out:
+        # Everyone qualified has been featured. Say so rather than silently
+        # repeating -- it means the floor or the lookback wants revisiting.
+        log.info("Every qualified pitcher has been featured; falling back to the watchlist")
+    return out
+
+
 class PitchingSummaryGenerator(ContentGenerator):
     name = "pitching_summary"
 
@@ -27,8 +71,16 @@ class PitchingSummaryGenerator(ContentGenerator):
             return PostContent(text="")
         pitches_df = pitch_profiler.get_season_pitches(MLB_SEASON)
 
+        # Candidates come from the QUALIFIED SEASON FIELD, not data/players.json.
+        # That watchlist holds 20 names; posting daily works through it in 20 days
+        # and then logs "All players posted recently, resetting pool" and starts
+        # repeating. The season board has ~198 pitchers over 250 pitches, which is
+        # a real pool -- and it stays current without anyone maintaining a list.
+        # pick_player() remains the fallback for when the API is short.
+        candidates = _candidate_pitchers(season_df)
+
         for attempt in range(3):
-            player_info = pick_player()
+            player_info = candidates[attempt] if attempt < len(candidates) else pick_player()
             name = player_info["name"]
             team = player_info.get("team")
             player_id = player_info.get("id")
