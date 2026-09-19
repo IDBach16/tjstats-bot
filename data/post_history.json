@@ -1829,6 +1829,15 @@
         "hitter_analysis",
         "hitter_analysis_mookie_betts"
       ]
+    },
+    {
+      "date": "2026-09-19T15:01:35.313905",
+      "generator": "pitching_summary",
+      "tweet_id": "2101325816873275782",
+      "tags": [
+        "pitching_summary",
+        "Taj Bradley"
+      ]
     }
   ]
 }
