@@ -6,7 +6,15 @@ import logging
 
 from .base import ContentGenerator, PostContent
 from .._player_pick import pick_player
-from .. import pitch_profiler
+# Savant, not pitch_profiler: that feed froze in early May. On the last day of
+# the 2026 regular season its board topped out at 7 games started and 47.3
+# innings against a real 214 -- so every card since May showed about six starts
+# under a "2026 Pitching Summary" caption. savant_pitching returns the same two
+# frames in the same column vocabulary, so the renderer is unchanged.
+# NOTE: stuff_plus / pitching_plus are Pitch Profiler's own models and are simply
+# absent now. The card omits a column it cannot find, which is the right
+# behaviour -- a Stuff+ from seven May starts describes nothing.
+from .. import savant_pitching as pitch_profiler
 from ..analysis import analyze_pitcher
 from ..charts import plot_pitching_summary
 from ..config import DEFAULT_HASHTAGS, MLB_SEASON

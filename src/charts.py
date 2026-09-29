@@ -1850,18 +1850,21 @@ _CMAP_BAD = LinearSegmentedColormap.from_list("tj_r", ['#648FFF', '#FFFFFF', '#F
 # ── Chart 7: Pitching Summary Dashboard (TJStats-style) ─────────────
 
 # Columns for the pitch stats table and their display info
+# Columns changed 2026-09-29 with the move to Savant. Dropped: Ext. and Chase%
+# (Savant publishes neither PER PITCH TYPE) and Stf+ (Pitch Profiler's own model,
+# which no public API has). Leaving them in meant three columns of "--" forever.
+# Put-away% and K% replace them -- both are real Savant per-pitch fields.
 _PITCH_TABLE_COLS = [
-    # (pp_column, header, format, higher_is_better)
-    ("velocity", "$\\bf{Velo}$", ".1f", True),
-    ("ivb", "$\\bf{iVB}$", ".1f", None),
-    ("hb", "$\\bf{HB}$", ".1f", None),
-    ("spin_rate", "$\\bf{Spin}$", ".0f", None),
-    ("release_extension", "$\\bf{Ext.}$", ".1f", True),
-    ("stuff_plus", "$\\bf{Stf+}$", ".0f", True),
-    ("whiff_rate", "$\\bf{Whiff\\%}$", ".1%", True),
-    ("chase_percentage", "$\\bf{Chase\\%}$", ".1%", True),
-    ("run_value_per_100_pitches", "$\\bf{RV\\/100}$", ".1f", True),
-    ("woba", "$\\bf{wOBA}$", ".3f", False),
+    # (savant column, header, format, higher_is_better)
+    ("velocity", r"$\bf{Velo}$", ".1f", True),
+    ("ivb", r"$\bf{iVB}$", ".1f", None),
+    ("hb", r"$\bf{HB}$", ".1f", None),
+    ("spin_rate", r"$\bf{Spin}$", ".0f", None),
+    ("whiff_rate", r"$\bf{Whiff\%}$", ".1%", True),
+    ("put_away", r"$\bf{PutAway}$", ".1%", True),
+    ("k_percent", r"$\bf{K\%}$", ".1%", True),
+    ("run_value_per_100_pitches", r"$\bf{RV\/100}$", ".1f", True),
+    ("woba", r"$\bf{wOBA}$", ".3f", False),
 ]
 
 # MiLB pitch table — replaces RV/100, wOBA, Stuff+ with Savant-derived stats
@@ -1994,6 +1997,12 @@ def plot_pitching_summary(
                     "whiff_rate", "chase_percentage",
                     "percentage_thrown", "woba",
                     "run_value_per_100_pitches",
+                    # Savant per-pitch columns (they replaced Ext./Stf+/Chase%,
+                    # which Savant does not publish per pitch type). A column
+                    # missing from THIS list is dropped by the groupby below and
+                    # then renders as "--" -- which is how PutAway% and K% came
+                    # back empty even though the data was in the frame.
+                    "put_away", "k_percent",
                     # MiLB-specific columns
                     "csw", "zone_rate", "swing_rate",
                     "avg_exit_velo", "hard_hit_rate", "xba",
@@ -2390,7 +2399,8 @@ def plot_pitching_summary(
                        "Colour Coding Compares to League Average By Pitch",
                        ha="center", va="top", fontsize=14,
                        color="#666666")
-        data_src = "Data: Baseball Savant" if level != "MLB" else "Data: Pitch Profiler"
+        # Everything on the MLB card comes from Savant now too.
+        data_src = "Data: Baseball Savant"
         ax_footer.text(1, 1, f"{data_src}\nImages: MLB, ESPN",
                        ha="right", va="top", fontsize=22)
 
@@ -3806,18 +3816,11 @@ _CMAP_GOOD = LinearSegmentedColormap.from_list("tj", ['#FFB000', '#FFFFFF', '#64
 _CMAP_BAD = LinearSegmentedColormap.from_list("tj_r", ['#648FFF', '#FFFFFF', '#FFB000'])
 
 # Pitch stats table columns
-_PITCH_TABLE_COLS = [
-    ("velocity", "$\\bf{Velo}$", ".1f", True),
-    ("ivb", "$\\bf{iVB}$", ".1f", None),
-    ("hb", "$\\bf{HB}$", ".1f", None),
-    ("spin_rate", "$\\bf{Spin}$", ".0f", None),
-    ("release_extension", "$\\bf{Ext.}$", ".1f", True),
-    ("stuff_plus", "$\\bf{Stf+}$", ".0f", True),
-    ("whiff_rate", "$\\bf{Whiff\\%}$", ".1%", True),
-    ("chase_percentage", "$\\bf{Chase\\%}$", ".1%", True),
-    ("run_value_per_100_pitches", "$\\bf{RV\\/100}$", ".1f", True),
-    ("woba", "$\\bf{wOBA}$", ".3f", False),
-]
+# NOTE: _PITCH_TABLE_COLS is defined ONCE, near _MILB_PITCH_TABLE_COLS above.
+# A second copy used to sit here and SHADOWED it -- Python takes the last
+# module-level binding, so every edit to the first one silently did nothing.
+# That is how the Savant column change looked like it had no effect. If this
+# file ever needs a different table, give it a different NAME.
 
 # Game stats row — game-specific stats (not season totals). Columns are shown
 # only when present, so both data paths (Pitch Profiler / MLB fallback) fill
