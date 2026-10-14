@@ -359,6 +359,35 @@ def _draw_side_labels(ax, is_lhp: bool) -> None:
             color=WHITE_MUTED, ha="right", va="bottom", bbox=box)
 
 
+_season_cloud_cache: dict[int, "pd.DataFrame | None"] = {}
+
+
+def _season_pitch_cloud(pitcher_id: int | None) -> "pd.DataFrame | None":
+    """Every regular-season pitch for MLB_SEASON as pitcher's-view hb / ivb
+    inches (Statcast pfx_x is catcher's view, hence the negation)."""
+    if not pitcher_id:
+        return None
+    pitcher_id = int(pitcher_id)
+    if pitcher_id in _season_cloud_cache:
+        return _season_cloud_cache[pitcher_id]
+    out = None
+    try:
+        raw = statcast_pitcher(start_dt=f"{MLB_SEASON}-03-01",
+                               end_dt=f"{MLB_SEASON}-11-30",
+                               player_id=pitcher_id)
+        if raw is not None and not raw.empty and {"pfx_x", "pfx_z"} <= set(raw.columns):
+            if "game_type" in raw.columns:
+                raw = raw[raw["game_type"] == "R"]
+            raw = raw.dropna(subset=["pfx_x", "pfx_z", "pitch_type"]).copy()
+            if not raw.empty:
+                out = raw.assign(hb=-raw["pfx_x"] * 12, ivb=raw["pfx_z"] * 12)[
+                    ["pitch_type", "hb", "ivb"]]
+    except Exception:
+        log.warning("Season pitch cloud failed for %s", pitcher_id, exc_info=True)
+    _season_cloud_cache[pitcher_id] = out
+    return out
+
+
 # ── Chart 1: Pitch Movement (HB × IVB scatter) ─────────────────────────
 
 def plot_pitch_movement(pitcher_id: int, name: str) -> Path | None:
@@ -2157,8 +2186,30 @@ def plot_pitching_summary(
         ax_break = fig.add_subplot(gs[3, 1:4])
         ax_pctile = fig.add_subplot(gs[3, 4:7])
 
-        # Movement scatter
+        # Movement scatter. Every pitch of the season as a faint cloud (with a
+        # 1.5-sd ellipse) under the per-pitch-type season average, so the chart
+        # shows shape and spread instead of four lonely dots. Falls back to the
+        # averages alone when the pitch-level pull fails.
         if not pitch_rows.empty and "hb" in pitch_rows.columns and "ivb" in pitch_rows.columns:
+            cloud = _season_pitch_cloud(player_id)
+            if cloud is not None:
+                shown = set(pitch_rows["pitch_type"].astype(str))
+                # The season board and pitch-level Statcast don't always agree
+                # on the label (Sean Burke's curve is CU on one, KC on the
+                # other), so fold an alias into whichever one the card shows.
+                _alias = {"KC": "CU", "CU": "KC", "SV": "CU", "ST": "SL", "SL": "ST"}
+                cloud = cloud.assign(pitch_type=cloud["pitch_type"].map(
+                    lambda t: t if t in shown or _alias.get(t) not in shown
+                    else _alias[t]))
+                for pt, sub in cloud.groupby("pitch_type"):
+                    if pt not in shown:
+                        continue
+                    color = _TJ_COLOUR.get(pt, "#888888")
+                    ax_break.scatter(sub["hb"], sub["ivb"], c=color, s=9,
+                                     alpha=0.35, edgecolors="none", zorder=1.5)
+                    if len(sub) >= 10:
+                        _draw_confidence_ellipse(ax_break, sub["hb"].values,
+                                                 sub["ivb"].values, color)
             for _, row in pitch_rows.iterrows():
                 pt = str(row["pitch_type"])
                 hb_val = float(row.get("hb", 0) or 0)
@@ -2167,6 +2218,8 @@ def plot_pitching_summary(
                 pname = _TJ_NAME.get(pt, pt)
                 usage = float(row.get("percentage_thrown", 0.1) or 0.1)
                 size = max(100, min(600, usage * 1200))
+                if cloud is not None:
+                    size = max(80, min(260, usage * 600))
 
                 # PP hb is pitcher's-view (verified vs Statcast pfx_x: RHP arm
                 # side = +hb, LHP arm side = -hb) — plot raw so arm-side
