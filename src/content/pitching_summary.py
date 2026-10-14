@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 
 from .base import ContentGenerator, PostContent
 from .._player_pick import pick_player
@@ -53,6 +54,14 @@ def _candidate_pitchers(season_df) -> list[dict]:
         df = df.sort_values("pitches_thrown", ascending=False)
 
     posted = recent_generator_tags("pitching_summary", index=1)
+    # Manual re-run of a specific pitcher (workflow input `player`), e.g. to
+    # repost a card that went out wrong. Bypasses the already-featured filter.
+    override = os.environ.get("PITCHER_OVERRIDE", "").strip().lower()
+    if override:
+        df = df[df[name_col].astype(str).str.strip().str.lower() == override]
+        if df.empty:
+            log.warning("PITCHER_OVERRIDE %r not on the qualified board", override)
+        posted = set()
     out: list[dict] = []
     for _, r in df.iterrows():
         nm = str(r[name_col]).strip()
@@ -86,6 +95,10 @@ class PitchingSummaryGenerator(ContentGenerator):
         # a real pool -- and it stays current without anyone maintaining a list.
         # pick_player() remains the fallback for when the API is short.
         candidates = _candidate_pitchers(season_df)
+        if os.environ.get("PITCHER_OVERRIDE", "").strip() and not candidates:
+            # A named re-run must post that pitcher or nothing -- never a
+            # random watchlist arm in his place.
+            return PostContent(text="")
 
         for attempt in range(3):
             player_info = candidates[attempt] if attempt < len(candidates) else pick_player()

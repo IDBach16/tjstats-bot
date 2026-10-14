@@ -28,6 +28,11 @@ on:
           - text
           - evening
           - biomechanics
+      player:
+        description: 'pitching_summary only: post this pitcher (exact name), even if already featured'
+        required: false
+        default: ''
+        type: string
       game_date:
         description: 'Override game date for reds_summary (YYYY-MM-DD, leave empty for yesterday)'
         required: false
@@ -143,6 +148,7 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           REDS_GAME_DATE: ${{ inputs.game_date }}
           NEWSROOM_KIND: ${{ inputs.newsroom_kind }}
+          PITCHER_OVERRIDE: ${{ inputs.player }}
         run: |
           if [ "${{ steps.slot.outputs.catchup }}" = "true" ]; then
             # Catch-up: check post history and run any missed morning slots
