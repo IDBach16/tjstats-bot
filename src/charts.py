@@ -344,6 +344,21 @@ def fetch_statcast_pitches(pitcher_id: int, lookback: int = 60) -> "pd.DataFrame
     return df
 
 
+def _draw_side_labels(ax, is_lhp: bool) -> None:
+    """Arm / glove side captions for a pitcher's-view movement chart.
+
+    hb here is pitcher's view (RHP arm side = +hb), so arm side is on the RIGHT
+    for a RHP and the LEFT for a LHP -- same as plot_pitching_summary.
+    """
+    left, right = (("← Arm Side", "Glove Side →") if is_lhp
+                   else ("← Glove Side", "Arm Side →"))
+    box = dict(facecolor="white", alpha=0.7, edgecolor="none")
+    ax.text(0.02, 0.02, left, transform=ax.transAxes, fontsize=9,
+            color=WHITE_MUTED, ha="left", va="bottom", bbox=box)
+    ax.text(0.98, 0.02, right, transform=ax.transAxes, fontsize=9,
+            color=WHITE_MUTED, ha="right", va="bottom", bbox=box)
+
+
 # ── Chart 1: Pitch Movement (HB × IVB scatter) ─────────────────────────
 
 def plot_pitch_movement(pitcher_id: int, name: str) -> Path | None:
@@ -361,10 +376,14 @@ def plot_pitch_movement(pitcher_id: int, name: str) -> Path | None:
         if df.empty:
             return None
 
-        # Convert feet → inches
+        # Convert feet → inches. Statcast pfx_x is CATCHER'S view (RHP arm side
+        # is negative); every other movement chart here is pitcher's view (RHP
+        # arm side = +hb), so flip it or this one comes out mirrored.
         df = df.copy()
-        df["hb"] = df["pfx_x"] * 12
+        df["hb"] = -df["pfx_x"] * 12
         df["ivb"] = df["pfx_z"] * 12
+        is_lhp = ("p_throws" in df.columns
+                  and str(df["p_throws"].mode().iat[0]).upper() == "L")
 
         fig = plt.figure(figsize=(12, 8), dpi=150)
         fig.set_facecolor(WHITE_BG)
@@ -394,6 +413,7 @@ def plot_pitch_movement(pitcher_id: int, name: str) -> Path | None:
         ax.set_ylabel("Induced Vertical Break (in)", fontsize=12)
         ax.set_xlim(-25, 25)
         ax.set_ylim(-25, 25)
+        _draw_side_labels(ax, is_lhp)
         ax.legend(
             loc="upper right", fontsize=9, framealpha=0.9,
             facecolor="white", edgecolor="#cccccc",
@@ -763,11 +783,18 @@ def plot_movement_profile(name: str, pitches_df: "pd.DataFrame",
         if not needed.issubset(prows.columns):
             return None
 
-        # Detect handedness for arm/glove side labels
+        # Detect handedness for arm/glove side labels. Savant's pitch frame has
+        # no p_throws, so fall back to where the fastball/changeup family runs:
+        # hb is pitcher's view, so those land positive for a RHP, negative LHP.
         is_lhp = False
-        if "p_throws" in prows.columns:
-            hand = str(prows["p_throws"].iloc[0]).upper()
+        if "p_throws" in prows.columns and prows["p_throws"].notna().any():
+            hand = str(prows["p_throws"].dropna().iloc[0]).upper()
             is_lhp = hand == "L"
+        else:
+            arm = pd.to_numeric(
+                prows.loc[prows["pitch_type"].isin(("FF", "SI", "CH", "FS")), "hb"],
+                errors="coerce").dropna()
+            is_lhp = bool(len(arm)) and arm.mean() < 0
 
         # Get player_id from data if not provided
         if player_id is None:
@@ -838,17 +865,7 @@ def plot_movement_profile(name: str, pitches_df: "pd.DataFrame",
         ax.set_xlim(-25, 25)
         ax.set_ylim(-25, 25)
 
-        # Arm side / Glove side labels
-        arm_side = "← Arm Side" if not is_lhp else "Arm Side →"
-        glove_side = "Glove Side →" if not is_lhp else "← Glove Side"
-        ax.text(0.02, 0.02, glove_side if is_lhp else arm_side,
-                transform=ax.transAxes, fontsize=9, color=WHITE_MUTED,
-                ha="left", va="bottom",
-                bbox=dict(facecolor="white", alpha=0.7, edgecolor="none"))
-        ax.text(0.98, 0.02, arm_side if is_lhp else glove_side,
-                transform=ax.transAxes, fontsize=9, color=WHITE_MUTED,
-                ha="right", va="bottom",
-                bbox=dict(facecolor="white", alpha=0.7, edgecolor="none"))
+        _draw_side_labels(ax, is_lhp)
 
         _draw_header(fig, name, player_id=player_id,
                      subtitle="Movement Profile (Pitch Profiler)")

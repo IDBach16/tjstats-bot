@@ -151,6 +151,61 @@ def _movement(season: int) -> "pd.DataFrame":
     return out
 
 
+# ** pitcher_break_x ON THE MOVEMENT BOARD IS UNSIGNED. ** It is a magnitude --
+# not one negative value in ~3,500 rows across all nine pitch types -- so a
+# four-seamer's 11" of run and a sweeper's 12" of sweep both arrive as positive
+# numbers and land on the SAME side of the movement chart. Every Pitching Summary
+# card from the Savant switch (2026-09-29) on drew the whole arsenal on the arm
+# side. The direction lives in Statcast search's grouped output instead:
+# api_break_x_arm, in FEET, positive = arm side. Its magnitude agrees with the
+# board's to a median 0.04", so only its SIGN is taken -- the board stays the
+# source of the number. One request per pitch type (~2 s each), same reason as
+# _movement: the search groups by pitcher, not by pitch.
+_SEARCH = "https://baseballsavant.mlb.com/statcast_search/csv"
+
+
+def _arm_direction(season: int) -> "pd.DataFrame":
+    """(pitcher_id, pitch_type) -> +1 if the pitch breaks arm side, -1 glove side."""
+    frames = []
+    for pt in _PITCH_TYPES:
+        d = _get(f"{_SEARCH}?all=true&hfPT={pt}%7C&hfGT=R%7C&hfSea={season}%7C"
+                 f"&player_type=pitcher&group_by=name&min_pitches=10"
+                 f"&min_results=0&sort_col=pitches&sort_order=desc",
+                 f"arm_dir_{season}_{pt}")
+        if d.empty or "api_break_x_arm" not in d.columns:
+            continue
+        arm = pd.to_numeric(d["api_break_x_arm"], errors="coerce")
+        frames.append(pd.DataFrame({
+            "pitcher_id": pd.to_numeric(d["player_id"], errors="coerce").astype("Int64"),
+            "pitch_type": pt,
+            "arm_dir": (arm.ge(0).astype(float) * 2 - 1).where(arm.notna()),
+        }))
+    if not frames:
+        return pd.DataFrame(columns=["pitcher_id", "pitch_type", "arm_dir"])
+    return pd.concat(frames, ignore_index=True).dropna()
+
+
+def _signed_hb(movement: "pd.DataFrame", season: int) -> "pd.Series":
+    """Board magnitude, signed into the card's convention: pitcher's view,
+    RHP arm side = +hb, LHP arm side = -hb (what Pitch Profiler served, and what
+    plot_pitching_summary's Arm Side / Glove Side labels assume)."""
+    mag = pd.to_numeric(movement.get("pitcher_break_x"), errors="coerce").abs()
+    keys = pd.DataFrame({
+        "pitcher_id": pd.to_numeric(movement["pitcher_id"], errors="coerce").astype("Int64"),
+        "pitch_type": movement["pitch_type"],
+    })
+    arm = keys.merge(_arm_direction(season), on=["pitcher_id", "pitch_type"],
+                     how="left")["arm_dir"].to_numpy()
+    # If the search is down, fall back to which side the LEAGUE average for that
+    # pitch type breaks to (the board's league_break_x is signed: arm side < 0).
+    # Right for nearly everyone; only the odd arm-side cutter comes out mirrored.
+    league = pd.to_numeric(movement.get("league_break_x"), errors="coerce")
+    fallback = league.lt(0).map({True: 1.0, False: -1.0}).to_numpy()
+    arm = pd.Series(arm, index=movement.index).fillna(pd.Series(fallback, index=movement.index))
+    hand = movement.get("pitch_hand").map({"R": 1.0, "L": -1.0}).fillna(1.0)
+    return mag * arm * hand
+
+
 def _spin(season: int) -> "pd.DataFrame":
     """Average spin per pitcher per pitch type.
 
@@ -284,7 +339,7 @@ def get_season_pitches(season: int = MLB_SEASON) -> pd.DataFrame:
             "ivb": pd.to_numeric(movement.get("pitcher_break_z_induced",
                                               movement.get("pitcher_break_z")),
                                  errors="coerce"),
-            "hb": pd.to_numeric(movement.get("pitcher_break_x"), errors="coerce"),
+            "hb": _signed_hb(movement, season),
         })
         df = df.merge(m, on=["pitcher_id", "pitch_type"], how="left")
 
