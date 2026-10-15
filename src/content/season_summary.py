@@ -18,6 +18,7 @@ from .base import ContentGenerator, PostContent
 from .. import pitch_profiler
 from ..charts import plot_pitching_summary
 from ..config import DEFAULT_HASHTAGS, MLB_SEASON
+from ..pitching_lens import analyst_request, reply_text
 
 log = logging.getLogger(__name__)
 
@@ -30,8 +31,7 @@ def _generate_season_take(name: str, stats_str: str) -> str | None:
     try:
         client = anthropic.Anthropic(api_key=key)
         message = client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=120,
+            **analyst_request(),
             messages=[{"role": "user", "content":
                 f"Write exactly 2 sentences analyzing {name}'s {MLB_SEASON} season so far. "
                 f"Season stats: {stats_str}. "
@@ -41,7 +41,7 @@ def _generate_season_take(name: str, stats_str: str) -> str | None:
                 f"Output ONLY the 2 sentences."
             }],
         )
-        text = message.content[0].text.strip()
+        text = reply_text(message)
         text = re.sub(r'\s*\(\d+ characters?\)\s*$', '', text)
         return text
     except Exception:

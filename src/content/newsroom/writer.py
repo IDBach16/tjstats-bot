@@ -8,6 +8,10 @@ import os
 import re
 
 from .personas import STYLE_GUIDE, WRITER_MODEL, HELPER_MODEL
+from ...pitching_lens import LENS
+
+# Story kinds about a pitcher (feeds/scout lead kinds).
+PITCHER_KINDS = {"nasty_pitch", "pitcher_stuff", "pitcher_luck"}
 
 log = logging.getLogger(__name__)
 
@@ -125,7 +129,12 @@ RULES
 - Each tweet must be UNDER {MAX_TWEET} characters. No hashtags (we add those).
   Emojis okay but sparingly. Do NOT number the tweets. Do NOT mention an attached video.
 """
-    raw = _complete(STYLE_GUIDE, prompt)
+    system = STYLE_GUIDE
+    if fact_sheet.get("kind") in PITCHER_KINDS:
+        # Interpretive lens only: the fact sheet stays the sole source of
+        # numbers (the copy desk checks every figure against it).
+        system = STYLE_GUIDE + "\n\n" + LENS
+    raw = _complete(system, prompt)
     data = _parse_json(raw or "")
     if not data or not isinstance(data.get("tweets"), list) or not data["tweets"]:
         log.warning("writer produced no usable thread for %s", fact_sheet.get("subject"))

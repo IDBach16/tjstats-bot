@@ -13,6 +13,7 @@ from ..analysis import generate_analysis
 from ..config import DEFAULT_HASHTAGS, MLB_SEASON
 from ..charts import plot_pitch_heatmap
 from ..video_clips import get_pitcher_clip
+from ..pitching_lens import analyst_request, reply_text
 
 log = logging.getLogger(__name__)
 
@@ -67,11 +68,10 @@ Rules:
 
     try:
         message = client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=150,
+            **analyst_request(),
             messages=[{"role": "user", "content": prompt}],
         )
-        text = message.content[0].text.strip()
+        text = reply_text(message)
         if len(text) > 270:
             text = text[:267] + "..."
         log.info("Generated comparison (%d chars): %s", len(text), text[:80])

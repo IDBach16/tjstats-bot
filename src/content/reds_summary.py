@@ -17,6 +17,7 @@ from .. import pitch_profiler
 from ..charts import plot_reds_game_summary, plot_reds_matchup_header
 from ..config import MLB_SEASON, MLB_API_BASE
 from ..video_clips import get_game_strikeout_clip
+from ..pitching_lens import analyst_request, reply_text
 
 log = logging.getLogger(__name__)
 
@@ -105,11 +106,10 @@ def _generate_pitcher_take(name: str, stats: pd.Series) -> str:
     try:
         client = anthropic.Anthropic(api_key=key)
         msg = client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=80,
+            **analyst_request(),
             messages=[{"role": "user", "content": prompt}],
         )
-        text = msg.content[0].text.strip()
+        text = reply_text(msg)
         if len(text) > 220:
             text = text[:217] + "..."
         return text
