@@ -12,6 +12,9 @@ on:
     - cron: '0 15 * * *'
     # 11 AM EST (UTC-5) = 16:00 UTC — catch-up: re-run either morning slot if it missed
     - cron: '0 16 * * *'
+    # 12 PM EST (UTC-5) = 17:00 UTC — rotating pitching-analysis post (evening
+    # slot: Throw It More / ERA vs Skill / Best Offspeed / Bat-Missing Outliers)
+    - cron: '0 17 * * *'
     # 2 PM EST (UTC-5) = 19:00 UTC — Hitter Analysis (Swing+ card)
     - cron: '0 19 * * *'
   workflow_dispatch:
@@ -53,6 +56,10 @@ on:
           - arsenal_vs
           - movement_profile
           - pitching_summary
+          - throw_it_more
+          - era_vs_skill
+          - best_offspeed
+          - bat_missers
           - pitcher_card
           - ss_pitching_summary
           - ss_statcast_cards
@@ -122,6 +129,11 @@ jobs:
             if [ "$HOUR" -ge 19 ]; then
               # 2 PM EST (19:00 UTC) — Hitter Analysis (text slot)
               echo "slot=text" >> $GITHUB_OUTPUT
+              echo "generator=" >> $GITHUB_OUTPUT
+              echo "catchup=" >> $GITHUB_OUTPUT
+            elif [ "$HOUR" -ge 17 ]; then
+              # 12 PM EST (17:00 UTC) — rotating pitching-analysis post
+              echo "slot=evening" >> $GITHUB_OUTPUT
               echo "generator=" >> $GITHUB_OUTPUT
               echo "catchup=" >> $GITHUB_OUTPUT
             elif [ "$HOUR" -ge 16 ]; then

@@ -50,6 +50,9 @@ from .content.milb_trad_pitching_summary import MiLBTradPitchingSummaryGenerator
 
 # Hitter analysis
 from .content.hitter_analysis import HitterAnalysisGenerator
+from .content.pitch_ideas import (
+    ThrowItMoreGenerator, EraVsSkillGenerator, BestOffspeedGenerator, BatMissersGenerator,
+)
 
 # Biomechanics educational content
 from .content.biomechanics_101 import BiomechanicsGenerator
@@ -106,6 +109,10 @@ GENERATORS: dict[str, type[ContentGenerator]] = {
     "arsenal_usage": ArsenalUsageGenerator,
     "pitcher_card": PitcherCardGenerator,
     "pitching_summary": PitchingSummaryGenerator,
+    "throw_it_more": ThrowItMoreGenerator,
+    "era_vs_skill": EraVsSkillGenerator,
+    "best_offspeed": BestOffspeedGenerator,
+    "bat_missers": BatMissersGenerator,
     "milb_pitcher_card": MiLBPitcherCardGenerator,
     "milb_pitching_summary": MiLBPitchingSummaryGenerator,
     "milb_trad_pitcher_card": MiLBTradPitcherCardGenerator,
@@ -142,9 +149,15 @@ DAILY_GENERATORS: list[type[ContentGenerator]] = []
 # Every one of them stays in GENERATORS for manual --generator runs; nothing was
 # deleted. The workflow's crons were cut to match (14:00 / 18:00 / 21:00 removed),
 # because a cron with nothing to run still spends an Actions minute.
+# Third slot added 2026-10-15 (Ian): one rotating pitching-analysis post at
+# 17:00 UTC ('evening' slot, gens[2]), each built on a Lance Brozdowski
+# principle with a clip of the pitch it is about (content/pitch_ideas.py).
+_IDEAS = (ThrowItMoreGenerator, EraVsSkillGenerator, BestOffspeedGenerator, BatMissersGenerator)
+
 # Monday=0 … Sunday=6.
 SCHEDULE: dict[int, tuple[type[ContentGenerator], ...]] = {
-    d: (PitchingSummaryGenerator, HitterAnalysisGenerator) for d in range(7)
+    d: (PitchingSummaryGenerator, HitterAnalysisGenerator, _IDEAS[d % len(_IDEAS)])
+    for d in range(7)
 }
 
 

@@ -353,5 +353,13 @@ def get_season_pitches(season: int = MLB_SEASON) -> pd.DataFrame:
     return df.dropna(subset=["pitcher_name"]).reset_index(drop=True)
 
 
+def get_expected_stats(season: int = MLB_SEASON) -> pd.DataFrame:
+    """ERA vs xERA (and wOBA vs xwOBA) per pitcher, from the expected-stats
+    board. min=200 batters faced in the URL; finer floors are applied by the
+    caller."""
+    return _get(f"{_BASE}/expected_statistics?type=pitcher&year={season}&position=&team="
+                f"&filterType=pa&min=200&csv=true", f"expected_stats_{season}")
+
+
 def clear_cache() -> None:
     _CACHE.clear()

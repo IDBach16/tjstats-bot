@@ -458,6 +458,68 @@ def get_pitcher_clip(pitcher_id: int, pitcher_name: str) -> Path | None:
     return None
 
 
+_PITCH_K_QUERY = """query S($q: String!) {
+  search(query: $q, limit: 100) {
+    plays { mediaPlayback { slug title feeds { playbacks { name url } } } }
+  }
+}"""
+
+
+def _search_filmroom_pitch(pitcher_id: int, season: int, pitch_type: str) -> tuple[str | None, str | None]:
+    """A strikeout clip whose FINAL pitch is `pitch_type` (Statcast code).
+
+    Film Room files a clip under the pitch that ended the play, so filtering
+    on PitchType and keeping strikeout titles ("K's X", "strikes out X") gives
+    that exact pitch finishing a hitter. Its PitchResult field exists but the
+    values are undocumented and every guess returned nothing, hence the title
+    filter. Checked 2026-10-15: Bibee CH 10, Luzardo ST 21, Misiorowski FF 21.
+    """
+    q = f'PitcherId = [{pitcher_id}] AND Season = [{season}] AND PitchType = ["{pitch_type}"]'
+    try:
+        resp = requests.post(FILMROOM_GRAPHQL, json={"query": _PITCH_K_QUERY, "variables": {"q": q}},
+                             headers={"Content-Type": "application/json"}, timeout=20)
+        resp.raise_for_status()
+        plays = ((resp.json().get("data") or {}).get("search") or {}).get("plays") or []
+    except Exception:
+        log.warning("Film Room pitch-type search failed", exc_info=True)
+        return None, None
+    for play in plays:
+        mp = (play.get("mediaPlayback") or [None])[0]
+        if not mp:
+            continue
+        title = (mp.get("title") or "").lower()
+        if "k's " not in title and "strikes out" not in title:
+            continue
+        mp4_url = _pick_best_mp4(mp)
+        if not mp4_url:
+            continue
+        try:
+            size = int(requests.head(mp4_url, timeout=10, allow_redirects=True)
+                       .headers.get("Content-Length", 0))
+            if size > MAX_CLIP_SIZE_MB * 1024 * 1024:
+                continue
+        except Exception:
+            pass
+        log.info("Found %s strikeout clip: %s", pitch_type, mp.get("title"))
+        return mp4_url, mp.get("title")
+    return None, None
+
+
+def get_pitch_clip(pitcher_id: int, pitcher_name: str, pitch_type: str) -> Path | None:
+    """A clip of THIS pitch striking someone out; falls back to any strikeout
+    clip of the pitcher (get_pitcher_clip) when that pitch has none."""
+    _cleanup_old_clips()
+    for season in (MLB_SEASON, MLB_SEASON - 1):
+        mp4_url, _title = _search_filmroom_pitch(pitcher_id, season, pitch_type)
+        if mp4_url:
+            safe = pitcher_name.replace(" ", "_").lower()
+            out = CLIPS_DIR / f"{safe}_{pitch_type.lower()}_{season}.mp4"
+            if out.exists() or _download_mp4(mp4_url, out):
+                return out
+    log.info("No %s strikeout clip for %s; using any strikeout clip", pitch_type, pitcher_name)
+    return get_pitcher_clip(pitcher_id, pitcher_name)
+
+
 # ── Hitter clips (Film Room search by BatterId) ────────────────────────
 # Title keywords that signal a good hitter highlight — home runs first.
 _HITTER_PREFER = (
