@@ -66,12 +66,34 @@ def _posted_names() -> set[str]:
     return out
 
 
-def _pick_hitter(df: pd.DataFrame) -> pd.Series | None:
+def _last_featured() -> dict[str, int]:
+    """Name -> position of that hitter's most recent post in the history
+    (higher = more recent), both tag formats, like _posted_names."""
+    from ..scheduler import _load_history
+    out: dict[str, int] = {}
+    for i, entry in enumerate(_load_history().get("posts", [])):
+        tags = entry.get("tags", [])
+        if entry.get("generator") != "hitter_analysis" or len(tags) < 2 or not tags[1]:
+            continue
+        tag = tags[1]
+        out[tag] = i
+        if tag.startswith("hitter_analysis_"):
+            out[tag[len("hitter_analysis_"):].replace("_", " ").title()] = i
+    return out
+
+
+def _pick_hitter(df: pd.DataFrame, pool: pd.DataFrame | None = None) -> pd.Series | None:
     """Pick an interesting hitter to analyze.
 
     Prioritize hitters with a gap between their mechanics and results —
     high swing+ but low xwOBA (underperforming) or low swing+ but high
     xwOBA (overperforming). Also avoid repeating recently analyzed hitters.
+
+    ``df`` is the preferred board (the top 40 by Swing+); ``pool`` is the whole
+    qualified field. The fallbacks MUST search ``pool``: when they only saw the
+    top 40, the board was exhausted by 2026-10-11 and the last-resort branch
+    posted James Wood (the top Swing+) eight days running while 200 qualified
+    hitters had never been featured.
     """
     # _posted_names, not was_recently_posted: the latter's `lookback` counts
     # POSTS across every generator, so it drifts with the schedule -- at the old
@@ -100,14 +122,19 @@ def _pick_hitter(df: pd.DataFrame) -> pd.Series | None:
 
     # Nobody in the gap board is new. Widen to the whole qualified pool before
     # giving up, ordered by Swing+ so the fallback still picks someone worth a card.
-    for _, row in df.nlargest(len(df), "swing_plus").iterrows():
+    pool = df if pool is None or pool.empty else pool
+    for _, row in pool.nlargest(len(pool), "swing_plus").iterrows():
         if row.get("name_fg", "") not in posted:
             return row
 
-    # Genuinely everyone has been featured. Repeat the best swing rather than
-    # post nothing -- but say so, because it means the pool needs widening.
-    log.info("Every qualified hitter has been featured; repeating the top Swing+")
-    return df.nlargest(1, "swing_plus").iloc[0]
+    # Genuinely everyone has been featured. Repeat whoever has gone LONGEST
+    # without a post -- never the same "top Swing+" hitter every day.
+    last = _last_featured()
+    order = pool.assign(_last=pool["name_fg"].map(lambda n: last.get(n, -1)))
+    pick = order.sort_values(["_last", "swing_plus"], ascending=[True, False]).iloc[0]
+    log.info("Every qualified hitter has been featured; repeating the least recent: %s",
+             pick.get("name_fg", "?"))
+    return pick.drop(labels="_last")
 
 
 def _get_hitter_videos(player_id: int, player_name: str, max_clips: int = 3):
@@ -358,7 +385,7 @@ class HitterAnalysisGenerator(ContentGenerator):
         df = full_df.nlargest(40, "swing_plus").reset_index(drop=True)
 
         # Pick a hitter
-        hitter = _pick_hitter(df)
+        hitter = _pick_hitter(df, pool=full_df)
         if hitter is None:
             log.warning("No hitter picked")
             return PostContent(text="")
